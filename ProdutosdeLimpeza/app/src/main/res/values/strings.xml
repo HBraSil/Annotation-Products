@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Produtos de Limpeza</string>
+    <string name="is_seller">É vendedor?</string>
+    <string name="click_here">Clique aqui</string>
+    <string name="icon_navigate_back">Voltar</string>
+    <string name="login">Login</string>
+    <string name="email">E-mail</string>
+    <string name="hint_email">Digite seu email</string>
+    <string name="password">Senha</string>
+    <string name="hint_password">Digite sua senha</string>
+    <string name="start">Entrar</string>
+    <string name="options_to_access">Ou acesse com:</string>
+    <string name="signup">Cadastro</string>
+    <string name="name_lastname">Nome e sobrenome</string>
+    <string name="hint_name_lastname">Digite seu nome e sobrenome</string>
+    <string name="confirm_password">Confirmar senha</string>
+    <string name="hint_confirm_password">Digite sua senha novamente</string>
+    <string name="to_signup">Cadastrar</string>
+    <string name="move_on">Continuar</string>
+    <string name="home">Início</string>
+    <string name="profile">Perfil</string>
+    <string name="product">Produtos</string>
+    <string name="image_profile">Imagem do perfil do usuário</string>
+    <string name="edit_profile_name_and_city">Editar nome e cidade do usuário</string>
+    <string name="search">Pesquisar</string>
+    <string name="icon_navigate_next">Saber mais</string>
+    <string name="icon_info">Icones sobre disponibilidade do vendedor</string>
+</resources>
