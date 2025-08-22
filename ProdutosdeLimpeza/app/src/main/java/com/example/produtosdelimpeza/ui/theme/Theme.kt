@@ -1,5 +1,6 @@
 package com.example.produtosdelimpeza.ui.theme
 
+import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -8,35 +9,40 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Green
 import androidx.compose.ui.graphics.Color.Companion.Red
+import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.ViewCompat
 
 private val DarkColorScheme = darkColorScheme(
-    primary = SmoothBlue,
-    secondary = LightGreen,
-    tertiary = Red,
-    background = BluishGray,
-    surface = BluishGray,
-    onPrimary = SmoothGreen,
-    onSecondary = IntenseGreen,
-    onBackground = BluishGray,
-    onSurface = BluishGray,
-    onTertiary = White,
+    primary = Color(0xFF3E556B),
+    onPrimary = Color(0xFF002233),
+    secondary = Color(0xFF1C3856),
+    onSecondary = Color(0xFFFFFFFF),
+    background = Color(0xFF002233),
+    onBackground = Color(0xFFFFFFFF),
+    surface = Color(0xFF1C3856),
+    onSurface = Color(0xFFB7CED2)
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = SmoothBlue,
-    secondary = IntenseBlue,
-    tertiary = Red,
-    background = BluishGray,
-    surface = BluishGray,
-    onPrimary = SmoothGreen,
-    onSecondary = IntenseGreen,
-    onBackground = BluishGray,
-    onSurface = BluishGray,
 
-    onTertiary = White,
+
+
+private val LightColorScheme = lightColorScheme(
+    primary = Color(0xE6A4BED0),
+    onPrimary = Color(0xFFFFFFFF),
+    secondary = Color(0xFF023069),
+    onSecondary = Color(0xFFFFFFFF),
+    background = Color(0xFFFFFFFF),
+    onBackground = Color(0xFF02002A),
+    surface = LightBluishGray,
+    onSurface = Color(0xFF030D64)
 )
 
 @Composable
@@ -52,7 +58,7 @@ fun ProdutosDeLimpezaTheme(
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> LightColorScheme
+        darkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 

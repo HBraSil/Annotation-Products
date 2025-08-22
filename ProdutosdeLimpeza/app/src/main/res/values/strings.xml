@@ -9,10 +9,12 @@
     <string name="password">Senha</string>
     <string name="hint_password">Digite sua senha</string>
     <string name="start">Entrar</string>
-    <string name="options_to_access">Ou acesse com:</string>
+    <string name="options_to_access">ou</string>
     <string name="signup">Cadastro</string>
-    <string name="name_lastname">Nome e sobrenome</string>
-    <string name="hint_name_lastname">Digite seu nome e sobrenome</string>
+    <string name="name">Nome</string>
+    <string name="last_name">Sobrenome</string>
+    <string name="hint_name">Digite seu nome</string>
+    <string name="hint_last_name">Digite seu sobrenome</string>
     <string name="confirm_password">Confirmar senha</string>
     <string name="hint_confirm_password">Digite sua senha novamente</string>
     <string name="to_signup">Cadastrar</string>
@@ -25,4 +27,16 @@
     <string name="search">Pesquisar</string>
     <string name="icon_navigate_next">Saber mais</string>
     <string name="icon_info">Icones sobre disponibilidade do vendedor</string>
+    <string name="recent_search">Busca recente</string>
+    <string name="show_password">Mostrar senha</string>
+    <string name="hide_password">Esconder senha</string>
+    <string name="facebook_logo">Logo do Facebook</string>
+    <string name="google_logo">Logo do Google</string>
+    <string name="type_email">Digite seu email</string>
+    <string name="type_password">Digite sua senha</string>
+    <string name="login_image">Imagem da tela de login</string>
+    <string name="welcome_message">Encontre os melhores produtos para deixar sua casa sempre limpa e cheirosa. Praticidade e qualidade ao seu alcance.</string>
+    <string name="edit_personal_data">Editar dados pessoais</string>
+    <string name="about_main_text">Nossa empresa nasceu com o propósito de levar mais praticidade, bem-estar e qualidade para o dia a dia das pessoas por meio de produtos de limpeza eficientes, acessíveis e sustentáveis.\n \nSomos movidos pelo compromisso de oferecer soluções que unem tecnologia, qualidade e respeito ao meio ambiente, sempre pensando na saúde e no conforto de nossos clientes.\n \nNosso objetivo é simplificar as tarefas de limpeza e garantir que cada produto entregue resultados de excelência. Trabalhamos com dedicação para desenvolver produtos que realmente façam diferença.</string>
+    <string name="icon_navigate_next_to_feedback">Avalie o App</string>
 </resources>

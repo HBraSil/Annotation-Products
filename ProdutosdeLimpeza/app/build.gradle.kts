@@ -65,4 +65,7 @@ dependencies {
     //NAVIGATION
     implementation(libs.androidx.navigation)
 
+
+    //Local Storage
+    implementation(libs.datastore.preferences)
 }

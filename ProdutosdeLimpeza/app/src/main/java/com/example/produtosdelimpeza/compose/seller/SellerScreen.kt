@@ -48,9 +48,7 @@ fun SellerScreen(nameSeller: String = "", onBackNavigation: () -> Unit = {}) {
                 TopAppBar(
                     title = { Text("Aurubu", color = Black)},
                     navigationIcon = {
-                        IconButton(onClick = { onBackNavigation() },
-                             modifier = Modifier
-                                    .indication(remember { MutableInteractionSource() }, ripple(bounded = true))) {
+                        IconButton(onClick = { onBackNavigation() }) {
                             Icon(
                                 imageVector = Icons.Default.ArrowBackIosNew,
                                 contentDescription = stringResource(R.string.icon_navigate_back),

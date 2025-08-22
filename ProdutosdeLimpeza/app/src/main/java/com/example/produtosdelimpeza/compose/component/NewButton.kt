@@ -2,6 +2,8 @@ package com.example.produtosdelimpeza.compose.component
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -24,7 +26,8 @@ fun NewButton(text: Int, modifier: Modifier = Modifier, onClickNewBtn: () -> Uni
         colors = ButtonDefaults.buttonColors(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = White
-        )
+        ),
+        shape = RoundedCornerShape(topStart = 15.dp, bottomEnd = 15.dp)
     ) {
         Text(stringResource(text))
     }

@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -69,13 +70,15 @@ fun SignupCodeScreen(modifier: Modifier = Modifier, onToSignupClick: () -> Unit 
         Scaffold(
             topBar = {
                 TopAppBar(
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.background
+                    ),
                     title = {},
                     navigationIcon = {
-                        IconButton(onClick = {}) {
+                        IconButton(onClick = onToSignupClick) {
                             Icon(
                                 imageVector = Icons.Filled.ArrowBackIosNew,
                                 contentDescription = stringResource(id = R.string.icon_navigate_back),
-                                tint = MaterialTheme.colorScheme.primary
                             )
                         }
                     }
@@ -91,11 +94,11 @@ fun SignupCodeScreen(modifier: Modifier = Modifier, onToSignupClick: () -> Unit 
                 Text(
                     text = "Código de verificação",
                     modifier = Modifier.padding(start = 12.dp),
-                    fontSize = 38.sp,
+                    fontSize = 30.sp,
                     maxLines = 1,
                     softWrap = false,
-                    color = MaterialTheme.colorScheme.secondary,
                     fontWeight = ExtraBold,
+                    //color = MaterialTheme.colorScheme.primary
                 )
 
                 Text(
@@ -131,7 +134,7 @@ fun SignupCodeScreen(modifier: Modifier = Modifier, onToSignupClick: () -> Unit 
                             textStyle = LocalTextStyle.current.copy(
                                 textAlign = TextAlign.Center,
                                 fontSize = 16.sp,
-                                color = Color.Black
+                               // color = Color.Black
                             ),
                             modifier = Modifier.size(52.dp)
                                 .focusRequester(focusRequesters[index])

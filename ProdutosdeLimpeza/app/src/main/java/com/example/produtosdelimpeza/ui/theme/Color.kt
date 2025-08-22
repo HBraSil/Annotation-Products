@@ -1,27 +1,41 @@
 package com.example.produtosdelimpeza.ui.theme
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
+//Light theme colors
+val LightBluishGray = Color(0xFFE1E8E7)
+val LightWhite = Color(0xFF000000)
+val LightBlue = Color(0xFF35808D)
+val LightDarkBlue = Color(0xFF021C3B)
+val LightSmoothBluish = Color(0xFF12445B)
+val LightGreenCircle = Color(0xFF1E942A)
+val LightBrown = Color(0xFF683904)
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF59717A)
-val Pink40 = Color(0xFF7D5260)
-
-val SmoothBlue = Color(0xFF7892D3)
-val IntenseBlue = Color(0xFF112B72)
-val BluishGray = Color(0xFFC9DAE1)
-
-val SmoothGreen = Color(0xFF81C784)
-val IntenseGreen = Color(0xFF00796B)
-val LightGreen = Color(0xFFA5D6A7)
-val LightestGreen = Color(0xFFD6ECCE)
-val GreenCircle = Color(0xFF1E942A)
+//Dark theme colors
+val DarkBluePool = Color(0xFFB7CED2)
+val DarkNavyBlue = Color(0xFF002233)
+val DarkSmoothGreen = Color(0xFF909BD0)
 val GreenishGray = Color(0xFF688879)
+val DarkBlackBlue = Color(0xFF19334F)
+val DarkBlueOil = Color(0xB2777D98)
+val DarkSmoothWhite = Color(0xFFE6F7FA)
+val DarkBlue = Color(0xFF152A3C)
+val DarkGreenishWhite = Color(0xFFAAE5EC)
 
-val RedCircle = Color(0xFF7A1515)
-val SmoothYellow = Color(0xFFFFF59D)
-val Test = Color(0xFFE8DBFD)
+
+// General colors
+val RedCircle = Color(0xFFB00020)
+val BluishGreen = Color(0xFF00693C)
+
+val GradientSignupMainText = Brush.radialGradient(
+    colors = listOf(
+        Color(0xFF106C9D), // Azul claro no centro
+        Color(0xFF6FAFA0), // Verde claro intermediário
+        Color(0x6F109F93)  // Verde escuro nas bordas
+    ),
+    center = Offset.Zero, // Pode ajustar depois
+    radius = 800f
+)

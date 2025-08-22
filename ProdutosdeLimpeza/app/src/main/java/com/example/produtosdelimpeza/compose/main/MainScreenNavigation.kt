@@ -1,9 +1,7 @@
 package com.example.produtosdelimpeza.compose.main
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material.icons.Icons
@@ -14,6 +12,9 @@ import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -21,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.NavHost
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
@@ -32,7 +34,6 @@ import com.example.produtosdelimpeza.compose.home.HomeScreen
 import com.example.produtosdelimpeza.compose.profile.ProfileScreen
 import com.example.produtosdelimpeza.compose.search.SearchScreen
 import com.example.produtosdelimpeza.compose.seller.SellerScreen
-import com.example.produtosdelimpeza.ui.theme.IntenseGreen
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,21 +41,20 @@ import com.example.produtosdelimpeza.ui.theme.IntenseGreen
 fun MainScreenNavigation() {
     val navController = rememberNavController()
 
-    Surface(modifier = Modifier.fillMaxSize()) {
         NavHost(navController = navController, startDestination = Screen.HOME.route,  modifier = Modifier.background(White)) {
             composable(Screen.HOME.route) {
                 HomeScreen(navController) {nameSeller ->
                     navController.navigate("${Screen.SELLER.route}/$nameSeller")
                 }
             }
+            composable(Screen.SEARCH.route) {
+                SearchScreen(navController)
+            }
             composable(Screen.PROFILE.route) {
                 ProfileScreen(navController)
             }
             composable(Screen.PRODUCT.route) {
-                //ProductScreen(navController)
-            }
-            composable(Screen.SEARCH.route) {
-                SearchScreen(navController)
+                //Área do vendedor(navController)
             }
 
             composable("${Screen.SELLER.route}/{nameSeller}") {
@@ -64,7 +64,6 @@ fun MainScreenNavigation() {
                 }
             }
         }
-    }
 }
 
 
@@ -95,15 +94,13 @@ fun MainBottomNavigation(
     )
 
 
-    BottomNavigation(
-        modifier = Modifier,
-        backgroundColor = IntenseGreen,
-    ) {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.surface) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentRoute = navBackStackEntry?.destination?.route
 
         navigationItems.forEach { item ->
-            BottomNavigationItem(
+            NavigationBarItem(
+                //modifier = Modifier.background(if (currentRoute == item.router.route) DarkGray else White),
                 selected = currentRoute == item.router.route,
                 onClick = {
                     if (currentRoute != item.router.route) {
@@ -119,12 +116,17 @@ fun MainBottomNavigation(
                 icon = {
                     Icon(
                         imageVector = if (currentRoute == item.router.route) item.iconSelected else item.iconUnselected,
-                        contentDescription = item.title.toString()
+                        contentDescription = item.title.toString(),
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 },
                 label = {
-                    Text(text = stringResource(id = item.title))
-                }
+                    Text(
+                        text = stringResource(id = item.title),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                },
+                colors = NavigationBarItemDefaults.colors(indicatorColor = White)
             )
         }
     }
