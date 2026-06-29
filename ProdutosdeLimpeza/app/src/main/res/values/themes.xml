@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <style name="Theme.LimpOn" parent="android:Theme.Material.Light.NoActionBar" />
 
-    <style name="Theme.ProdutosDeLimpeza" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.LimpOn.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/white</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/cleaning_icon</item>
+
+        <item name="postSplashScreenTheme">@style/Theme.LimpOn</item>
+    </style>
 </resources>
