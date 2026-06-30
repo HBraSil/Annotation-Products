@@ -53,5 +53,6 @@ class PriceDefinitionViewModel @Inject constructor(
 }
 
 data class PriceDefinitionUiState(
-    val items: List<Product> = emptyList()
+    val items: List<Product> = emptyList(),
+    val priceSaved: Boolean = false
 )

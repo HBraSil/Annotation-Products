@@ -13,11 +13,11 @@ class ProductRepositoryImpl @Inject constructor(
         return productDao.getAll().map { it.toProductDomain() }
     }
 
-    override suspend fun updateProductPrice(productId: Long, newPrice: Int) {
+    override suspend fun updateProductPrice(productId: Long, newPrice: Int): Int {
         val product = productDao.getById(productId)
-        product?.let {
+        return product?.let {
             val updatedProduct = it.copy(price = newPrice)
             productDao.updateProductPrice(updatedProduct)
-        }
+        } ?: 0
     }
 }

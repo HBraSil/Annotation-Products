@@ -46,15 +46,22 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun showDialog() {
+        _uiState.update {
+            it.copy(showDialog = true)
+        }
+    }
+
     fun dismissDialog() {
         _uiState.update {
-            it.copy(success = false, error = null)
+            it.copy(showDialog = false, success = false, error = null)
         }
     }
 }
 
 data class HomeState(
     val cities: List<City> = emptyList(),
+    val showDialog: Boolean = false,
     val success: Boolean = false,
     val error: String? = null
 )

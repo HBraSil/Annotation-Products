@@ -39,6 +39,10 @@ class CustomerRepositoryImpl @Inject constructor(
         return customerDao.saveCartItems(cartItems.map { it.toCartEntity() })
     }
 
+    override suspend fun deleteCustomer(customerId: Long): Int {
+        return customerDao.deleteCustomer(customerId)
+    }
+
     override fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsData?> {
         return customerDao.getLastPurchase(customerId)
     }

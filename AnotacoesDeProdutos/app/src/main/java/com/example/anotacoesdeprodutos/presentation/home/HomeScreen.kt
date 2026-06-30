@@ -1,6 +1,5 @@
 package com.example.anotacoesdeprodutos.presentation.home
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -28,12 +27,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,7 +38,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.City
-import com.example.anotacoesdeprodutos.presentation.LastScreenViewModel
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSearchBar
 import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 
@@ -51,20 +45,11 @@ import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
-    lastScreenViewModel: LastScreenViewModel = hiltViewModel(),
     onSearchChange: (String) -> Unit = {},
     onUpdatePricesClick: () -> Unit = {},
     onCityClick: (City) -> Unit = {},
 ) {
-
     val homeUiState by homeViewModel.uiState.collectAsState()
-    val lastScreen by lastScreenViewModel.lastActiveProfile.collectAsState()
-
-    LaunchedEffect(lastScreen) {
-
-        Log.d("HomeScreen", "actualRoute: $lastScreen")
-    }
-
 
     HomeContent(
         state = homeUiState,
@@ -72,7 +57,8 @@ fun HomeScreen(
         onUpdatePricesClick = onUpdatePricesClick,
         onCityClick = onCityClick,
         addCity = homeViewModel::addCity,
-        onDismiss = homeViewModel::dismissDialog
+        onDismiss = homeViewModel::dismissDialog,
+        showAddCityModal = homeViewModel::showDialog
     )
 }
 
@@ -85,8 +71,8 @@ fun HomeContent(
     onCityClick: (City) -> Unit,
     addCity: (City) -> Unit,
     onDismiss: () -> Unit,
+    showAddCityModal: () -> Unit,
 ) {
-    var showAddCityModal by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -153,7 +139,7 @@ fun HomeContent(
                     verticalAlignment = Alignment.Bottom
                 ){
                     OutlinedButton(
-                        onClick = { showAddCityModal = true },
+                        onClick = showAddCityModal,
                     ) {
                         Icon(
                             imageVector = Icons.Outlined.Add,
@@ -171,9 +157,9 @@ fun HomeContent(
         Spacer(modifier = Modifier.height(22.dp))
     }
 
-    if (showAddCityModal) {
+    if (state.showDialog) {
         ModalAddCityScreen(
-            onBackClick = { showAddCityModal = false },
+            onBackClick = onDismiss,
             onSaveClick = addCity
         )
     }
@@ -329,7 +315,8 @@ private fun HomeScreenPreview() {
             onUpdatePricesClick = {},
             onCityClick = {},
             addCity = {},
-            onDismiss = {}
+            onDismiss = {},
+            showAddCityModal = {}
         )
     }
 }

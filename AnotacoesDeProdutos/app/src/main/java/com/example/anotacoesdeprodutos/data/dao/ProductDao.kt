@@ -17,7 +17,7 @@ interface ProductDao {
     suspend fun getAll(): List<ProductEntity>
 
     @Update
-    suspend fun updateProductPrice(product: ProductEntity)
+    suspend fun updateProductPrice(product: ProductEntity): Int
 
 
     @Query("SELECT * FROM product WHERE id = :id")

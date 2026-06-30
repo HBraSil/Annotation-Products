@@ -191,7 +191,7 @@ fun AddNewCustomerScreen(
         }
     }
 
-    if (uiState.customerCreatedSuccessfully) SuccessDialog(
+    if (uiState.customerCreatedWithSuccess) SuccessDialog(
         text = "Cliente adicionado com sucesso!",
         onDismiss = onDismissOverlayCreatedCustomer
     )

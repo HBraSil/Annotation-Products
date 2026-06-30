@@ -81,19 +81,44 @@ class CustomersViewModel @Inject constructor(
         _customerUiState.update { it.copy(extraInfo = extraInfo) }
     }
 
-    fun openModal() {
+    fun showModalCreateCustomer() {
         _customerUiState.update {
             it.copy(showModalCreateCustomer = true)
-
         }
     }
+
+    fun showModalDeleteCustomer(id: Long) {
+        _customerUiState.update {
+            it.copy(showModalDeleteCustomer = id)
+        }
+    }
+
 
     fun closeModalAndOverlayCreatedCustomer() {
         _customerUiState.update {
             it.copy(
                 showModalCreateCustomer = false,
-                customerCreatedSuccessfully = false
+                customerCreatedWithSuccess = false
             )
+        }
+    }
+
+    fun onDismissModalDeleteCustomer() {
+        _customerUiState.update {
+            it.copy(showModalDeleteCustomer = -1)
+        }
+    }
+
+    fun deleteCustomer() {
+        viewModelScope.launch {
+            val customerId = _customerUiState.value.showModalDeleteCustomer
+            val result = customerRepository.deleteCustomer(customerId)
+
+            if (result > 0) {
+                _customerUiState.update {
+                    it.copy(showModalDeleteCustomer = -1)
+                }
+            }
         }
     }
 
@@ -108,7 +133,7 @@ class CustomersViewModel @Inject constructor(
             if (result > 0) {
                 _customerUiState.update {
                     it.copy(
-                        customerCreatedSuccessfully = true
+                        customerCreatedWithSuccess = true
                     )
                 }
             }
@@ -119,7 +144,8 @@ class CustomersViewModel @Inject constructor(
 
 data class CustomersUiState(
     val name: String = "",
-    val extraInfo: String? = "",
+    val extraInfo: String? = null,
     val showModalCreateCustomer: Boolean = false,
-    val customerCreatedSuccessfully: Boolean = false,
+    val showModalDeleteCustomer: Long = -1,
+    val customerCreatedWithSuccess: Boolean = false,
 )

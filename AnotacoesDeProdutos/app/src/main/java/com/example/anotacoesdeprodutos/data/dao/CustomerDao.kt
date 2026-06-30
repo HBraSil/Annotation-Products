@@ -30,6 +30,9 @@ interface CustomerDao {
     @Insert
     suspend fun saveCustomer(customer: CustomerEntity): Long
 
+    @Query("DELETE FROM Customer WHERE id = :customerId")
+    suspend fun deleteCustomer(customerId: Long): Int
+
     @Insert
     suspend fun addPurchase(purchase: PurchaseEntity): Long
 

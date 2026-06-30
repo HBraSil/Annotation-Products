@@ -5,5 +5,5 @@ import com.example.anotacoesdeprodutos.domain.model.Product
 interface ProductRepository {
     suspend fun getAllProducts(): List<Product>
 
-    suspend fun updateProductPrice(productId: Long, newPrice: Int)
+    suspend fun updateProductPrice(productId: Long, newPrice: Int): Int
 }
