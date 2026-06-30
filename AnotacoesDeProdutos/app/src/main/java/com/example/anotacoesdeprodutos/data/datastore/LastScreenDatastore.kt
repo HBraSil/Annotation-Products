@@ -1,12 +1,15 @@
 package com.example.anotacoesdeprodutos.data.datastore
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.example.anotacoesdeprodutos.Screens
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -21,12 +24,19 @@ class LastScreenDatastore @Inject constructor(@param:ApplicationContext private 
     }
 
     val lastScreenProfile = context.navigationDataStore.data.map { preferences ->
-        preferences[LAST_SCREEN_PROFILE]
+        Log.d("LastScreenDatastore", "recebi qual route? R:${preferences[LAST_SCREEN_PROFILE]}")
+        preferences[LAST_SCREEN_PROFILE] ?: Screens.HOME.route
     }
 
     suspend fun setLastScreenProfile(route: String) {
         context.navigationDataStore.edit { preferences ->
+            Log.d("LastScreenDatastore", "recebo qual route? R:$route")
             preferences[LAST_SCREEN_PROFILE] = route
         }
+
+
+        Log.d("LastScreenDatastore", "rota salva? R: ${context.navigationDataStore.data.map { preferences ->
+            preferences[LAST_SCREEN_PROFILE]
+            }.first()}")
     }
 }

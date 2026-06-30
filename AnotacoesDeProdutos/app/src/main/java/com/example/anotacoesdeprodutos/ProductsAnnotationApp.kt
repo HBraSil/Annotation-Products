@@ -1,5 +1,6 @@
 package com.example.anotacoesdeprodutos
 
+import android.util.Log
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -57,15 +58,21 @@ fun ProductsAnnotationApp(startDestination: String) {
             CustomersScreen(
                 lastScreenViewModel = lastScreenViewModel,
                 onBackClick = {
-                    lastScreenViewModel.currentRoute(Screens.HOME.route)
+                    lastScreenViewModel.lastRoute(Screens.HOME.route)
+                    Log.d("CustomersScreenNav", "onBackClick: ${lastScreenViewModel.lastActiveProfile.value}")
                     navController.navigateUp()
                 },
                 goToHomeScreen = {
+                    lastScreenViewModel.lastRoute(Screens.HOME.route)
+                    Log.d("CustomersScreenNav", "onBackClick: ${lastScreenViewModel.lastActiveProfile.value}")
                     navController.navigate(Screens.HOME.route) {
                         popUpTo(Screens.HOME.route) { inclusive = false }
                         launchSingleTop = true
                     }
                 },
+                goToCustomerDetailScreen = {
+                    navController.navigate("${Screens.CUSTOMER_DETAIL.route}/$it")
+                }
             )
         }
 
@@ -77,7 +84,9 @@ fun ProductsAnnotationApp(startDestination: String) {
                 onBackClick = {
                     navController.navigateUp()
                 },
-                onHistoryClick = { navController.navigate(Screens.PURCHASE_HISTORY.route) },
+                onHistoryClick = { customerId ->
+                    navController.navigate("${Screens.PURCHASE_HISTORY.route}/$customerId")
+                },
                 goToNewPurchaseScreen = {
                     navController.navigate("${Screens.NEW_PURCHASE.route}/$it")
                 }
@@ -109,7 +118,10 @@ fun ProductsAnnotationApp(startDestination: String) {
             PriceDefinitionScreen(onBackClick = { navController.navigateUp() })
         }
 
-        composable(route = Screens.PURCHASE_HISTORY.route) {
+        composable(
+            route = "${Screens.PURCHASE_HISTORY.route}/{customerId}",
+            arguments = listOf(navArgument("customerId") { type = NavType.LongType })
+        ) {
             PurchaseHistoryScreen(onBackClick = { navController.navigateUp() })
         }
     }

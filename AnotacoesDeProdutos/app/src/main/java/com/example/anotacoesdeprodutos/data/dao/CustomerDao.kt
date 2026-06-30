@@ -8,7 +8,7 @@ import com.example.anotacoesdeprodutos.data.entity.CartItemEntity
 import com.example.anotacoesdeprodutos.data.entity.PurchaseEntity
 import com.example.anotacoesdeprodutos.data.entity.CustomerEntity
 import com.example.anotacoesdeprodutos.data.entity.PaymentStatus
-import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItems
+import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsData
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -40,10 +40,17 @@ interface CustomerDao {
     ORDER BY purchaseDate DESC
     LIMIT 1
 """)
-    fun getLastPurchase(customerId: Long): Flow<PurchaseWithItems?>
+    fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsData?>
+
+    @Transaction
+    @Query("""
+    SELECT * FROM purchase
+    WHERE customerId = :customerId
+    ORDER BY purchaseDate DESC
+""")
+    fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsData>>
 
 
     @Insert
     suspend fun saveCartItems(cartItems: List<CartItemEntity>): List<Long>
-    //suspend fun getCartItems(cartItems: List<CartItemEntity>): List<Long>
 }

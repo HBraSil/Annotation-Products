@@ -1,14 +1,15 @@
 package com.example.anotacoesdeprodutos.data.repository
 
-import android.util.Log
 import com.example.anotacoesdeprodutos.data.dao.CustomerDao
 import com.example.anotacoesdeprodutos.data.entity.toDomain
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Customer
 import com.example.anotacoesdeprodutos.domain.model.Purchase
-import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItems
+import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsData
+import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsDomain
 import com.example.anotacoesdeprodutos.domain.model.toCartEntity
 import com.example.anotacoesdeprodutos.domain.model.toCustomerEntity
+import com.example.anotacoesdeprodutos.domain.model.toDomain
 import com.example.anotacoesdeprodutos.domain.model.toEntity
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
 import kotlinx.coroutines.flow.Flow
@@ -31,19 +32,25 @@ class CustomerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun addPurchase(purchase: Purchase): Long {
-        Log.d("CustomerRepositoryImpl", "Adding purchase: $purchase")
         return customerDao.addPurchase(purchase.toEntity())
     }
 
     override suspend fun saveCartItems(cartItems: List<CartItem>): List<Long> {
-        Log.d("CustomerRepositoryImpl", "Saving cart items: $cartItems")
         return customerDao.saveCartItems(cartItems.map { it.toCartEntity() })
     }
 
-    override fun getLastPurchase(customerId: Long): Flow<PurchaseWithItems?> {
-        Log.d("CustomerRepositoryImpl", "Getting last purchase for customer ID: $customerId")
+    override fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsData?> {
         return customerDao.getLastPurchase(customerId)
     }
+
+    override fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsDomain>> {
+        return customerDao.getAllPurchases(customerId).map { purchaseListData ->
+            purchaseListData.map {
+                it.toDomain()
+            }
+        }
+    }
+
 /*
     override suspend fun getCartItems(cartItems: List<CartItem>): List<Long> {
         return customerDao.getCartItems(cartItems.map { it.toCartEntity() })

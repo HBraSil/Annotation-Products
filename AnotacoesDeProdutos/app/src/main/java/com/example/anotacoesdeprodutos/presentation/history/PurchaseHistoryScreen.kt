@@ -2,6 +2,7 @@ package com.example.anotacoesdeprodutos.presentation.history
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
@@ -14,57 +15,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsDomain
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 
-data class PurchaseOrder(
-    val id: String,
-    val date: String,
-    val productsDescription: String,
-    val totalValue: Double,
-)
 
-data class PurchaseHistoryUiState(
-    val clientName: String = "João Silva",
-    val orders: List<PurchaseOrder> = emptyList(),
-    val totalOrdersCount: Int = 12
-)
-
-// 2. Componente CONTÊINER (Stateful)
 @Composable
 fun PurchaseHistoryScreen(
+    purchaseHistoryViewModel: PurchaseHistoryViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
 ) {
-    // Dados imutáveis baseados exatamente na imagem enviada
-    val mockOrders = remember {
-        listOf(
-            PurchaseOrder(
-                id = "1",
-                date = "15 de Outubro, 2023",
-                productsDescription = "2 Sabão, 1 Desinfetante",
-                totalValue = 45.00
-            ),
-            PurchaseOrder(
-                id = "2",
-                date = "02 de Outubro, 2023",
-                productsDescription = "1 Amaciante, 3 Buchas, 1 Detergente",
-                totalValue = 32.50
-            ),
-            PurchaseOrder(
-                id = "3",
-                date = "22 de Setembro, 2023",
-                productsDescription = "5 Água Sanitária, 2 Panos Multiuso",
-                totalValue = 58.90,
-            )
-        )
-    }
 
-    val uiState = remember(mockOrders) {
-        PurchaseHistoryUiState(
-            clientName = "João Silva",
-            orders = mockOrders,
-            totalOrdersCount = 12
-        )
-    }
+    val uiState by purchaseHistoryViewModel.uiState.collectAsState()
+
 
     PurchaseHistoryContent(
         uiState = uiState,
@@ -77,7 +40,7 @@ fun PurchaseHistoryScreen(
 @Composable
 fun PurchaseHistoryContent(
     modifier: Modifier = Modifier,
-    uiState: PurchaseHistoryUiState,
+    uiState: PurchaseHistoryUiState = PurchaseHistoryUiState(),
     onBackClick: () -> Unit,
 ) {
 
@@ -126,15 +89,15 @@ fun PurchaseHistoryContent(
                 ) {
                     Text(
                         text = uiState.clientName,
-                        fontSize = 24.sp, // Fonte reduzida preventivamente
+                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
 
             // Listagem de Cards de Histórico (Totalmente Stateless)
-            items(uiState.orders, key = { it.id }) { order ->
+            items(uiState.orders, key = { it.purchase.id }) { order ->
                 OrderHistoryCard(order = order)
 
                 Spacer(modifier = Modifier.height(14.dp))
@@ -145,9 +108,8 @@ fun PurchaseHistoryContent(
     }
 }
 
-// 4. Sub-componente do Card de Histórico (Stateless)
 @Composable
-fun OrderHistoryCard(order: PurchaseOrder) {
+fun OrderHistoryCard(order: PurchaseWithItemsDomain) {
 
     Column(
         modifier = Modifier.fillMaxWidth(),
@@ -163,7 +125,7 @@ fun OrderHistoryCard(order: PurchaseOrder) {
                 color = MaterialTheme.colorScheme.secondary
             )
             Text(
-                text = order.date,
+                text = order.purchase.purchaseDate,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface
@@ -189,13 +151,24 @@ fun OrderHistoryCard(order: PurchaseOrder) {
                     fontWeight = FontWeight.Bold,
                     color = Color.Blue
                 )
-                Text(
-                    text = order.productsDescription,
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    fontWeight = FontWeight.SemiBold,
-                    lineHeight = 18.sp
-                )
+                LazyRow {
+                    items(order.items) { item ->
+                        Text(
+                            text = "${item.cartItem.quantity} ${item.product.name}",
+                            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.SemiBold,
+                            lineHeight = 18.sp
+                        )
+                        if (item != order.items.last()) {
+                            Text(
+                                text = ", ",
+                                fontSize = 18.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            )
+                        }
+                    }
+                }
             }
         }
 
@@ -210,7 +183,7 @@ fun OrderHistoryCard(order: PurchaseOrder) {
                 color = MaterialTheme.colorScheme.secondary
             )
             Text(
-                text = currencyFormatter.format(order.totalValue),
+                text = currencyFormatter.format(order.purchase.total),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary
@@ -224,6 +197,11 @@ fun OrderHistoryCard(order: PurchaseOrder) {
 @Composable
 fun PurchaseHistoryScreenPreview() {
     MaterialTheme {
-        PurchaseHistoryScreen()
+        PurchaseHistoryContent(
+            uiState = PurchaseHistoryUiState(
+                clientName = "Cliente Teste",
+            ),
+            onBackClick = {}
+        )
     }
 }

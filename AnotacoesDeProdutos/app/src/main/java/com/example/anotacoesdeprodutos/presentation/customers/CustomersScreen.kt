@@ -1,6 +1,6 @@
 package com.example.anotacoesdeprodutos.presentation.customers
 
-import android.util.Log
+import android.util.Log.d
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -41,12 +41,13 @@ fun CustomersScreen(
 
     val customers by customersViewModel.customerList.collectAsState()
     val currentCity by customersViewModel.currentCity.collectAsState()
+    val lastScreen by lastScreenViewModel.lastActiveProfile.collectAsState()
     val customerUiState by customersViewModel.customerUiState.collectAsState()
 
     LaunchedEffect(currentCity?.id) {
         if (currentCity?.id != null) {
-            Log.d("CustomersScreen", "LaunchedEffect: ${currentCity?.id}")
-            lastScreenViewModel.currentRoute("${Screens.CUSTOMERS.route}/${currentCity?.id}")
+            lastScreenViewModel.lastRoute("${Screens.CUSTOMERS.route}/${currentCity?.id}")
+            d("CustomersScreen", "CustomersScreen: $lastScreen")
         }
     }
 

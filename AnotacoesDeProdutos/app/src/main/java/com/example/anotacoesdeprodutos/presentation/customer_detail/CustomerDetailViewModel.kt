@@ -12,9 +12,7 @@ import com.example.anotacoesdeprodutos.domain.model.Product
 import com.example.anotacoesdeprodutos.domain.model.Purchase
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -30,8 +28,8 @@ import javax.inject.Inject
 @HiltViewModel
 class CustomerDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val customerRepository: CustomerRepository
-): ViewModel() {
+    private val customerRepository: CustomerRepository,
+) : ViewModel() {
     private val customerId: StateFlow<Long?> = savedStateHandle.getStateFlow("customerId", null)
 
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
@@ -72,7 +70,8 @@ class CustomerDetailViewModel @Inject constructor(
                     val items = purchaseWithItems?.items?.map {
                         it.cartItem.toCartItemDomain()
                     }?.map { cartItem ->
-                        cartItem.copy(product = product.find { it.id == cartItem.productId } ?: Product())
+                        cartItem.copy(product = product.find { it.id == cartItem.productId }
+                            ?: Product())
                     }
 
                     _uiState.update {
@@ -82,7 +81,6 @@ class CustomerDetailViewModel @Inject constructor(
                             totalBalance = purchase?.total ?: 0.0
                         )
                     }
-
                 }
         }
     }
@@ -94,5 +92,5 @@ data class CustomerDetailUiState(
     val purchaseItems: List<CartItem>? = null,
     val partialPayment: String = "",
     val totalBalance: Double = 0.0,
-    val showDialog: Boolean = false
+    val showDialog: Boolean = false,
 )

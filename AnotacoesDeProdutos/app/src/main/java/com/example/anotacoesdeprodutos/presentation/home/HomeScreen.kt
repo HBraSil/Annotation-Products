@@ -1,5 +1,6 @@
 package com.example.anotacoesdeprodutos.presentation.home
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,6 +28,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.City
+import com.example.anotacoesdeprodutos.presentation.LastScreenViewModel
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSearchBar
 import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 
@@ -48,12 +51,19 @@ import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
+    lastScreenViewModel: LastScreenViewModel = hiltViewModel(),
     onSearchChange: (String) -> Unit = {},
     onUpdatePricesClick: () -> Unit = {},
     onCityClick: (City) -> Unit = {},
 ) {
 
     val homeUiState by homeViewModel.uiState.collectAsState()
+    val lastScreen by lastScreenViewModel.lastActiveProfile.collectAsState()
+
+    LaunchedEffect(lastScreen) {
+
+        Log.d("HomeScreen", "actualRoute: $lastScreen")
+    }
 
 
     HomeContent(

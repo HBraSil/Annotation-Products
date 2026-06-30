@@ -91,7 +91,7 @@ fun PriceDefinitionContent(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     Text(
-                        text = "Atualize os preços dos itens abaixo para aparecer na seleção de produtos. Itens sem o preço definido não irão aparecer na lista de produtos.",
+                        text = "Itens sem o preço definido não irão aparecer na seleção de produtos.",
                         fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.secondary
                     )
@@ -131,7 +131,7 @@ fun PriceDefinitionContent(
                         modifier = Modifier.size(22.dp)
                     )
                     Text(
-                        text = "Prices updated here will be reflected immediately in the customer-facing marketplace. Ensure all values are checked before saving.",
+                        text = "Preços atualizados aqui irão refletir, imediatamente, no mercado de compras do cliente. Verifique todos os valores antes de salvar.",
                         color = MaterialTheme.colorScheme.onSecondary,
                         fontSize = 14.sp,
                         lineHeight = 20.sp

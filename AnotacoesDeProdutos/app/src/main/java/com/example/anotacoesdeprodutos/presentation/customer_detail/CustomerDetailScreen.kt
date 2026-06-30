@@ -37,7 +37,7 @@ import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 fun CustomerDetailScreen(
     customerDetailViewModel: CustomerDetailViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
-    onHistoryClick: () -> Unit = {},
+    onHistoryClick: (Long) -> Unit = {},
     goToNewPurchaseScreen: (Long) -> Unit = {},
 ) {
     var partialPayment by remember { mutableStateOf("") }
@@ -59,7 +59,7 @@ fun ClientDetailsContent(
     uiState: CustomerDetailUiState,
     onPartialPaymentChange: (String) -> Unit,
     onBackClick: () -> Unit,
-    onHistoryClick: () -> Unit,
+    onHistoryClick: (Long) -> Unit,
     modifier: Modifier = Modifier,
     goToNewPurchaseScreen: (Long) -> Unit,
 ) {
@@ -69,9 +69,8 @@ fun ClientDetailsContent(
     val accentGreen = Color(0xFF2E7D32)
     val cardBackground = Color(0xFFFFFFFF)
 
-    // Cores específicas para o Card de Saldo Devedor inspirado na imagem
-    val debtCardMainBg =
-        Color(0xFF5E42E2) // Mantendo o tom destacado ou alterável para Azul Escuro se preferir
+
+    val debtCardMainBg = Color(0xFF5E42E2)
     val debtCardFooterBg = Color(0xFFF1F2F6)
 
     val textPrimary = Color(0xFF191C1E)
@@ -83,14 +82,14 @@ fun ClientDetailsContent(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Client Details") },
+                title = { Text("Detalhes do Cliente") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Voltar")
                     }
                 },
                 actions = {
-                    IconButton(onClick = onHistoryClick) {
+                    IconButton(onClick = { onHistoryClick(uiState.customer.id) }) {
                         Icon(
                             imageVector = Icons.Default.History,
                             contentDescription = "Histórico",
