@@ -30,20 +30,18 @@ class CustomerDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val customerRepository: CustomerRepository,
 ) : ViewModel() {
-    private val customerId: StateFlow<Long?> = savedStateHandle.getStateFlow("customerId", null)
+    private val customerId: Long = checkNotNull(savedStateHandle["customerId"])
 
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
     val uiState: StateFlow<CustomerDetailUiState> = _uiState.asStateFlow()
 
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val customer: StateFlow<Customer?> = customerId.flatMapLatest {
-        customerRepository.getCustomer(it ?: 0)
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = null
-    )
+    val customer: StateFlow<Customer?> = customerRepository.getCustomer(customerId)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     init {
         viewModelScope.launch {

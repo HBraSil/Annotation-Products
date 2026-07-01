@@ -8,5 +8,5 @@ interface CityRepository {
     fun getCities(): Flow<List<City>>
     suspend fun addCity(city: City): Long
     fun getCitiesWithClientCount(): Flow<List<City>>
-    suspend fun getCity(cityId: Long?): City
+    suspend fun getCity(cityId: Long?): City?
 }

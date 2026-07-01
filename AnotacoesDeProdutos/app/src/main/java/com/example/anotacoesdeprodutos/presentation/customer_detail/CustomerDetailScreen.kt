@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
+import com.example.anotacoesdeprodutos.presentation.formatter.toBrazilianDate
 
 
 @Composable
@@ -162,7 +163,7 @@ fun ClientDetailsContent(
                         )
                     }
                     Text(
-                        text = "Última compra: ${uiState.purchase?.purchaseDate ?: "Nenhuma compra registrada"}",
+                        text = "Última compra: ${uiState.purchase?.purchaseDate?.toBrazilianDate() ?: "Nenhuma compra registrada"}",
                         fontSize = 13.sp,
                         color = accentGreen,
                         fontWeight = FontWeight.Medium

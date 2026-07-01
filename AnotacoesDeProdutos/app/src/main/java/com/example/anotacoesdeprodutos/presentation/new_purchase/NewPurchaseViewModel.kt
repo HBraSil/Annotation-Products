@@ -6,13 +6,11 @@ import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.room.Transaction
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Product
 import com.example.anotacoesdeprodutos.domain.model.Purchase
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
 import com.example.anotacoesdeprodutos.domain.repository.ProductRepository
-import com.example.anotacoesdeprodutos.presentation.formatter.toBrazilianDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -108,14 +106,17 @@ class NewPurchaseViewModel @Inject constructor(
         }
     }
 
+    fun onDismiss() {
+        _uiState.update { it.copy(success = false) }
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
-    @Transaction
     fun finalizePurchase() {
         viewModelScope.launch {
             val result = customerRepository.addPurchase(
                 purchase = Purchase(
                     customerId = customerId,
-                    purchaseDate = System.currentTimeMillis().toBrazilianDate(),
+                    purchaseDate = System.currentTimeMillis(),
                     total = uiState.value.totalPrice
                 )
             )
@@ -131,7 +132,11 @@ class NewPurchaseViewModel @Inject constructor(
                 }
                     Log.d("NewPurchaseViewModel", "cart item variable: $cartItem")
 
-                customerRepository.saveCartItems(cartItem)
+                val result = customerRepository.saveCartItems(cartItem)
+
+                if (result.isNotEmpty()) {
+                    _uiState.update { it.copy(success = true) }
+                }
             }
         }
     }
@@ -143,5 +148,6 @@ data class NewPurchaseUiState(
     val allProducts: List<Product> = emptyList(),
     val selectedProducts: List<CartItem> = mutableListOf(),
     val selectedProductsSubtotal: Int = 0,
-    val totalPrice: Double = pendingDebt
+    val totalPrice: Double = pendingDebt,
+    val success: Boolean = false
 )

@@ -15,7 +15,7 @@ interface CityDao {
     suspend fun getById(id: Long): CityEntity?
 
     @Query("SELECT * FROM city WHERE id = :id")
-    suspend fun getCity(id: Long?): CityEntity
+    suspend fun getCity(id: Long?): CityEntity?
 
     @Query(
         """

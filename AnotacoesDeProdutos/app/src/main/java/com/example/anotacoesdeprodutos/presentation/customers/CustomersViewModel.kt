@@ -1,8 +1,5 @@
 package com.example.anotacoesdeprodutos.presentation.customers
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,15 +9,9 @@ import com.example.anotacoesdeprodutos.domain.repository.CityRepository
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -32,45 +23,25 @@ class CustomersViewModel @Inject constructor(
     private val customerRepository: CustomerRepository,
     private val cityRepository: CityRepository,
 ) : ViewModel() {
+    val cityIdFlow: Long = checkNotNull(savedStateHandle["cityId"])
 
     private val _customerUiState = MutableStateFlow(CustomersUiState())
     val customerUiState = _customerUiState.asStateFlow()
 
-    val cityIdFlow: StateFlow<Long?> = savedStateHandle.getStateFlow("cityId", null)
-
-    private var customer by mutableStateOf(Customer())
-
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val customerList = cityIdFlow
-        .filterNotNull()
-        .flatMapLatest { id ->
-            customerRepository.getAllCustomers(id)
-        }
+    val customerList = customerRepository.getAllCustomers(cityIdFlow)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = emptyList()
         )
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    val currentCity = cityIdFlow
-        .flatMapLatest { id ->
-            if (id != null) {
-                flow<City> {
-                    val city = cityRepository.getCity(id)
-                    customer = customer.copy(cityId = id)
-                    emit(city) // Emite a cidade para o fluxo
-                }
-            } else {
-                flowOf(null) // Se não houver ID, emite null
-            }
-        }
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
 
+    init {
+        viewModelScope.launch {
+            val cities = cityRepository.getCity(cityIdFlow)
+            _customerUiState.update { it.copy(currentCity = cities) }
+        }
+    }
 
 
     fun updateName(name: String) {
@@ -124,10 +95,11 @@ class CustomersViewModel @Inject constructor(
 
     fun saveCustomer() {
         viewModelScope.launch {
-            customer = customer.copy(
-                    name = _customerUiState.value.name,
-                    extraInfo = _customerUiState.value.extraInfo
-                )
+            val customer = Customer(
+                name = _customerUiState.value.name,
+                extraInfo = _customerUiState.value.extraInfo,
+                cityId = _customerUiState.value.currentCity?.id ?: 0
+            )
             val result = customerRepository.addCustomer(customer)
 
             if (result > 0) {
@@ -145,6 +117,8 @@ class CustomersViewModel @Inject constructor(
 data class CustomersUiState(
     val name: String = "",
     val extraInfo: String? = null,
+    val customers: List<Customer> = emptyList(),
+    val currentCity: City? = null,
     val showModalCreateCustomer: Boolean = false,
     val showModalDeleteCustomer: Long = -1,
     val customerCreatedWithSuccess: Boolean = false,

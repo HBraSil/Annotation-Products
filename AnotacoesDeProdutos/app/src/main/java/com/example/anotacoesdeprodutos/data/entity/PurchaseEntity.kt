@@ -8,7 +8,7 @@ import com.example.anotacoesdeprodutos.domain.model.Purchase
 data class PurchaseEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val customerId: Long = 0,
-    val purchaseDate: String = "",
+    val purchaseDate: Long = 0,
     val total: Double = 0.0
 )
 

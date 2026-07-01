@@ -33,7 +33,7 @@ class CityRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getCity(cityId: Long?): City {
-        return cityDao.getCity(cityId).toCity()
+    override suspend fun getCity(cityId: Long?): City? {
+        return cityDao.getCity(cityId)?.toCity()
     }
 }

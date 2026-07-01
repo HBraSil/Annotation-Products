@@ -15,7 +15,7 @@ import com.example.anotacoesdeprodutos.data.util.Converters
 
 @Database(
     entities = [CityEntity::class, ProductEntity::class, CustomerEntity::class, PurchaseEntity::class, CartItemEntity::class],
-    version = 12,
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

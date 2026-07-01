@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Product
+import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -45,14 +46,14 @@ fun NewPurchaseScreen(
 ) {
     val uiState by newPurchaseViewModel.uiState.collectAsState()
 
-    Log.d("NewPurchaseScreen", "Selected Products: ${uiState.selectedProducts}")
     NewPurchaseContent(
         uiState = uiState,
         onBackClick = onBackClick,
-        onSelectProductClick = { newPurchaseViewModel.onProductSelected(it) },
-        decreaseQntt = { newPurchaseViewModel.decreaseQuantity(it) },
-        increaseQntt = { newPurchaseViewModel.increaseQuantity(it) },
-        onFinalizeClick = { newPurchaseViewModel.finalizePurchase() },
+        onSelectProductClick = newPurchaseViewModel::onProductSelected,
+        decreaseQntt = newPurchaseViewModel::decreaseQuantity,
+        increaseQntt = newPurchaseViewModel::increaseQuantity,
+        onFinalizeClick = newPurchaseViewModel::finalizePurchase,
+        onDismiss = newPurchaseViewModel::onDismiss
     )
 }
 
@@ -67,9 +68,8 @@ fun NewPurchaseContent(
     decreaseQntt: (Product) -> Unit = { _ -> },
     increaseQntt: (Product) -> Unit = { _ -> },
     onFinalizeClick: () -> Unit = {},
+    onDismiss: () -> Unit = {},
 ) {
-    // --- Nova Paleta de Cores (Azuis, Verdes e Variantes) ---
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -364,6 +364,16 @@ fun NewPurchaseContent(
                 // Seção 4: Card de Fechamento Inferior (Fixo sobreposto)
             }
         }
+    }
+
+    if (uiState.success) {
+        SuccessDialog(
+            text = "Compra feita com sucesso",
+            onDismiss = {
+                onBackClick()
+                onDismiss()
+            }
+        )
     }
 }
 

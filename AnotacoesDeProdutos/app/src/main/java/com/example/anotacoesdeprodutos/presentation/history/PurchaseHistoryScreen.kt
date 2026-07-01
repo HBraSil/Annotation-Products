@@ -17,7 +17,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsDomain
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
+import com.example.anotacoesdeprodutos.presentation.formatter.toBrazilianDate
 
 
 @Composable
@@ -70,6 +72,7 @@ fun PurchaseHistoryContent(
         containerColor = MaterialTheme.colorScheme.onPrimary,
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
+
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
@@ -78,7 +81,6 @@ fun PurchaseHistoryContent(
             verticalArrangement = Arrangement.spacedBy(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Cabeçalho da Tela
             item {
                 Column(
                     modifier = Modifier
@@ -96,13 +98,22 @@ fun PurchaseHistoryContent(
                 }
             }
 
-            // Listagem de Cards de Histórico (Totalmente Stateless)
-            items(uiState.orders, key = { it.purchase.id }) { order ->
-                OrderHistoryCard(order = order)
+            item {
+                if (uiState.orders.isEmpty()) {
+                    AnnotationProductsNothingToShow(
+                        modifier = Modifier.padding(top = 30.dp),
+                        text = "Nenhuma compra feita"
+                    )
+                } else {
+                    uiState.orders.forEach { order ->
 
-                Spacer(modifier = Modifier.height(14.dp))
-                HorizontalDivider(color = MaterialTheme.colorScheme.secondary, thickness = 3.dp)
-                Spacer(modifier = Modifier.height(22.dp))
+                        OrderHistoryCard(order = order)
+
+                        Spacer(modifier = Modifier.height(14.dp))
+                        HorizontalDivider(color = MaterialTheme.colorScheme.secondary, thickness = 3.dp)
+                        Spacer(modifier = Modifier.height(22.dp))
+                    }
+                }
             }
         }
     }
@@ -125,7 +136,7 @@ fun OrderHistoryCard(order: PurchaseWithItemsDomain) {
                 color = MaterialTheme.colorScheme.secondary
             )
             Text(
-                text = order.purchase.purchaseDate,
+                text = order.purchase.purchaseDate.toBrazilianDate(),
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface

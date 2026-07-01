@@ -5,7 +5,7 @@ import com.example.anotacoesdeprodutos.data.entity.PurchaseEntity
 data class Purchase(
     val id: Long = 0,
     val customerId: Long = 0,
-    val purchaseDate: String = "",
+    val purchaseDate: Long = 0,
     val total: Double = 0.0,
     val items: List<CartItem> = emptyList()
 )

@@ -14,7 +14,7 @@ interface ProductDao {
     suspend fun insertAll(product: List<ProductEntity>): List<Long>
 
     @Query("SELECT * FROM product")
-    suspend fun getAll(): List<ProductEntity>
+    suspend fun getAllProducts(): List<ProductEntity>
 
     @Update
     suspend fun updateProductPrice(product: ProductEntity): Int

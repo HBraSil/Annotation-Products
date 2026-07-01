@@ -40,7 +40,7 @@ interface CustomerDao {
     @Query("""
     SELECT * FROM purchase
     WHERE customerId = :customerId
-    ORDER BY purchaseDate DESC
+    ORDER BY id DESC
     LIMIT 1
 """)
     fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsData?>
