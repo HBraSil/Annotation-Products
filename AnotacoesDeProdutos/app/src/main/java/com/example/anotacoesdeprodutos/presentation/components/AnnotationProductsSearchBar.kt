@@ -2,6 +2,7 @@ package com.example.anotacoesdeprodutos.presentation.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
@@ -11,6 +12,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -36,6 +38,9 @@ fun AnnotationProductsSearchBar(
                 tint = MaterialTheme.colorScheme.onBackground
             )
         },
+        keyboardOptions = KeyboardOptions(
+            capitalization = KeyboardCapitalization.Words
+        ),
         singleLine = true,
         shape = RoundedCornerShape(28.dp),
         colors = OutlinedTextFieldDefaults.colors(

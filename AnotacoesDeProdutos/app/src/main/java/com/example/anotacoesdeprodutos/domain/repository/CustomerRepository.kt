@@ -18,5 +18,6 @@ interface CustomerRepository {
     suspend fun deleteCustomer(customerId: Long): Int
 
     fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsDomain>>
-    //suspend fun getCartItems(cartItems: List<CartItem>): List<Long>
+
+    fun searchCustomer(query: String, cityId: Long): Flow<List<Customer>>
 }

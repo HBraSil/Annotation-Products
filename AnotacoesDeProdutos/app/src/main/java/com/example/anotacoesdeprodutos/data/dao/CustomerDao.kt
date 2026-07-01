@@ -8,6 +8,7 @@ import com.example.anotacoesdeprodutos.data.entity.CartItemEntity
 import com.example.anotacoesdeprodutos.data.entity.PurchaseEntity
 import com.example.anotacoesdeprodutos.data.entity.CustomerEntity
 import com.example.anotacoesdeprodutos.data.entity.PaymentStatus
+import com.example.anotacoesdeprodutos.data.entity.ProductEntity
 import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsData
 import kotlinx.coroutines.flow.Flow
 
@@ -38,22 +39,31 @@ interface CustomerDao {
 
     @Transaction
     @Query("""
-    SELECT * FROM purchase
-    WHERE customerId = :customerId
-    ORDER BY id DESC
-    LIMIT 1
-""")
+        SELECT * FROM purchase
+        WHERE customerId = :customerId
+        ORDER BY id DESC
+        LIMIT 1
+    """)
     fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsData?>
 
     @Transaction
     @Query("""
-    SELECT * FROM purchase
-    WHERE customerId = :customerId
-    ORDER BY purchaseDate DESC
-""")
+        SELECT * FROM purchase
+        WHERE customerId = :customerId
+        ORDER BY purchaseDate DESC
+    """)
     fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsData>>
 
 
     @Insert
     suspend fun saveCartItems(cartItems: List<CartItemEntity>): List<Long>
+
+    @Query("""
+        SELECT *
+        FROM customer
+        WHERE cityId = :cityId
+        AND name LIKE '%' || :query || '%'
+        ORDER BY name
+    """)
+    fun searchCustomer(query: String, cityId: Long): Flow<List<CustomerEntity>>
 }

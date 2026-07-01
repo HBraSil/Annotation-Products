@@ -54,8 +54,9 @@ class CustomerRepositoryImpl @Inject constructor(
         }
     }
 
-/*
-    override suspend fun getCartItems(cartItems: List<CartItem>): List<Long> {
-        return customerDao.getCartItems(cartItems.map { it.toCartEntity() })
-    }*/
+    override fun searchCustomer(query: String, cityId: Long): Flow<List<Customer>> {
+        return customerDao.searchCustomer(query, cityId).map { customerList ->
+            customerList.map { it.toDomain() }
+        }
+    }
 }

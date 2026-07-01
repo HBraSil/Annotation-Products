@@ -53,9 +53,6 @@ fun CustomersScreen(
     goToCustomerDetailScreen: (Long) -> Unit = {},
 ) {
 
-    var searchQuery by remember { mutableStateOf("") }
-
-    val customers by customersViewModel.customerList.collectAsState()
     val lastScreen by lastScreenViewModel.lastActiveProfile.collectAsState()
     val customerUiState by customersViewModel.customerUiState.collectAsState()
 
@@ -70,13 +67,10 @@ fun CustomersScreen(
         goToHomeScreen()
     }
 
-
-
     ClientManagementContent(
-        customersList = customers,
         currentCity = customerUiState.currentCity ?: City(),
         customerUiState = customerUiState,
-        onSearchQueryChange = { searchQuery = it },
+        onSearchQueryChange = customersViewModel::updateSearchQuery,
         onBackClick = onBackClick,
         onNameChange = customersViewModel::updateName,
         onExtraInfoChange = customersViewModel::updateExtraInfo,
@@ -96,7 +90,6 @@ fun CustomersScreen(
 @Composable
 fun ClientManagementContent(
     modifier: Modifier = Modifier,
-    customersList: List<Customer> = emptyList(),
     currentCity: City = City(),
     customerUiState: CustomersUiState = CustomersUiState(),
     onSearchQueryChange: (String) -> Unit = {},
@@ -136,7 +129,7 @@ fun ClientManagementContent(
                 },
                 actions = {
                     Text(
-                        text = "Total: ${currentCity.customerCount} Clients",
+                        text = "Total: ${customerUiState.customers.size} Clients",
                         fontSize = 16.sp,
                         color = MaterialTheme.colorScheme.onBackground.copy(0.7f),
                         fontWeight = FontWeight.W700
@@ -158,9 +151,7 @@ fun ClientManagementContent(
         modifier = modifier.fillMaxSize(),
         containerColor = Color.White
     ) { paddingValues ->
-        if (customersList.isEmpty()) {
-            AnnotationProductsNothingToShow(text = "Nenhum cliente encontrado",)
-        } else {
+
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -173,83 +164,92 @@ fun ClientManagementContent(
                 // Campo de Busca
                 item {
                     AnnotationProductsSearchBar(
-                        text = "",
-                        placeholder = "Find clients by name...",
+                        text = customerUiState.searchQuery,
+                        placeholder = "Buscar por cliente",
                         onSearchQueryChange = onSearchQueryChange
                     )
                 }
 
                 // Lista de Clientes (Cards)
-                items(customersList, key = { it.id }) { customer ->
-                    Card(
-                        onClick = { goToCustomerDetailScreen(customer.id) },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                        ) {
-                            Column(
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                item {
+                    if (customerUiState.customers.isEmpty()) {
+                        AnnotationProductsNothingToShow(text = "Nenhum cliente encontrado",)
+                    } else {
+                        customerUiState.customers.forEach { customer ->
+                            Card(
+                                onClick = { goToCustomerDetailScreen(customer.id) },
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
+                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
                             ) {
-                                // Nome do Cliente
-                                Text(
-                                    text = customer.name,
-                                    fontSize = 18.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black,
-
-                                    )
-
-                                // Informação Extra (Se houver)
                                 Row(
-                                    verticalAlignment = Alignment.CenterVertically
+                                    modifier = Modifier.padding(16.dp),
                                 ) {
-                                    Text(
-                                        text = "info: ",
-                                        fontSize = 14.sp,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(0.5f)
-                                    )
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        // Nome do Cliente
+                                        Text(
+                                            text = customer.name,
+                                            fontSize = 18.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.Black,
 
-                                    Text(
-                                        text = customer.extraInfo ?: "nenhuma informação extra",
-                                        fontSize = 14.sp,
-                                        color = Color.Black,
-                                        fontWeight = FontWeight.W500
-                                    )
+                                            )
+
+                                        // Informação Extra (Se houver)
+                                        Row(
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = "info: ",
+                                                fontSize = 14.sp,
+                                                color = MaterialTheme.colorScheme.onBackground.copy(
+                                                    0.5f
+                                                )
+                                            )
+
+                                            Text(
+                                                text = customer.extraInfo
+                                                    ?: "nenhuma informação extra",
+                                                fontSize = 14.sp,
+                                                color = Color.Black,
+                                                fontWeight = FontWeight.W500
+                                            )
+                                        }
+
+                                        // Última Compra
+                                        customer.lastPurchaseDate?.let {
+                                            Text(
+                                                text = "Última compra: $it",
+                                                fontSize = 15.sp,
+                                                color = MaterialTheme.colorScheme.onBackground.copy(
+                                                    0.5f
+                                                )
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.weight(1f))
+
+                                    IconButton(
+                                        onClick = { showModalDeleteCustomer(customer.id) },
+                                        modifier = Modifier.size(44.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Delete,
+                                            contentDescription = "Excluir",
+                                            tint = Color.LightGray
+                                        )
+                                    }
                                 }
-
-                                // Última Compra
-                                customer.lastPurchaseDate?.let {
-                                    Text(
-                                        text = "Última compra: $it",
-                                        fontSize = 15.sp,
-                                        color = MaterialTheme.colorScheme.onBackground.copy(0.5f)
-                                    )
-                                }
-                            }
-
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            IconButton(
-                                onClick = { showModalDeleteCustomer(customer.id) },
-                                modifier = Modifier.size(44.dp)
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Delete,
-                                    contentDescription = "Excluir",
-                                    tint = Color.LightGray
-                                )
                             }
                         }
                     }
                 }
 
-                // Espaçador inferior para a rolagem não ficar colada ao FAB
                 item { Spacer(modifier = Modifier.height(80.dp)) }
-            }
 
         }
 
