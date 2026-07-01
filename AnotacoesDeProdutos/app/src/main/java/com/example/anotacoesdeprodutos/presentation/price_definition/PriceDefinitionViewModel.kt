@@ -42,11 +42,23 @@ class PriceDefinitionViewModel @Inject constructor(
         }
     }
 
+    fun dismissPriceSaved() {
+        _uiState.update { it.copy(priceSaved = false) }
+    }
+
     fun savePrices() {
         viewModelScope.launch {
             val updatedProducts = _uiState.value.items
+
+            var result = 0
             updatedProducts.forEach { product ->
-                productRepository.updateProductPrice(product.id, product.price)
+                result = productRepository.updateProductPrice(product.id, product.price)
+            }
+
+            if (result > 0) {
+                _uiState.update { uiState ->
+                    uiState.copy(priceSaved = true)
+                }
             }
         }
     }

@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.Product
+import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 
 
 @Composable
@@ -38,9 +39,8 @@ fun PriceDefinitionScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onSaveClick = priceDefinitionViewModel::savePrices,
-        onPriceChange = { productId, newPrice ->
-            priceDefinitionViewModel.updateProductPrice(productId, newPrice)
-        },
+        onPriceChange = priceDefinitionViewModel::updateProductPrice,
+        onDismiss = priceDefinitionViewModel::dismissPriceSaved
     )
 }
 
@@ -52,16 +52,27 @@ fun PriceDefinitionContent(
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
     onPriceChange: (Long, String) -> Unit,
-    modifier: Modifier = Modifier
-    ) {
+    modifier: Modifier = Modifier,
+    onDismiss: () -> Unit
+) {
 
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Definição de Preços", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 20.sp) },
+                title = {
+                    Text(
+                        text = "Definição de Preços",
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp)
+                },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
-                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Voltar", tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(
+                            imageVector = Icons.Default.ArrowBackIosNew,
+                            contentDescription = "Voltar",
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                     }
                 },
                 actions = {
@@ -140,6 +151,13 @@ fun PriceDefinitionContent(
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+
+    if (uiState.priceSaved) {
+        SuccessDialog(
+            text = "Preços salvos com sucesso!",
+            onDismiss = onDismiss,
+        )
     }
 }
 
