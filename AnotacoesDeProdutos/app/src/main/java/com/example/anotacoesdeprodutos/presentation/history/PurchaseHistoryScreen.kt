@@ -102,7 +102,7 @@ fun PurchaseHistoryContent(
                 if (uiState.orders.isEmpty()) {
                     AnnotationProductsNothingToShow(
                         modifier = Modifier.padding(top = 30.dp),
-                        text = "Nenhuma compra feita"
+                        text = "Nenhuma compra feita",
                     )
                 } else {
                     uiState.orders.forEach { order ->

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 import com.example.anotacoesdeprodutos.presentation.formatter.toBrazilianDate
 
@@ -57,27 +58,12 @@ fun CustomerDetailScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientDetailsContent(
-    uiState: CustomerDetailUiState,
-    onPartialPaymentChange: (String) -> Unit,
-    onBackClick: () -> Unit,
-    onHistoryClick: (Long) -> Unit,
-    modifier: Modifier = Modifier,
-    goToNewPurchaseScreen: (Long) -> Unit,
+    uiState: CustomerDetailUiState = CustomerDetailUiState(),
+    onPartialPaymentChange: (String) -> Unit = {},
+    onBackClick: () -> Unit = {},
+    onHistoryClick: (Long) -> Unit = {},
+    goToNewPurchaseScreen: (Long) -> Unit = {},
 ) {
-    // Paleta refinada focada em Azuis e Verdes operacionais
-    val backgroundColor = Color(0xFFFBFDFC)
-    val primaryBlue = Color(0xFF0056FF)
-    val accentGreen = Color(0xFF2E7D32)
-    val cardBackground = Color(0xFFFFFFFF)
-
-
-    val debtCardMainBg = Color(0xFF5E42E2)
-    val debtCardFooterBg = Color(0xFFF1F2F6)
-
-    val textPrimary = Color(0xFF191C1E)
-    val textSecondary = Color(0xFF6A6C70)
-
-    // Controle local de estado para a animação de expansão da gaveta
     var isPartialPaymentExpanded by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -97,13 +83,15 @@ fun ClientDetailsContent(
                         )
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = backgroundColor)
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.onPrimary
+                )
             )
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { goToNewPurchaseScreen(uiState.customer.id) },
-                containerColor = primaryBlue,
+                containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
                 shape = CircleShape
             ) {
@@ -122,8 +110,8 @@ fun ClientDetailsContent(
                 }
             }
         },
-        containerColor = backgroundColor,
-        modifier = modifier.fillMaxSize()
+        containerColor = MaterialTheme.colorScheme.onPrimary,
+        modifier = Modifier.fillMaxSize()
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -132,7 +120,6 @@ fun ClientDetailsContent(
                 .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            // Seção 1: Informações do Cliente
             item {
                 Column(
                     modifier = Modifier.padding(top = 8.dp),
@@ -146,12 +133,12 @@ fun ClientDetailsContent(
                             text = uiState.customer.name,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Bold,
-                            color = primaryBlue
+                            color = MaterialTheme.colorScheme.primary
                         )
                         Icon(
                             Icons.Default.Edit,
                             contentDescription = "Editar cliente",
-                            tint = primaryBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -159,15 +146,17 @@ fun ClientDetailsContent(
                         Text(
                             text = it,
                             fontSize = 14.sp,
-                            color = textSecondary
+                            color = MaterialTheme.colorScheme.secondary
                         )
                     }
-                    Text(
-                        text = "Última compra: ${uiState.purchase?.purchaseDate?.toBrazilianDate() ?: "Nenhuma compra registrada"}",
-                        fontSize = 13.sp,
-                        color = accentGreen,
-                        fontWeight = FontWeight.Medium
-                    )
+                    if (uiState.purchase.purchaseDate > 0L) {
+                        Text(
+                            text = "Última compra: ${uiState.purchase.purchaseDate.toBrazilianDate()}",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.surface,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
 
@@ -177,8 +166,16 @@ fun ClientDetailsContent(
                     "Compras do Último Mês",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = textPrimary
+                    color = MaterialTheme.colorScheme.onSurface
                 )
+
+                if (uiState.purchaseItems == null) {
+                    AnnotationProductsNothingToShow(
+                        modifier = Modifier.padding(vertical = 40.dp),
+                        text = "Nenhuma compra feita",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
             }
 
             // Seção 3: Itens Comprados no Último Mês (Histórico Meio da Tela)
@@ -193,7 +190,7 @@ fun ClientDetailsContent(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             // Pequeno marcador redondo para simular o bullet point elegante do app
-                            Box(modifier = Modifier.size(6.dp).background(primaryBlue, CircleShape))
+                            Box(modifier = Modifier.size(6.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
                             Column {
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -203,17 +200,17 @@ fun ClientDetailsContent(
                                         item.product.name,
                                         fontSize = 15.sp,
                                         fontWeight = FontWeight.SemiBold,
-                                        color = textPrimary
+                                        color = MaterialTheme.colorScheme.onSurface
                                     )
                                     HorizontalDivider(color = Color(0xFFB8B7B7), thickness = 1.dp, modifier = Modifier.width(10.dp))
                                     Text("unit: R$ ${item.product.price}", fontSize = 8.sp, color = Color.Gray)
                                 }
-                                Text("Quantidade: ${item.quantity}x", fontSize = 12.sp, color = textSecondary)
+                                Text("Quantidade: ${item.quantity}x", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
                             }
                         }
                         Column(horizontalAlignment = Alignment.End) {
-                            Text("TOTAL", fontSize = 10.sp, color = textSecondary, fontWeight = FontWeight.Bold)
-                            Text(text = currencyFormatter.format(item.subtotal()), color = textPrimary, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text("TOTAL", fontSize = 10.sp, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
+                            Text(text = currencyFormatter.format(item.subtotal()), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                     }
                     HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
@@ -229,11 +226,10 @@ fun ClientDetailsContent(
                     colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Gerenciado internamente pelas seções
                 ) {
                     Column(modifier = Modifier.fillMaxWidth()) {
-                        // Parte Superior Roxa/Azul Escura Fixa
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(debtCardMainBg)
+                                .background(MaterialTheme.colorScheme.primary)
                                 .padding(vertical = 24.dp, horizontal = 20.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -249,7 +245,7 @@ fun ClientDetailsContent(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = currencyFormatter.format(uiState.totalBalance),
+                                    text = currencyFormatter.format(uiState.purchase.total),
                                     fontSize = 32.sp,
                                     color = Color.White,
                                     fontWeight = FontWeight.Black
@@ -260,7 +256,13 @@ fun ClientDetailsContent(
                             Button(
                                 onClick = {},
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = Color.White),
+                                enabled = uiState.purchase.total > 0,
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.onPrimary,
+                                    contentColor = MaterialTheme.colorScheme.primary,
+                                    disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
+                                ),
                                 shape = RoundedCornerShape(14.dp)
                             ) {
                                 Row(
@@ -268,13 +270,11 @@ fun ClientDetailsContent(
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
                                     Icon(
-                                        Icons.Default.CheckCircle,
+                                        imageVector = Icons.Default.CheckCircle,
                                         contentDescription = null,
-                                        tint = debtCardMainBg
                                     )
                                     Text(
-                                        "Quitar Total",
-                                        color = debtCardMainBg,
+                                        text = "Quitar Total",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 16.sp
                                     )
@@ -286,7 +286,7 @@ fun ClientDetailsContent(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .background(debtCardFooterBg)
+                                .background(MaterialTheme.colorScheme.secondary.copy(0.4f))
                         ) {
                             // Cabeçalho clicável que dispara a expansão
                             Row(
@@ -302,13 +302,13 @@ fun ClientDetailsContent(
                                 Text(
                                     "PAGAMENTO PARCIAL",
                                     fontSize = 13.sp,
-                                    color = textPrimary,
+                                    color = MaterialTheme.colorScheme.onSurface,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Icon(
                                     imageVector = if (isPartialPaymentExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
                                     contentDescription = if (isPartialPaymentExpanded) "Recolher" else "Expandir",
-                                    tint = textSecondary
+                                    tint = MaterialTheme.colorScheme.secondary
                                 )
                             }
 
@@ -328,20 +328,20 @@ fun ClientDetailsContent(
                                     OutlinedTextField(
                                         value = "uiState.customer.partialPayment",
                                         onValueChange = onPartialPaymentChange,
-                                        placeholder = { Text("R$ 0,00", color = textSecondary) },
+                                        placeholder = { Text("R$ 0,00", color = MaterialTheme.colorScheme.secondary) },
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(10.dp),
                                         singleLine = true,
                                         colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = primaryBlue,
-                                            unfocusedBorderColor = primaryBlue,
-                                            focusedContainerColor = cardBackground,
-                                            unfocusedContainerColor = cardBackground
+                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                            unfocusedBorderColor = MaterialTheme.colorScheme.primary,
+                                            focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary
                                         )
                                     )
                                     Button(
                                         onClick = { /* Ação de confirmação */ },
-                                        colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                         shape = RoundedCornerShape(10.dp),
                                         modifier = Modifier.height(54.dp)
                                     ) {
@@ -362,6 +362,6 @@ fun ClientDetailsContent(
 @Composable
 fun CustomerDetailScreenPreview() {
     MaterialTheme {
-        CustomerDetailScreen()
+        ClientDetailsContent()
     }
 }

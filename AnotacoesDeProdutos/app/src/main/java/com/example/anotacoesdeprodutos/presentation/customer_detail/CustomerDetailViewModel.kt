@@ -3,12 +3,8 @@ package com.example.anotacoesdeprodutos.presentation.customer_detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.anotacoesdeprodutos.data.entity.toCartItemDomain
-import com.example.anotacoesdeprodutos.data.entity.toDomain
-import com.example.anotacoesdeprodutos.data.entity.toProductDomain
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Customer
-import com.example.anotacoesdeprodutos.domain.model.Product
 import com.example.anotacoesdeprodutos.domain.model.Purchase
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -33,8 +29,7 @@ class CustomerDetailViewModel @Inject constructor(
     private val customerId: Long = checkNotNull(savedStateHandle["customerId"])
 
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
-    val uiState: StateFlow<CustomerDetailUiState> = _uiState.asStateFlow()
-
+    val uiState = _uiState.asStateFlow()
 
     val customer: StateFlow<Customer?> = customerRepository.getCustomer(customerId)
         .stateIn(
@@ -43,6 +38,7 @@ class CustomerDetailViewModel @Inject constructor(
             initialValue = null
         )
 
+
     init {
         viewModelScope.launch {
             customer.collect { customer ->
@@ -50,45 +46,31 @@ class CustomerDetailViewModel @Inject constructor(
             }
         }
 
-
         viewModelScope.launch {
-            customer
-                .filterNotNull()
+            customer.filterNotNull()
                 .flatMapLatest { customer ->
-
                     customerRepository.getLastPurchase(customer.id)
                 }
                 .collect { purchaseWithItems ->
-                    val purchase = purchaseWithItems?.purchase?.toDomain()
-
-                    val product = purchaseWithItems?.items?.map {
-                        it.product.toProductDomain()
-                    } ?: emptyList()
-
-                    val items = purchaseWithItems?.items?.map {
-                        it.cartItem.toCartItemDomain()
-                    }?.map { cartItem ->
-                        cartItem.copy(product = product.find { it.id == cartItem.productId }
-                            ?: Product())
-                    }
-
                     _uiState.update {
                         it.copy(
-                            purchase = purchase,
-                            purchaseItems = items,
-                            totalBalance = purchase?.total ?: 0.0
+                            purchase = purchaseWithItems?.purchase ?: Purchase(),
+                            purchaseItems = purchaseWithItems?.items?.map { item ->
+                                item.cartItem.copy(product = item.product)
+                            } ?: emptyList()
                         )
                     }
                 }
+
         }
     }
 }
 
+
 data class CustomerDetailUiState(
     val customer: Customer = Customer(),
-    val purchase: Purchase? = null,
+    val purchase: Purchase = Purchase(),
     val purchaseItems: List<CartItem>? = null,
     val partialPayment: String = "",
-    val totalBalance: Double = 0.0,
     val showDialog: Boolean = false,
 )

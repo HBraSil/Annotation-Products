@@ -3,7 +3,6 @@ package com.example.anotacoesdeprodutos.domain.repository
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Customer
 import com.example.anotacoesdeprodutos.domain.model.Purchase
-import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsData
 import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsDomain
 import kotlinx.coroutines.flow.Flow
 
@@ -13,7 +12,7 @@ interface CustomerRepository {
     suspend fun addCustomer(customer: Customer): Long
 
     suspend fun addPurchase(purchase: Purchase): Long
-    fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsData?>
+    fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsDomain?>
 
     suspend fun saveCartItems(cartItems: List<CartItem>): List<Long>
     suspend fun deleteCustomer(customerId: Long): Int

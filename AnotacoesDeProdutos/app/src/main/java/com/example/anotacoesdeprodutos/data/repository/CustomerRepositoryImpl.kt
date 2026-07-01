@@ -5,7 +5,6 @@ import com.example.anotacoesdeprodutos.data.entity.toDomain
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Customer
 import com.example.anotacoesdeprodutos.domain.model.Purchase
-import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsData
 import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsDomain
 import com.example.anotacoesdeprodutos.domain.model.toCartEntity
 import com.example.anotacoesdeprodutos.domain.model.toCustomerEntity
@@ -43,8 +42,8 @@ class CustomerRepositoryImpl @Inject constructor(
         return customerDao.deleteCustomer(customerId)
     }
 
-    override fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsData?> {
-        return customerDao.getLastPurchase(customerId)
+    override fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsDomain?> {
+        return customerDao.getLastPurchase(customerId).map { it?.toDomain() }
     }
 
     override fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsDomain>> {

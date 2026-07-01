@@ -24,7 +24,6 @@ import com.example.anotacoesdeprodutos.Screens
 import com.example.anotacoesdeprodutos.domain.model.City
 import com.example.anotacoesdeprodutos.domain.model.Customer
 import com.example.anotacoesdeprodutos.presentation.LastScreenViewModel
-import com.example.anotacoesdeprodutos.presentation.add_customer.AddNewCustomerScreen
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSearchBar
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -160,7 +159,7 @@ fun ClientManagementContent(
         containerColor = Color.White
     ) { paddingValues ->
         if (customersList.isEmpty()) {
-            AnnotationProductsNothingToShow(text = "Nenhum cliente encontrado")
+            AnnotationProductsNothingToShow(text = "Nenhum cliente encontrado",)
         } else {
             LazyColumn(
                 modifier = Modifier

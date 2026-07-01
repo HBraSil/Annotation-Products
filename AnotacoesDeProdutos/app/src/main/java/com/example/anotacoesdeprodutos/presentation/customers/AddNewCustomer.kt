@@ -1,4 +1,4 @@
-package com.example.anotacoesdeprodutos.presentation.add_customer
+package com.example.anotacoesdeprodutos.presentation.customers
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
-import com.example.anotacoesdeprodutos.presentation.customers.CustomersUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +56,7 @@ fun AddNewCustomerScreen(
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Voltar",
-                                tint = MaterialTheme.colorScheme.secondary
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     },

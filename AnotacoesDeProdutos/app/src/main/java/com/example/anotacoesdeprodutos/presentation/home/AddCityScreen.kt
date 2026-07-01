@@ -25,9 +25,6 @@ import com.example.anotacoesdeprodutos.domain.model.City
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
-    val primaryColor = Color(0xFF0033CC)
-    val backgroundColor = Color(0xFFF8F9FC)
-    val textGray = Color(0xFF666666)
 
     var cityName by remember { mutableStateOf("") }
 
@@ -43,28 +40,32 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
                     title = {
                         Text(
                             text = "Add City",
-                            color = primaryColor,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 18.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(end = 48.dp) // Compensa o botão de voltar para centralizar
+                            modifier = Modifier.padding(end = 48.dp)
                         )
                     },
                     navigationIcon = {
                         IconButton(
                             onClick = onBackClick,
-                            colors = IconButtonDefaults.iconButtonColors(containerColor = textGray)
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = MaterialTheme.colorScheme.secondary
+                            )
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Voltar",
-                                tint = backgroundColor
+                                tint = MaterialTheme.colorScheme.onPrimary
                             )
                         }
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(containerColor = backgroundColor)
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 )
             },
-            containerColor = backgroundColor,
+            containerColor = MaterialTheme.colorScheme.onPrimary,
         ) { paddingValues ->
             Column(
                 modifier = Modifier
@@ -86,7 +87,7 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
                     Icon(
                         imageVector = Icons.Default.Place,
                         contentDescription = "Cidade",
-                        tint = primaryColor,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(48.dp)
                     )
                 }
@@ -96,7 +97,7 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
                 // 2. Textos Centrais
                 Text(
                     text = "LOCATION ENTRY",
-                    color = textGray,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.5.sp
@@ -121,7 +122,7 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
                         .fillMaxWidth()
                         .background(Color.White, shape = MaterialTheme.shapes.medium),
                     colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = primaryColor,
+                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
                         unfocusedIndicatorColor = Color.Gray,
                         unfocusedContainerColor = Color.Transparent,
                         focusedContainerColor = Color.Transparent,
@@ -135,7 +136,7 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
                     onClick = {
                         onSaveClick(City(id = 0, name = cityName, lastSale = null))
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = primaryColor),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
