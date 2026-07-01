@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsTextField
 import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -83,70 +84,40 @@ fun AddNewCustomerScreen(
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "FULL NAME",
+                            text = "NOME DO CLIENTE",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary,
                             letterSpacing = 0.5.sp
                         )
-                        TextField(
-                            value = uiState.name,
-                            onValueChange = onNameChange,
-                            placeholder = {
-                                Text(
-                                    "Enter the legal or preferred name",
-                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                                disabledContainerColor = MaterialTheme.colorScheme.onPrimary,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
-                            )
+                        AnnotationProductsTextField(
+                            text = uiState.name,
+                            onNameChange = onNameChange,
+                            placeholder = "Digite o nome do cliente"
                         )
                     }
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(40.dp))
 
                     // Campo 2: ADDRESS COMPLEMENT (Totalmente Stateless)
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(
-                            text = "ADDRESS COMPLEMENT",
+                            text = "INFORMAÇÃO EXTRA",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.secondary,
                             letterSpacing = 0.5.sp
                         )
-                        TextField(
-                            value = uiState.extraInfo ?: "",
-                            onValueChange = onExtraInfoChange,
-                            placeholder = {
-                                Text(
-                                    "Apto, Bloco, Suite, Floor...",
-                                    color = MaterialTheme.colorScheme.secondary.copy(alpha = 0.7f)
-                                )
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(16.dp),
-                            singleLine = true,
-                            colors = TextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                                disabledContainerColor = MaterialTheme.colorScheme.onPrimary,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
-                            )
+                        AnnotationProductsTextField(
+                            text = uiState.extraInfo ?: "",
+                            onNameChange = onExtraInfoChange,
+                            placeholder = "Rua, Bairro, Perto de..."
                         )
                     }
                 }

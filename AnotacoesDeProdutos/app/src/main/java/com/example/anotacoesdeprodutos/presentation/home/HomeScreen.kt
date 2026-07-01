@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
@@ -38,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.City
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSearchBar
 import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 
@@ -45,15 +45,14 @@ import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
-    onSearchChange: (String) -> Unit = {},
     onUpdatePricesClick: () -> Unit = {},
     onCityClick: (City) -> Unit = {},
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
 
     HomeContent(
-        state = homeUiState,
-        onSearchChange = onSearchChange,
+        homeUiState = homeUiState,
+        onSearchChange = homeViewModel::updateSearchQuery,
         onUpdatePricesClick = onUpdatePricesClick,
         onCityClick = onCityClick,
         addCity = homeViewModel::addCity,
@@ -65,7 +64,7 @@ fun HomeScreen(
 
 @Composable
 fun HomeContent(
-    state: HomeState,
+    homeUiState: HomeState,
     onSearchChange: (String) -> Unit,
     onUpdatePricesClick: () -> Unit,
     onCityClick: (City) -> Unit,
@@ -91,7 +90,7 @@ fun HomeContent(
         Spacer(modifier = Modifier.height(20.dp))
 
         AnnotationProductsSearchBar(
-            text = "state.searchQuery",
+            text = homeUiState.searchQuery,
             placeholder = "Pesquisar cidade ou cliente...",
             onSearchQueryChange = onSearchChange
         )
@@ -111,7 +110,7 @@ fun HomeContent(
             )
 
             Text(
-                text = "${state.cities.size} resultados",
+                text = "${homeUiState.cities.size} resultados",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -119,16 +118,27 @@ fun HomeContent(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+
         LazyColumn(
             modifier = Modifier.weight(1f).fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
-            items(state.cities) { city ->
-                CityCard(
-                    city = city,
-                    onClick = { onCityClick(city) }
-                )
+            item {
+                if (homeUiState.cities.isEmpty()) {
+                    AnnotationProductsNothingToShow(
+                        text = "Nenhum cidade encontrada",
+                        modifier = Modifier.padding(vertical = 20.dp)
+                    )
+                } else {
+                    homeUiState.cities.forEach { city ->
+                        CityCard(
+                            city = city,
+                            onClick = { onCityClick(city) },
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                }
             }
 
             item {
@@ -157,14 +167,14 @@ fun HomeContent(
         Spacer(modifier = Modifier.height(22.dp))
     }
 
-    if (state.showDialog) {
+    if (homeUiState.showDialog) {
         ModalAddCityScreen(
             onBackClick = onDismiss,
             onSaveClick = addCity
         )
     }
 
-    if (state.success) SuccessDialog(
+    if (homeUiState.success) SuccessDialog(
         text = "Cidade adicionada com sucesso!",
         onDismiss = onDismiss
     )
@@ -205,13 +215,14 @@ private fun Header(
 
 @Composable
 private fun CityCard(
+    modifier: Modifier = Modifier,
     city: City,
     onClick: () -> Unit,
 ) {
 
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 2.dp
@@ -308,7 +319,7 @@ private fun HomeScreenPreview() {
 
     MaterialTheme {
         HomeContent(
-            state = HomeState(),
+            homeUiState = HomeState(),
             onSearchChange = {},
             onUpdatePricesClick = {},
             onCityClick = {},

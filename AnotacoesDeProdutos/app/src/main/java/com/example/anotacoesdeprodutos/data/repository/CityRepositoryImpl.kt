@@ -36,4 +36,10 @@ class CityRepositoryImpl @Inject constructor(
     override suspend fun getCity(cityId: Long?): City? {
         return cityDao.getCity(cityId)?.toCity()
     }
+
+    override fun searchCities(query: String): Flow<List<City>> {
+        return cityDao.searchCities(query).map { cityList ->
+            cityList.map { it.toCity() }
+        }
+    }
 }

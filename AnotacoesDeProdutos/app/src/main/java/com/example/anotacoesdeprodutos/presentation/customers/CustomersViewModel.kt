@@ -37,11 +37,11 @@ class CustomersViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val cities = cityRepository.getCity(cityIdFlow)
+
             customerRepository.getAllCustomers(cityIdFlow).collect { customers ->
-                _customerUiState.update { it.copy(
-                    customers = customers,
-                    currentCity = cities
-                ) }
+                _customerUiState.update {
+                    it.copy(customers = customers, currentCity = cities)
+                }
             }
         }
 

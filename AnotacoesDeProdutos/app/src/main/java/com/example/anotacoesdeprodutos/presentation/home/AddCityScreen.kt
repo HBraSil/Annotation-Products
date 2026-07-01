@@ -21,6 +21,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.anotacoesdeprodutos.domain.model.City
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -114,19 +115,10 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
 
                 Spacer(modifier = Modifier.height(48.dp))
 
-                TextField(
-                    value = cityName,
-                    onValueChange = { cityName = it },
-                    placeholder = { Text("Nome da cidade") },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.White, shape = MaterialTheme.shapes.medium),
-                    colors = TextFieldDefaults.colors(
-                        focusedIndicatorColor = MaterialTheme.colorScheme.primary,
-                        unfocusedIndicatorColor = Color.Gray,
-                        unfocusedContainerColor = Color.Transparent,
-                        focusedContainerColor = Color.Transparent,
-                    )
+                AnnotationProductsTextField(
+                    text = cityName,
+                    onNameChange = { cityName = it },
+                    placeholder = "Nome da cidade"
                 )
 
                 Spacer(modifier = Modifier.weight(0.2f))
