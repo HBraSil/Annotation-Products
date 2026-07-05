@@ -1,10 +1,27 @@
 package com.example.anotacoesdeprodutos.data.entity
 
 import androidx.room.Entity
+import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 
-@Entity(tableName = "cart_item")
+@Entity(
+    tableName = "cart_item",
+    foreignKeys = [
+        ForeignKey(
+            entity = PurchaseEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["purchaseId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ProductEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["productId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ]
+)
 data class CartItemEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val purchaseId: Long = 0,

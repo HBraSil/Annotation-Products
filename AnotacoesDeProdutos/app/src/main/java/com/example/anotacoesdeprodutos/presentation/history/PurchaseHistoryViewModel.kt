@@ -8,6 +8,7 @@ import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -25,9 +26,9 @@ class PurchaseHistoryViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             customerRepository.getCustomer(customerId).collect { customer ->
-                _uiState.value = _uiState.value.copy(
-                    clientName = customer.name
-                )
+                _uiState.update {
+                    it.copy(clientName = customer.name)
+                }
             }
         }
 

@@ -194,7 +194,7 @@ fun OrderHistoryCard(order: PurchaseWithItemsDomain) {
                 color = MaterialTheme.colorScheme.secondary
             )
             Text(
-                text = currencyFormatter.format(order.purchase.total),
+                text = currencyFormatter.format(order.purchase.totalAmount),
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Black,
                 color = MaterialTheme.colorScheme.primary

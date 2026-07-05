@@ -35,7 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Product
-import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSuccessDialog
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -45,9 +45,12 @@ fun NewPurchaseScreen(
     onBackClick: () -> Unit = {},
 ) {
     val uiState by newPurchaseViewModel.uiState.collectAsState()
+    val customers by newPurchaseViewModel.customer.collectAsState()
+    Log.d("NewPurchaseScreen", "pendingDebt variable: $customers")
 
     NewPurchaseContent(
         uiState = uiState,
+        pendingDebt = customers.owes,
         onBackClick = onBackClick,
         onSelectProductClick = newPurchaseViewModel::onProductSelected,
         decreaseQntt = newPurchaseViewModel::decreaseQuantity,
@@ -63,6 +66,7 @@ fun NewPurchaseScreen(
 fun NewPurchaseContent(
     modifier: Modifier = Modifier,
     uiState: NewPurchaseUiState = NewPurchaseUiState(),
+    pendingDebt: Double? = 0.0,
     onBackClick: () -> Unit = {},
     onSelectProductClick: (Product) -> Unit = {},
     decreaseQntt: (Product) -> Unit = { _ -> },
@@ -138,7 +142,7 @@ fun NewPurchaseContent(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = currencyFormatter.format(uiState.pendingDebt),
+                            text = currencyFormatter.format(pendingDebt ?: 0.0),
                             color = MaterialTheme.colorScheme.error,
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Black
@@ -159,7 +163,6 @@ fun NewPurchaseContent(
                     fontWeight = FontWeight.Medium
                 )
 
-                Log.d("NewPurchaseScreen", "Selected Products: ${uiState.selectedProducts}")
                 ProductDropdown(
                     products = uiState.allProducts,
                     selectedProduct = uiState.selectedProducts.lastOrNull(),
@@ -367,7 +370,7 @@ fun NewPurchaseContent(
     }
 
     if (uiState.success) {
-        SuccessDialog(
+        AnnotationProductsSuccessDialog(
             text = "Compra feita com sucesso",
             onDismiss = {
                 onBackClick()

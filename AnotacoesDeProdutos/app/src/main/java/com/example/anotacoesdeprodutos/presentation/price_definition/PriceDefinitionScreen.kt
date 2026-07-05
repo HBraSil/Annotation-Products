@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.Product
-import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSuccessDialog
 
 
 @Composable
@@ -154,7 +154,7 @@ fun PriceDefinitionContent(
     }
 
     if (uiState.priceSaved) {
-        SuccessDialog(
+        AnnotationProductsSuccessDialog(
             text = "Preços salvos com sucesso!",
             onDismiss = onDismiss,
         )

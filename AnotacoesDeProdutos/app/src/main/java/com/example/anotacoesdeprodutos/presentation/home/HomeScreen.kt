@@ -39,7 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.domain.model.City
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSearchBar
-import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSuccessDialog
 
 
 @Composable
@@ -174,7 +174,7 @@ fun HomeContent(
         )
     }
 
-    if (homeUiState.success) SuccessDialog(
+    if (homeUiState.success) AnnotationProductsSuccessDialog(
         text = "Cidade adicionada com sucesso!",
         onDismiss = onDismiss
     )

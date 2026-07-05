@@ -25,12 +25,16 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsConfirmationDialog
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSuccessDialog
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 import com.example.anotacoesdeprodutos.presentation.formatter.toBrazilianDate
 
@@ -42,16 +46,18 @@ fun CustomerDetailScreen(
     onHistoryClick: (Long) -> Unit = {},
     goToNewPurchaseScreen: (Long) -> Unit = {},
 ) {
-    var partialPayment by remember { mutableStateOf("") }
 
     val uiState by customerDetailViewModel.uiState.collectAsState()
 
     ClientDetailsContent(
         uiState = uiState,
-        onPartialPaymentChange = { partialPayment = it },
+        onPartialPaymentChange = customerDetailViewModel::updatePartialPayment,
         onBackClick = onBackClick,
         onHistoryClick = onHistoryClick,
-        goToNewPurchaseScreen = goToNewPurchaseScreen
+        goToNewPurchaseScreen = goToNewPurchaseScreen,
+        onPartialPaymentConfirm = customerDetailViewModel::confirmPartialPayment,
+        onDismiss = customerDetailViewModel::onDismiss,
+        showConfirmationDialog = customerDetailViewModel::showConfirmationDialog
     )
 }
 
@@ -63,6 +69,9 @@ fun ClientDetailsContent(
     onBackClick: () -> Unit = {},
     onHistoryClick: (Long) -> Unit = {},
     goToNewPurchaseScreen: (Long) -> Unit = {},
+    onPartialPaymentConfirm: () -> Unit = {},
+    onDismiss: () -> Unit = {},
+    showConfirmationDialog: () -> Unit = {},
 ) {
     var isPartialPaymentExpanded by remember { mutableStateOf(false) }
 
@@ -90,7 +99,11 @@ fun ClientDetailsContent(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { goToNewPurchaseScreen(uiState.customer.id) },
+                onClick = {
+                    if (uiState.customer.id > 0) {
+                        goToNewPurchaseScreen(uiState.customer.id)
+                    }
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = Color.White,
                 shape = CircleShape
@@ -111,14 +124,14 @@ fun ClientDetailsContent(
             }
         },
         containerColor = MaterialTheme.colorScheme.onPrimary,
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().imePadding()
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(horizontal = 20.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             item {
                 Column(
@@ -169,7 +182,7 @@ fun ClientDetailsContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                if (uiState.purchaseItems == null) {
+                if (uiState.purchaseItems.isEmpty()) {
                     AnnotationProductsNothingToShow(
                         modifier = Modifier.padding(vertical = 40.dp),
                         text = "Nenhuma compra feita",
@@ -179,7 +192,7 @@ fun ClientDetailsContent(
             }
 
             // Seção 3: Itens Comprados no Último Mês (Histórico Meio da Tela)
-            items(uiState.purchaseItems ?: emptyList(), key = { it.id }) { item ->
+            items(uiState.purchaseItems, key = { it.id }) { item ->
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Row(
                         modifier = Modifier
@@ -213,8 +226,34 @@ fun ClientDetailsContent(
                             Text(text = currencyFormatter.format(item.subtotal()), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                     }
-                    HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 1.dp)
                 }
+            }
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.secondary.copy(0.4f),
+                            shape = RoundedCornerShape(14.dp)
+                        )
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "VALOR:",
+                        style = MaterialTheme.typography.labelMedium,
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = currencyFormatter.format(uiState.purchase.totalAmount),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
+            item {HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 2.dp)
             }
 
             // Seção 4: O CARD DE SALDO TOTAL EM ABERTO COM ANIMAÇÃO
@@ -234,29 +273,24 @@ fun ClientDetailsContent(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
-                            Column(
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(2.dp)
-                            ) {
-                                Text(
-                                    "SALDO TOTAL EM ABERTO",
-                                    fontSize = 12.sp,
-                                    color = Color.White.copy(alpha = 0.8f),
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = currencyFormatter.format(uiState.purchase.total),
-                                    fontSize = 32.sp,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Black
-                                )
-                            }
+                            Text(
+                                "SALDO ACUMULADO",
+                                fontSize = 12.sp,
+                                color = Color.White.copy(alpha = 0.8f),
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = currencyFormatter.format(uiState.purchase.totalAmount),
+                                fontSize = 32.sp,
+                                color = Color.White,
+                                fontWeight = FontWeight.Black
+                            )
 
                             // Botão Quitar Total
                             Button(
                                 onClick = {},
                                 modifier = Modifier.fillMaxWidth().height(50.dp),
-                                enabled = uiState.purchase.total > 0,
+                                enabled = uiState.purchase.totalAmount > 0,
                                 colors = ButtonDefaults.buttonColors(
                                     containerColor = MaterialTheme.colorScheme.onPrimary,
                                     contentColor = MaterialTheme.colorScheme.primary,
@@ -326,11 +360,14 @@ fun ClientDetailsContent(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     OutlinedTextField(
-                                        value = "uiState.customer.partialPayment",
-                                        onValueChange = onPartialPaymentChange,
+                                        value = uiState.partialPaymentComponent,
+                                        onValueChange = {
+                                            onPartialPaymentChange(it.text)
+                                        },
                                         placeholder = { Text("R$ 0,00", color = MaterialTheme.colorScheme.secondary) },
                                         modifier = Modifier.weight(1f),
                                         shape = RoundedCornerShape(10.dp),
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                                         singleLine = true,
                                         colors = OutlinedTextFieldDefaults.colors(
                                             focusedBorderColor = MaterialTheme.colorScheme.primary,
@@ -340,8 +377,9 @@ fun ClientDetailsContent(
                                         )
                                     )
                                     Button(
-                                        onClick = { /* Ação de confirmação */ },
+                                        onClick = showConfirmationDialog,
                                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                        enabled = uiState.purchase.totalAmount > 0,
                                         shape = RoundedCornerShape(10.dp),
                                         modifier = Modifier.height(54.dp)
                                     ) {
@@ -352,16 +390,32 @@ fun ClientDetailsContent(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(60.dp)) // Espaço extra para não cobrir o conteúdo com o FAB
+                Spacer(modifier = Modifier.height(80.dp)) // Espaço extra para não cobrir o conteúdo com o FAB
             }
         }
     }
+
+    if (uiState.showConfirmationDialog) {
+        AnnotationProductsConfirmationDialog(
+            title = "Deseja pagar parte do saldo?",
+            onDismissRequest = onDismiss,
+            onConfirmClick = onPartialPaymentConfirm,
+        )
+    }
+
+    if (uiState.showSuccessDialog) {
+        AnnotationProductsSuccessDialog(
+            text = "Pagamento realizado com sucesso!",
+            onDismiss = onDismiss
+        )
+    }
+
 }
 
 @Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")
 @Composable
 fun CustomerDetailScreenPreview() {
     MaterialTheme {
-        ClientDetailsContent()
+        ClientDetailsContent() {}
     }
 }

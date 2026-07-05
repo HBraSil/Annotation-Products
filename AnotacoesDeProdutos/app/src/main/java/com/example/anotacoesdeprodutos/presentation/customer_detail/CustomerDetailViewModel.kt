@@ -1,5 +1,8 @@
 package com.example.anotacoesdeprodutos.presentation.customer_detail
 
+import android.util.Log
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -7,11 +10,11 @@ import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Customer
 import com.example.anotacoesdeprodutos.domain.model.Purchase
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
+import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
@@ -31,7 +34,7 @@ class CustomerDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
     val uiState = _uiState.asStateFlow()
 
-    val customer: StateFlow<Customer?> = customerRepository.getCustomer(customerId)
+    val customer = customerRepository.getCustomer(customerId)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -52,6 +55,7 @@ class CustomerDetailViewModel @Inject constructor(
                     customerRepository.getLastPurchase(customer.id)
                 }
                 .collect { purchaseWithItems ->
+                    Log.d("CustomerDetailViewModel", "getLastPurchase: $purchaseWithItems?.purchase")
                     _uiState.update {
                         it.copy(
                             purchase = purchaseWithItems?.purchase ?: Purchase(),
@@ -61,7 +65,70 @@ class CustomerDetailViewModel @Inject constructor(
                         )
                     }
                 }
+        }
+    }
 
+    fun updatePartialPayment(text: String) {
+        val digitsOnly = text.filter { it.isDigit() }
+
+        val cleanString = digitsOnly.toLongOrNull()?.toString() ?: ""
+
+        val cents = cleanString.toLongOrNull() ?: 0L
+        val doubleValue = cents / 100.0
+
+        val formattedText = currencyFormatter.format(doubleValue)
+
+        _uiState.update { currentState ->
+            currentState.copy(
+                partialPaymentComponent = TextFieldValue(
+                    text = formattedText,
+                    selection = TextRange(formattedText.length)
+                ),
+                purchase = currentState.purchase.copy(partialPayment = doubleValue)
+            )
+        }
+    }
+
+    fun showConfirmationDialog() {
+        _uiState.update { it.copy(showConfirmationDialog = true) }
+    }
+
+    fun confirmPartialPayment() {
+        viewModelScope.launch {
+            val partialPayment = _uiState.value.purchase.partialPayment
+            val owes = _uiState.value.purchase.totalAmount - partialPayment
+
+            Log.d("CustomerDetailViewModel", "confirmPartialPayment: $partialPayment")
+
+            _uiState.update {
+                it.copy(
+                    customer = it.customer.copy(owes = owes),
+                    purchase = it.purchase.copy(
+                        totalAmount = it.purchase.totalAmount - partialPayment,
+                        partialPayment = partialPayment
+                    )
+                )
+            }
+
+            Log.d("confirmPartialPayment", "customer: ${_uiState.value.customer} \n purchase: ${_uiState.value.purchase}")
+
+            val result = customerRepository.partialPayment(
+                _uiState.value.customer,
+                _uiState.value.purchase
+            )
+
+            if (result) {
+                _uiState.update { it.copy(showSuccessDialog = true) }
+            }
+        }
+    }
+
+    fun onDismiss() {
+        _uiState.update {
+            it.copy(
+                showConfirmationDialog = false,
+                showSuccessDialog = false
+            )
         }
     }
 }
@@ -70,7 +137,8 @@ class CustomerDetailViewModel @Inject constructor(
 data class CustomerDetailUiState(
     val customer: Customer = Customer(),
     val purchase: Purchase = Purchase(),
-    val purchaseItems: List<CartItem>? = null,
-    val partialPayment: String = "",
-    val showDialog: Boolean = false,
+    val partialPaymentComponent: TextFieldValue = TextFieldValue("R$ 0,00"),
+    val purchaseItems: List<CartItem> = emptyList(),
+    val showConfirmationDialog: Boolean = false,
+    val showSuccessDialog: Boolean = false
 )

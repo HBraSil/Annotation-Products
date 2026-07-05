@@ -20,4 +20,6 @@ interface CustomerRepository {
     fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsDomain>>
 
     fun searchCustomer(query: String, cityId: Long): Flow<List<Customer>>
+
+    suspend fun partialPayment(customer: Customer, purchase: Purchase): Boolean
 }

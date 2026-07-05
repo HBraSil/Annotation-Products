@@ -12,12 +12,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -66,13 +64,6 @@ class CustomersViewModel @Inject constructor(
         }
     }
 
-
-    val customerList = customerRepository.getAllCustomers(cityIdFlow)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = emptyList()
-        )
 
     fun updateSearchQuery(query: String) {
         _customerUiState.update { it.copy(searchQuery = query) }
@@ -129,10 +120,15 @@ class CustomersViewModel @Inject constructor(
 
     fun saveCustomer() {
         viewModelScope.launch {
+            if (cityIdFlow <= 0) {
+                Log.e("CustomersViewModel", "Cannot save customer: Invalid cityId $cityIdFlow")
+                return@launch
+            }
+
             val customer = Customer(
                 name = _customerUiState.value.name,
                 extraInfo = _customerUiState.value.extraInfo,
-                cityId = _customerUiState.value.currentCity?.id ?: 0
+                cityId = cityIdFlow
             )
             val result = customerRepository.addCustomer(customer)
 

@@ -24,7 +24,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 
 @Composable
-fun SuccessDialog(
+fun AnnotationProductsSuccessDialog(
     text: String,
     onDismiss: () -> Unit,
 ) {
@@ -99,6 +99,6 @@ fun SuccessDialog(
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewSuccessDialog() {
-    SuccessDialog("", onDismiss = {})
+fun PreviewAnnotationProductsSuccessDialog() {
+    AnnotationProductsSuccessDialog("", onDismiss = {})
 }

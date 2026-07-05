@@ -21,9 +21,9 @@ enum class PaymentStatus { DEVE, TUDO_PAGO }
 data class CustomerEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String = "",
-    val status: PaymentStatus? = null,
+    //val status: PaymentStatus? = null,
     val lastPurchaseDate: String? = null,
-    val partialPayment: String? = null,
+    val owes: Double? = null,
     val extraInfo: String? = null,
     val cityId: Long
 )
@@ -31,9 +31,9 @@ data class CustomerEntity(
 fun CustomerEntity.toDomain() = Customer(
     id = id,
     name = name,
-    status = status,
+    //status = status,
     lastPurchaseDate = lastPurchaseDate,
-    partialPayment = partialPayment,
+    owes = owes,
     extraInfo = extraInfo,
     cityId = cityId
 )

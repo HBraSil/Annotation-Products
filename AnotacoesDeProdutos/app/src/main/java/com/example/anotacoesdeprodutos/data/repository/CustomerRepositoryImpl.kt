@@ -1,5 +1,6 @@
 package com.example.anotacoesdeprodutos.data.repository
 
+import android.util.Log
 import com.example.anotacoesdeprodutos.data.dao.CustomerDao
 import com.example.anotacoesdeprodutos.data.entity.toDomain
 import com.example.anotacoesdeprodutos.domain.model.CartItem
@@ -58,5 +59,13 @@ class CustomerRepositoryImpl @Inject constructor(
         return customerDao.searchCustomer(query, cityId).map { customerList ->
             customerList.map { it.toDomain() }
         }
+    }
+
+    override suspend fun partialPayment(
+        customer: Customer,
+        purchase: Purchase,
+    ): Boolean {
+        Log.d("CustomerRepositoryImpl", "partialPayment called with customer: ${customer.id}")
+        return customerDao.registerPartialPayment(customer.toCustomerEntity(), purchase.toEntity())
     }
 }

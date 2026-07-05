@@ -18,7 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsTextField
-import com.example.anotacoesdeprodutos.presentation.components.SuccessDialog
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSuccessDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -161,7 +161,7 @@ fun AddNewCustomerScreen(
         }
     }
 
-    if (uiState.customerCreatedWithSuccess) SuccessDialog(
+    if (uiState.customerCreatedWithSuccess) AnnotationProductsSuccessDialog(
         text = "Cliente adicionado com sucesso!",
         onDismiss = onDismissOverlayCreatedCustomer
     )

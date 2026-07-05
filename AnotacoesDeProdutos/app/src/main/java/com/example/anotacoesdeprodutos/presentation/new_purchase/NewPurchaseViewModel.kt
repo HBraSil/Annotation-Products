@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotacoesdeprodutos.domain.model.CartItem
+import com.example.anotacoesdeprodutos.domain.model.Customer
 import com.example.anotacoesdeprodutos.domain.model.Product
 import com.example.anotacoesdeprodutos.domain.model.Purchase
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
@@ -14,8 +15,10 @@ import com.example.anotacoesdeprodutos.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -31,10 +34,28 @@ class NewPurchaseViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(NewPurchaseUiState())
     val uiState: StateFlow<NewPurchaseUiState> = _uiState.asStateFlow()
 
+    val customer = customerRepository.getCustomer(customerId)
+        .stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = Customer()
+    )
+
+
     init {
         viewModelScope.launch {
             val products = productRepository.getAllProducts()
-            _uiState.update { it.copy(allProducts = products) }
+
+            customer.collect { customer ->
+                _uiState.update {
+                    val debt = customer.owes ?: 0.0
+                    it.copy(
+                        pendingDebt = debt,
+                        allProducts = products,
+                        totalPrice = it.selectedProductsSubtotal + debt
+                    )
+                }
+            }
         }
     }
 
@@ -113,30 +134,38 @@ class NewPurchaseViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun finalizePurchase() {
         viewModelScope.launch {
-            val result = customerRepository.addPurchase(
-                purchase = Purchase(
-                    customerId = customerId,
-                    purchaseDate = System.currentTimeMillis(),
-                    total = uiState.value.totalPrice
-                )
-            )
+            if (customerId <= 0) {
+                Log.e("NewPurchaseViewModel", "Cannot finalize purchase: Invalid customerId $customerId")
+                return@launch
+            }
 
-            if (result > 0) {
-                val cartItem = _uiState.value.selectedProducts.map {
-                    Log.d("NewPurchaseViewModel", "Adding cart item: $it")
-                    it.copy(
-                        productId = it.product.id,
-                        purchaseId = result,
-                        quantity = it.quantity,
+            try {
+                val purchaseId = customerRepository.addPurchase(
+                    purchase = Purchase(
+                        customerId = customerId,
+                        purchaseDate = System.currentTimeMillis(),
+                        totalAmount = uiState.value.totalPrice
                     )
-                }
-                    Log.d("NewPurchaseViewModel", "cart item variable: $cartItem")
+                )
 
-                val result = customerRepository.saveCartItems(cartItem)
+                if (purchaseId > 0) {
+                    val cartItems = _uiState.value.selectedProducts.map {
+                        Log.d("NewPurchaseViewModel", "Preparing cart item: $it")
+                        it.copy(
+                            purchaseId = purchaseId,
+                            productId = it.product.id
+                        )
+                    }
+                    Log.d("NewPurchaseViewModel", "Saving cart items: $cartItems")
 
-                if (result.isNotEmpty()) {
-                    _uiState.update { it.copy(success = true) }
+                    val saveResults = customerRepository.saveCartItems(cartItems)
+
+                    if (saveResults.isNotEmpty()) {
+                        _uiState.update { it.copy(success = true) }
+                    }
                 }
+            } catch (e: Exception) {
+                Log.e("NewPurchaseViewModel", "Error finalizing purchase", e)
             }
         }
     }
@@ -149,5 +178,5 @@ data class NewPurchaseUiState(
     val selectedProducts: List<CartItem> = mutableListOf(),
     val selectedProductsSubtotal: Int = 0,
     val totalPrice: Double = pendingDebt,
-    val success: Boolean = false
+    val success: Boolean = false,
 )
