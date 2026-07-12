@@ -56,6 +56,7 @@ fun CustomerDetailScreen(
         onHistoryClick = onHistoryClick,
         goToNewPurchaseScreen = goToNewPurchaseScreen,
         onPartialPaymentConfirm = customerDetailViewModel::confirmPartialPayment,
+        onTotalPaymentConfirm = customerDetailViewModel::onTotalPaymentConfirm,
         onDismiss = customerDetailViewModel::onDismiss,
         showConfirmationDialog = customerDetailViewModel::showConfirmationDialog
     )
@@ -70,6 +71,7 @@ fun ClientDetailsContent(
     onHistoryClick: (Long) -> Unit = {},
     goToNewPurchaseScreen: (Long) -> Unit = {},
     onPartialPaymentConfirm: () -> Unit = {},
+    onTotalPaymentConfirm: () -> Unit = {},
     onDismiss: () -> Unit = {},
     showConfirmationDialog: () -> Unit = {},
 ) {
@@ -176,7 +178,7 @@ fun ClientDetailsContent(
             // Seção 2: Cabeçalho da Listagem Mensal
             item {
                 Text(
-                    "Compras do Último Mês",
+                    "Último Compra",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
@@ -240,7 +242,7 @@ fun ClientDetailsContent(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "VALOR:",
+                        text = "VALOR DESSA COMPRA:",
                         style = MaterialTheme.typography.labelMedium,
                     )
                     Spacer(modifier = Modifier.weight(1f))
@@ -274,44 +276,46 @@ fun ClientDetailsContent(
                             verticalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             Text(
-                                "SALDO ACUMULADO",
+                                "DÍVIDA TOTAL DO CLIENTE",
                                 fontSize = 12.sp,
-                                color = Color.White.copy(alpha = 0.8f),
+                                color = Color.White,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = currencyFormatter.format(uiState.purchase.totalAmount),
+                                text = currencyFormatter.format(uiState.customer.owes ?: 0.0),
                                 fontSize = 32.sp,
                                 color = Color.White,
                                 fontWeight = FontWeight.Black
                             )
 
                             // Botão Quitar Total
-                            Button(
-                                onClick = {},
-                                modifier = Modifier.fillMaxWidth().height(50.dp),
-                                enabled = uiState.purchase.totalAmount > 0,
-                                colors = ButtonDefaults.buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.onPrimary,
-                                    contentColor = MaterialTheme.colorScheme.primary,
-                                    disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                                    disabledContentColor = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f)
-                                ),
-                                shape = RoundedCornerShape(14.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            uiState.customer.owes?.let {
+                                Button(
+                                    onClick = onTotalPaymentConfirm,
+                                    modifier = Modifier.fillMaxWidth().height(50.dp),
+                                    enabled = it > 0,
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = MaterialTheme.colorScheme.onPrimary,
+                                        contentColor = MaterialTheme.colorScheme.surface,
+                                        disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
+                                        disabledContentColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = null,
-                                    )
-                                    Text(
-                                        text = "Quitar Total",
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 16.sp
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.CheckCircle,
+                                            contentDescription = "Icon Check",
+                                        )
+                                        Text(
+                                            text = "Quitar Total",
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 16.sp
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -379,7 +383,7 @@ fun ClientDetailsContent(
                                     Button(
                                         onClick = showConfirmationDialog,
                                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                        enabled = uiState.purchase.totalAmount > 0,
+                                        enabled = (uiState.customer.owes ?: 0.0) > 0,
                                         shape = RoundedCornerShape(10.dp),
                                         modifier = Modifier.height(54.dp)
                                     ) {

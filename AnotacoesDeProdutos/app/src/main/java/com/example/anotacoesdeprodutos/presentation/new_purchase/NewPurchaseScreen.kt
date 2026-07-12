@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
-import androidx.compose.foundation.border
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.ArrowBackIosNew
@@ -50,7 +48,6 @@ fun NewPurchaseScreen(
 
     NewPurchaseContent(
         uiState = uiState,
-        pendingDebt = customers.owes,
         onBackClick = onBackClick,
         onSelectProductClick = newPurchaseViewModel::onProductSelected,
         decreaseQntt = newPurchaseViewModel::decreaseQuantity,
@@ -66,7 +63,6 @@ fun NewPurchaseScreen(
 fun NewPurchaseContent(
     modifier: Modifier = Modifier,
     uiState: NewPurchaseUiState = NewPurchaseUiState(),
-    pendingDebt: Double? = 0.0,
     onBackClick: () -> Unit = {},
     onSelectProductClick: (Product) -> Unit = {},
     decreaseQntt: (Product) -> Unit = { _ -> },
@@ -109,48 +105,6 @@ fun NewPurchaseContent(
                 .padding(paddingValues),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 16.dp, horizontal = 16.dp)
-                    .background(MaterialTheme.colorScheme.errorContainer.copy(0.5f), RoundedCornerShape(24.dp))
-                    .border(1.dp, MaterialTheme.colorScheme.error.copy(0.5f), RoundedCornerShape(24.dp))
-                    .padding(16.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .background(Color(0xFFFFD8D6), CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "!",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
-                    Column {
-                        Text(
-                            text = "Saldo Anterior Pendente",
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = currencyFormatter.format(pendingDebt ?: 0.0),
-                            color = MaterialTheme.colorScheme.error,
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Black
-                        )
-                    }
-                }
-            }
-
             // Seção 2: Campo Seletor de Produto
             Column(
                 modifier = Modifier.padding(horizontal = 16.dp),
@@ -224,7 +178,7 @@ fun NewPurchaseContent(
                             ) {
                                 Row(
                                     modifier = Modifier.background(
-                                        Color(0xFFF0F2F5),
+                                        MaterialTheme.colorScheme.onPrimary,
                                         RoundedCornerShape(24.dp)
                                     ).padding(horizontal = 4.dp),
                                     verticalAlignment = Alignment.CenterVertically
@@ -434,7 +388,6 @@ fun ProductDropdown(
 
                 Spacer(modifier = Modifier.width(12.dp))
 
-                Log.d("ProductDropdown", "Selected Product: ${selectedProduct?.product?.name}")
                 Text(
                     text = selectedProduct?.product?.name
                         ?: "Selecione um produto no catálogo...",
@@ -461,19 +414,30 @@ fun ProductDropdown(
             shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp),
             shadowElevation = 0.dp,
         ) {
-            products.forEach { product ->
+            if (products.isEmpty()) {
                 DropdownMenuItem(
-                    text = {
-                        Text(product.name)
-                    },
-                    trailingIcon ={
-                        Text(text = currencyFormatter.format(product.price.toDouble()), fontSize = 12.sp, color = Color.Gray)
-                    },
-                    onClick = {
-                        onProductSelected(product)
-                        expanded = false
-                    }
+                    text = { Text("Nenhum produto com o preço definido") },
+                    onClick = { expanded = false }
                 )
+            } else {
+                products.forEach { product ->
+                    DropdownMenuItem(
+                        text = {
+                            Text(product.name)
+                        },
+                        trailingIcon = {
+                            Text(
+                                text = currencyFormatter.format(product.price.toDouble()),
+                                fontSize = 12.sp,
+                                color = Color.Gray
+                            )
+                        },
+                        onClick = {
+                            onProductSelected(product)
+                            expanded = false
+                        }
+                    )
+                }
             }
         }
     }

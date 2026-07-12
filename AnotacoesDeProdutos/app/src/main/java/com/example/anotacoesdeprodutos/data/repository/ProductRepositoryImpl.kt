@@ -13,6 +13,10 @@ class ProductRepositoryImpl @Inject constructor(
         return productDao.getAllProducts().map { it.toProductDomain() }
     }
 
+    override suspend fun getProductsWithDefinedPrice(): List<Product> {
+        return productDao.getProductsWithDefinedPrice().map { it.toProductDomain() }
+    }
+
     override suspend fun updateProductPrice(productId: Long, newPrice: Int): Int {
         val product = productDao.getById(productId)
         return product?.let {

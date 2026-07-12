@@ -24,7 +24,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotacoesdeprodutos.domain.model.Product
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSuccessDialog
 
 
@@ -164,7 +163,7 @@ fun PriceDefinitionContent(
 // 5. Linha Reutilizável de Produto Totalmente STATELESS (Sem estado interno)
 @Composable
 fun InventoryPriceCard(
-    item: Product,
+    item: EditableProduct,
     onPriceValueChange: (String) -> Unit,
     cardBgColor: Color,
     textColor: Color,
@@ -204,7 +203,7 @@ fun InventoryPriceCard(
             Spacer(modifier = Modifier.weight(1f))
 
             OutlinedTextField(
-                value = item.price.toString(),
+                value = item.priceText,
                 onValueChange = onPriceValueChange,
                 prefix = {
                     Text(

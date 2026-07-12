@@ -5,7 +5,6 @@ import com.example.anotacoesdeprodutos.data.entity.CustomerEntity
 data class Customer(
     val id: Long = 0,
     val name: String = "",
-    //val status: PaymentStatus? = null,
     val owes: Double? = null,
     val lastPurchase: List<CartItem> = emptyList(),
     val lastPurchaseDate: String? = null,
@@ -16,7 +15,6 @@ data class Customer(
 fun Customer.toCustomerEntity() = CustomerEntity(
     id = id,
     name = name,
-    //status = status,
     lastPurchaseDate = lastPurchaseDate,
     owes = owes,
     extraInfo = extraInfo,

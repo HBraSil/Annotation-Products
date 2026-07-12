@@ -9,6 +9,7 @@ import androidx.room.Update
 import com.example.anotacoesdeprodutos.data.entity.CartItemEntity
 import com.example.anotacoesdeprodutos.data.entity.PurchaseEntity
 import com.example.anotacoesdeprodutos.data.entity.CustomerEntity
+import com.example.anotacoesdeprodutos.data.entity.PaymentEntity
 import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsData
 import kotlinx.coroutines.flow.Flow
 
@@ -67,24 +68,30 @@ interface CustomerDao {
     @Update
     suspend fun updateCustomer(customer: CustomerEntity): Int
 
+    @Insert
+    suspend fun insertPayment(payment: PaymentEntity): Long
+
+    @Query("SELECT * FROM payment WHERE customerId = :customerId")
+    fun getPayments(customerId: Long): Flow<List<PaymentEntity>>
+
     @Update
     suspend fun updatePurchase(purchase: PurchaseEntity): Int
 
     @Query("SELECT * FROM purchase WHERE id = :id")
     suspend fun getPurchase(id: Long): PurchaseEntity?
 
+
     @Transaction
     suspend fun registerPartialPayment(
         customer: CustomerEntity,
-        purchase: PurchaseEntity
+        purchase: PurchaseEntity,
+        partialPayment: PaymentEntity
     ): Boolean {
+        Log.d("CustomerDao", "registerPartialPayment: $partialPayment")
         val customerRows = updateCustomer(customer)
-
         val purchaseRow = updatePurchase(purchase)
+        val paymentId = insertPayment(partialPayment)
 
-        Log.d("CustomerDao", "registerPartialPayment: ${getPurchase(purchase.id)}")
-        Log.d("CustomerDao", "registerPartialPayment: $purchaseRow")
-
-        return customerRows > 0 && purchaseRow > 0
+        return customerRows > 0 && purchaseRow > 0 && paymentId > 0
     }
 }

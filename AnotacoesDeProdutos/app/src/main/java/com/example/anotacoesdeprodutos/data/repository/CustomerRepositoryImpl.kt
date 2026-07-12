@@ -5,6 +5,7 @@ import com.example.anotacoesdeprodutos.data.dao.CustomerDao
 import com.example.anotacoesdeprodutos.data.entity.toDomain
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Customer
+import com.example.anotacoesdeprodutos.domain.model.Payment
 import com.example.anotacoesdeprodutos.domain.model.Purchase
 import com.example.anotacoesdeprodutos.domain.model.PurchaseWithItemsDomain
 import com.example.anotacoesdeprodutos.domain.model.toCartEntity
@@ -31,8 +32,23 @@ class CustomerRepositoryImpl @Inject constructor(
         return customerDao.saveCustomer(customer.toCustomerEntity())
     }
 
-    override suspend fun addPurchase(purchase: Purchase): Long {
+    override suspend fun newPurchase(purchase: Purchase): Long {
         return customerDao.addPurchase(purchase.toEntity())
+    }
+
+    override suspend fun updateCustomer(customer: Customer): Int {
+        return customerDao.updateCustomer(customer.toCustomerEntity())
+
+    }
+
+    override suspend fun payOffTotalDebt(
+        customer: Customer,
+        payment: Payment,
+    ): Pair<Int, Long> {
+        return Pair(
+            customerDao.updateCustomer(customer.toCustomerEntity()),
+            customerDao.insertPayment(payment.toEntity())
+        )
     }
 
     override suspend fun saveCartItems(cartItems: List<CartItem>): List<Long> {
@@ -49,9 +65,15 @@ class CustomerRepositoryImpl @Inject constructor(
 
     override fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsDomain>> {
         return customerDao.getAllPurchases(customerId).map { purchaseListData ->
-            purchaseListData.map {
-                it.toDomain()
-            }
+            Log.d("CustomerRepositoryImpl", "getPurchase: $purchaseListData")
+            purchaseListData.map { it.toDomain() }
+        }
+    }
+
+    override fun getAllPayments(customerId: Long): Flow<List<Payment>> {
+        return customerDao.getPayments(customerId).map { paymentList ->
+            Log.d("CustomerRepositoryImpl", "getPayments: $paymentList")
+            paymentList.map { it.toDomain() }
         }
     }
 
@@ -61,11 +83,13 @@ class CustomerRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun partialPayment(
-        customer: Customer,
-        purchase: Purchase,
-    ): Boolean {
-        Log.d("CustomerRepositoryImpl", "partialPayment called with customer: ${customer.id}")
-        return customerDao.registerPartialPayment(customer.toCustomerEntity(), purchase.toEntity())
+    override suspend fun partialPayment(customer: Customer, purchase: Purchase, partialPayment: Payment): Boolean {
+        Log.d("CustomerRepositoryImpl", "partialPayment: $partialPayment")
+        return customerDao.registerPartialPayment(
+            customer.toCustomerEntity(),
+            purchase.toEntity(),
+            partialPayment.toEntity()
+        )
     }
+
 }

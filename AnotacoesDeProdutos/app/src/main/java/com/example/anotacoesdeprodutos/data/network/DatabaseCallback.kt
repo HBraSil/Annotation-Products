@@ -1,7 +1,6 @@
 package com.example.anotacoesdeprodutos.data.network
 
 
-import android.util.Log
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.anotacoesdeprodutos.data.dao.ProductDao
@@ -18,13 +17,7 @@ class DatabaseCallback(
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
-
-        Log.d("DATABASE", "onCreate executou")
-
         scope.launch(Dispatchers.IO) {
-
-            Log.d("DATABASE", "Inserindo produtos")
-
             val databaseList = listOf(
                 ProductEntity(name = "Sabão", price = 0),
                 ProductEntity(name = "Brilho", price = 0),
@@ -46,8 +39,6 @@ class DatabaseCallback(
 
 
             productDaoProvider.get().insertAll(databaseList)
-
-            Log.d("DATABASE", "Produtos inseridos")
         }
     }
 

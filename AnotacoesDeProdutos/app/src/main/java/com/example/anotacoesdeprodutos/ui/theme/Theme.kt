@@ -19,12 +19,13 @@ private val DarkColorScheme = darkColorScheme(
 private val LightColorScheme = lightColorScheme(
     primary = PrimaryColor,
     onPrimary = OnPrimaryColor,
-    background = BackgroundColor,
     secondary = SecondaryColor,
     onSecondary = DarkBlueText,
+    background = BackgroundColor,
     onBackground = OnBackgroundColor,
-    surface = CardCheckedWithSuccess,
+    surface = Surface,
     onSurface = OnSurface,
+    primaryContainer = PrimaryContainer
 
 
     /* Other default colors to override

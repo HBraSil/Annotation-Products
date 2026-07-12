@@ -44,7 +44,7 @@ class NewPurchaseViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val products = productRepository.getAllProducts()
+            val products = productRepository.getProductsWithDefinedPrice()
 
             customer.collect { customer ->
                 _uiState.update {
@@ -52,7 +52,7 @@ class NewPurchaseViewModel @Inject constructor(
                     it.copy(
                         pendingDebt = debt,
                         allProducts = products,
-                        totalPrice = it.selectedProductsSubtotal + debt
+                        totalPrice = debt
                     )
                 }
             }
@@ -140,17 +140,24 @@ class NewPurchaseViewModel @Inject constructor(
             }
 
             try {
-                val purchaseId = customerRepository.addPurchase(
-                    purchase = Purchase(
-                        customerId = customerId,
-                        purchaseDate = System.currentTimeMillis(),
-                        totalAmount = uiState.value.totalPrice
-                    )
+                val purchase = Purchase(
+                    customerId = customerId,
+                    purchaseDate = System.currentTimeMillis(),
+                    totalAmount = uiState.value.selectedProductsSubtotal.toDouble()
                 )
+
+                val currentCustomer = customer.value
+                val updatedCustomer = currentCustomer.copy(
+                    id = customerId,
+                    owes = uiState.value.totalPrice
+                )
+
+                val purchaseId = customerRepository.newPurchase(purchase = purchase)
+
+                customerRepository.updateCustomer(updatedCustomer)
 
                 if (purchaseId > 0) {
                     val cartItems = _uiState.value.selectedProducts.map {
-                        Log.d("NewPurchaseViewModel", "Preparing cart item: $it")
                         it.copy(
                             purchaseId = purchaseId,
                             productId = it.product.id
@@ -173,10 +180,11 @@ class NewPurchaseViewModel @Inject constructor(
 
 
 data class NewPurchaseUiState(
-    val pendingDebt: Double = 0.0,
+    val pendingDebt: Double = 0.0, // DEPOIS REMOVER ESSA PROPRIEDADE
     val allProducts: List<Product> = emptyList(),
     val selectedProducts: List<CartItem> = mutableListOf(),
     val selectedProductsSubtotal: Int = 0,
     val totalPrice: Double = pendingDebt,
+    val isDropdownExpanded: Boolean = false,
     val success: Boolean = false,
 )

@@ -7,7 +7,6 @@ data class Purchase(
     val customerId: Long = 0,
     val purchaseDate: Long = 0,
     val totalAmount: Double = 0.0,
-    val partialPayment: Double = 0.0,
     val items: List<CartItem> = emptyList()
 )
 
@@ -16,5 +15,4 @@ fun Purchase.toEntity() = PurchaseEntity(
     customerId = customerId,
     purchaseDate = purchaseDate,
     totalAmount = totalAmount,
-    partialPayment = partialPayment,
 )

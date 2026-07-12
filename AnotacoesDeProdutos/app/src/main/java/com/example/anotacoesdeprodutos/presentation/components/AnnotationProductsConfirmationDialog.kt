@@ -81,7 +81,7 @@ fun AnnotationProductsConfirmationDialog(
 
                 // Texto de Apoio descritivo
                 Text(
-                    text = "Tem certeza disso? Esta ação não pode ser desfeita.",
+                    text = "Esta ação não pode ser desfeita.",
                     fontSize = 14.sp,
                     color = textSecondary,
                     textAlign = TextAlign.Center,

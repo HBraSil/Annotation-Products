@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Customer
+import com.example.anotacoesdeprodutos.domain.model.Payment
 import com.example.anotacoesdeprodutos.domain.model.Purchase
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
@@ -84,7 +85,23 @@ class CustomerDetailViewModel @Inject constructor(
                     text = formattedText,
                     selection = TextRange(formattedText.length)
                 ),
-                purchase = currentState.purchase.copy(partialPayment = doubleValue)
+                payment = currentState.payment.copy(amount = doubleValue)
+            )
+        }
+    }
+
+    fun onTotalPaymentConfirm() {
+        viewModelScope.launch {
+            customerRepository.payOffTotalDebt(
+                _uiState.value.customer.copy(
+                    owes = 0.0
+                ),
+                Payment(
+                    customerId = _uiState.value.customer.id,
+                    paymentDate = System.currentTimeMillis(),
+                    amount = _uiState.value.customer.owes ?: 0.0,
+                    isTotalPayment = true
+                )
             )
         }
     }
@@ -95,26 +112,24 @@ class CustomerDetailViewModel @Inject constructor(
 
     fun confirmPartialPayment() {
         viewModelScope.launch {
-            val partialPayment = _uiState.value.purchase.partialPayment
-            val owes = _uiState.value.purchase.totalAmount - partialPayment
-
-            Log.d("CustomerDetailViewModel", "confirmPartialPayment: $partialPayment")
+            val partialPayment = _uiState.value.payment
+            val totalUpdated = _uiState.value.customer.owes?.minus(partialPayment.amount)
 
             _uiState.update {
                 it.copy(
-                    customer = it.customer.copy(owes = owes),
-                    purchase = it.purchase.copy(
-                        totalAmount = it.purchase.totalAmount - partialPayment,
-                        partialPayment = partialPayment
-                    )
+                    customer = it.customer.copy(owes = totalUpdated),
+                    //purchase = it.purchase.copy(totalAmount = totalUpdated),
                 )
             }
 
-            Log.d("confirmPartialPayment", "customer: ${_uiState.value.customer} \n purchase: ${_uiState.value.purchase}")
 
             val result = customerRepository.partialPayment(
                 _uiState.value.customer,
-                _uiState.value.purchase
+                _uiState.value.purchase,
+                partialPayment.copy(
+                    customerId = _uiState.value.customer.id,
+                    paymentDate = System.currentTimeMillis()
+                )
             )
 
             if (result) {
@@ -137,6 +152,7 @@ class CustomerDetailViewModel @Inject constructor(
 data class CustomerDetailUiState(
     val customer: Customer = Customer(),
     val purchase: Purchase = Purchase(),
+    val payment: Payment = Payment(),
     val partialPaymentComponent: TextFieldValue = TextFieldValue("R$ 0,00"),
     val purchaseItems: List<CartItem> = emptyList(),
     val showConfirmationDialog: Boolean = false,

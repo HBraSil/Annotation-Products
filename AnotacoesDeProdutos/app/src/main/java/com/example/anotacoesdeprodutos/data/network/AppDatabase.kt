@@ -10,12 +10,13 @@ import com.example.anotacoesdeprodutos.data.entity.CartItemEntity
 import com.example.anotacoesdeprodutos.data.entity.PurchaseEntity
 import com.example.anotacoesdeprodutos.data.entity.CityEntity
 import com.example.anotacoesdeprodutos.data.entity.CustomerEntity
+import com.example.anotacoesdeprodutos.data.entity.PaymentEntity
 import com.example.anotacoesdeprodutos.data.entity.ProductEntity
 import com.example.anotacoesdeprodutos.data.util.Converters
 
 @Database(
-    entities = [CityEntity::class, ProductEntity::class, CustomerEntity::class, PurchaseEntity::class, CartItemEntity::class],
-    version = 20,
+    entities = [CityEntity::class, ProductEntity::class, CustomerEntity::class, PurchaseEntity::class, CartItemEntity::class, PaymentEntity::class],
+    version = 25,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

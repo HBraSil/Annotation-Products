@@ -9,4 +9,3 @@ data class CartItemWithProductDomain(
     val cartItem: CartItem,
     val product: Product
 )
-

@@ -22,7 +22,13 @@ class PriceDefinitionViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            val products = productRepository.getAllProducts()
+            val products = productRepository.getAllProducts().map { product ->
+                EditableProduct(
+                    id = product.id,
+                    name = product.name,
+                    priceText = if (product.price > 0) product.price.toString() else ""
+                )
+            }
             _uiState.update { it.copy(items = products) }
         }
     }
@@ -33,7 +39,7 @@ class PriceDefinitionViewModel @Inject constructor(
             uiState.copy(
                 items = uiState.items.map { product ->
                     if (product.id == productId) {
-                        product.copy(price = newPrice.toInt())
+                        product.copy(priceText = newPrice)
                     } else {
                         product
                     }
@@ -48,7 +54,10 @@ class PriceDefinitionViewModel @Inject constructor(
 
     fun savePrices() {
         viewModelScope.launch {
-            val updatedProducts = _uiState.value.items
+            val updatedProducts = _uiState.value.items.map { product ->
+                Product(id = product.id, name = product.name, price = product.priceText.toIntOrNull() ?: 0)
+            }
+
 
             var result = 0
             updatedProducts.forEach { product ->
@@ -65,6 +74,12 @@ class PriceDefinitionViewModel @Inject constructor(
 }
 
 data class PriceDefinitionUiState(
-    val items: List<Product> = emptyList(),
+    val items: List<EditableProduct> = emptyList(),
     val priceSaved: Boolean = false
+)
+
+data class EditableProduct(
+    val id: Long,
+    val name: String,
+    val priceText: String
 )
