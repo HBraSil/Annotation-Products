@@ -135,6 +135,7 @@ fun AddNewCustomerScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),
+                        enabled = uiState.name.isNotBlank(),
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(28.dp)
                     ) {
@@ -143,7 +144,7 @@ fun AddNewCustomerScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = "Create Client",
+                                text = "Criar Cliente",
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
@@ -161,10 +162,12 @@ fun AddNewCustomerScreen(
         }
     }
 
-    if (uiState.customerCreatedWithSuccess) AnnotationProductsSuccessDialog(
-        text = "Cliente adicionado com sucesso!",
-        onDismiss = onDismissOverlayCreatedCustomer
-    )
+    if (uiState.customerCreatedWithSuccess) {
+        AnnotationProductsSuccessDialog(
+            text = "Cliente adicionado com sucesso!",
+            onDismiss = onDismissOverlayCreatedCustomer
+        )
+    }
 }
 
 // 4. Preview interativo da tela de acordo com as proporções do dispositivo

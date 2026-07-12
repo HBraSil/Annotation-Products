@@ -123,11 +123,11 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
 
                 Spacer(modifier = Modifier.weight(0.2f))
 
-                // 3. Botão de Salvar (Substituindo o antigo "+")
                 ElevatedButton(
                     onClick = {
                         onSaveClick(City(id = 0, name = cityName, lastSale = null))
                     },
+                    enabled = cityName.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Row(

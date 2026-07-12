@@ -420,6 +420,6 @@ fun ClientDetailsContent(
 @Composable
 fun CustomerDetailScreenPreview() {
     MaterialTheme {
-        ClientDetailsContent() {}
+        ClientDetailsContent {}
     }
 }
