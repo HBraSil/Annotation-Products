@@ -1,6 +1,5 @@
 package com.example.anotacoesdeprodutos.presentation.customers
 
-import android.util.Log.d
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -61,18 +60,10 @@ fun CustomersScreen(
     ClientManagementContent(
         currentCity = customerUiState.currentCity ?: City(),
         customerUiState = customerUiState,
-        onSearchQueryChange = customersViewModel::updateSearchQuery,
         onBackClick = onBackClick,
-        onNameChange = customersViewModel::updateName,
-        onExtraInfoChange = customersViewModel::updateExtraInfo,
-        onCreateClientClick = customersViewModel::saveCustomer,
-        onDismissModalDeleteCustomer = customersViewModel::onDismissModalDeleteCustomer,
         goToCustomerDetailScreen = goToCustomerDetailScreen,
-        showModalCreateCustomer = customersViewModel::showModalCreateCustomer,
-        onConfirmDeleteCustomer = customersViewModel::deleteCustomer,
-        showModalDeleteCustomer = customersViewModel::showModalDeleteCustomer,
-        onDismissOverlayCreatedCustomer = customersViewModel::closeModalAndOverlayCreatedCustomer,
-        onCloseModal = customersViewModel::closeModalAndOverlayCreatedCustomer,
+        onCustomerUiEvent = customersViewModel::customersEvent
+
     )
 }
 
@@ -80,21 +71,11 @@ fun CustomersScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientManagementContent(
-    modifier: Modifier = Modifier,
-    currentCity: City = City(),
     customerUiState: CustomersUiState = CustomersUiState(),
-    onSearchQueryChange: (String) -> Unit = {},
+    currentCity: City = City(),
     onBackClick: () -> Unit = {},
-    onNameChange: (String) -> Unit = {},
-    onExtraInfoChange: (String) -> Unit = {},
-    onCreateClientClick: () -> Unit = {},
-    onDismissModalDeleteCustomer: () -> Unit = {},
     goToCustomerDetailScreen: (Long) -> Unit = {},
-    showModalCreateCustomer: () -> Unit = {},
-    onConfirmDeleteCustomer: () -> Unit = {},
-    showModalDeleteCustomer: (Long) -> Unit = {},
-    onDismissOverlayCreatedCustomer: () -> Unit = {},
-    onCloseModal: () -> Unit = {},
+    onCustomerUiEvent: (CustomersUiEvent) -> Unit = {}
 ) {
 
     Scaffold(
@@ -131,7 +112,7 @@ fun ClientManagementContent(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = showModalCreateCustomer,
+                onClick = { onCustomerUiEvent(CustomersUiEvent.OnShowModalCreateCustomer) },
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.padding(bottom = 16.dp, end = 8.dp),
                 containerColor = MaterialTheme.colorScheme.primary,
@@ -139,7 +120,7 @@ fun ClientManagementContent(
                 Text("Adicionar Cliente")
             }
         },
-        modifier = modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize(),
         containerColor = Color.White
     ) { paddingValues ->
 
@@ -157,7 +138,9 @@ fun ClientManagementContent(
                     AnnotationProductsSearchBar(
                         text = customerUiState.searchQuery,
                         placeholder = "Buscar por cliente",
-                        onSearchQueryChange = onSearchQueryChange
+                        onSearchQueryChange = {
+                            onCustomerUiEvent(CustomersUiEvent.OnSearchQueryChange(it))
+                        }
                     )
                 }
 
@@ -226,7 +209,7 @@ fun ClientManagementContent(
                                     Spacer(modifier = Modifier.weight(1f))
 
                                     IconButton(
-                                        onClick = { showModalDeleteCustomer(customer.id) },
+                                        onClick = { onCustomerUiEvent(CustomersUiEvent.OnShowModalDeleteCustomer(customer.id)) },
                                         modifier = Modifier.size(44.dp)
                                     ) {
                                         Icon(
@@ -242,25 +225,24 @@ fun ClientManagementContent(
                 }
 
                 item { Spacer(modifier = Modifier.height(80.dp)) }
-
         }
 
         if (customerUiState.showModalCreateCustomer) {
             AddNewCustomerScreen(
                 uiState = customerUiState,
-                onDismissOverlayCreatedCustomer = onDismissOverlayCreatedCustomer,
-                onNameChange = onNameChange,
-                onExtraInfoChange = onExtraInfoChange,
-                onCreateClientClick = onCreateClientClick,
-                onCloseModal = onCloseModal,
+                onDismissOverlayCreatedCustomer = { onCustomerUiEvent(CustomersUiEvent.OnDismissOverlayCreatedCustomer) },
+                onNameChange = { onCustomerUiEvent(CustomersUiEvent.OnNameChange(it)) },
+                onExtraInfoChange = { onCustomerUiEvent(CustomersUiEvent.OnExtraInfoChange(it)) },
+                onCreateClientClick = { onCustomerUiEvent(CustomersUiEvent.OnCreateCustomerClick) },
+                onCloseModal = { onCustomerUiEvent(CustomersUiEvent.OnDismissOverlayCreatedCustomer) },
             )
         }
 
         if (customerUiState.showModalDeleteCustomer >= 0) {
             AnnotationProductsConfirmationDialog(
                 title = "Excluir Cliente?",
-                onDismissRequest = onDismissModalDeleteCustomer,
-                onConfirmClick = onConfirmDeleteCustomer,
+                onDismissRequest = { onCustomerUiEvent(CustomersUiEvent.OnDismissModalDeleteCustomer) },
+                onConfirmClick = { onCustomerUiEvent(CustomersUiEvent.OnDeleteCustomerClick) },
                 modifier = Modifier.fillMaxWidth()
             )
         }

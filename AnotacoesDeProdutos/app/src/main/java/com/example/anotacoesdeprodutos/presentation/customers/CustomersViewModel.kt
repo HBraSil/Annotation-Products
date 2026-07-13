@@ -46,6 +46,22 @@ class CustomersViewModel @Inject constructor(
         observeSearchQuery()
     }
 
+
+    fun customersEvent(event: CustomersUiEvent) {
+        when (event) {
+            is CustomersUiEvent.OnSearchQueryChange -> updateSearchQuery(event.query)
+            is CustomersUiEvent.OnNameChange -> updateName(event.name)
+            is CustomersUiEvent.OnExtraInfoChange -> updateExtraInfo(event.extraInfo)
+            is CustomersUiEvent.OnCreateCustomerClick -> saveCustomer()
+            is CustomersUiEvent.OnDismissModalDeleteCustomer -> onDismissModalDeleteCustomer()
+            is CustomersUiEvent.OnShowModalDeleteCustomer -> showModalDeleteCustomer(event.id)
+            is CustomersUiEvent.OnShowModalCreateCustomer -> showModalCreateCustomer()
+            is CustomersUiEvent.OnDeleteCustomerClick -> deleteCustomer()
+            is CustomersUiEvent.OnDismissOverlayCreatedCustomer -> closeModalAndOverlayCreatedCustomer()
+        }
+
+    }
+
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeSearchQuery() {
         viewModelScope.launch {
@@ -64,33 +80,24 @@ class CustomersViewModel @Inject constructor(
     }
 
 
-    fun updateSearchQuery(query: String) {
-        _customerUiState.update { it.copy(searchQuery = query) }
+    private fun updateSearchQuery(query: String) = _customerUiState.update { it.copy(searchQuery = query) }
+
+
+    private fun updateName(name: String) = _customerUiState.update { it.copy(name = name) }
+
+
+    private fun updateExtraInfo(extraInfo: String) = _customerUiState.update { it.copy(extraInfo = extraInfo) }
+
+    private fun showModalCreateCustomer() = _customerUiState.update {
+        it.copy(showModalCreateCustomer = true)
     }
 
-    fun updateName(name: String) {
-        _customerUiState.update { it.copy(name = name) }
-    }
-
-    fun updateExtraInfo(extraInfo: String) {
-        _customerUiState.update { it.copy(extraInfo = extraInfo) }
-    }
-
-    fun showModalCreateCustomer() {
-        _customerUiState.update {
-            it.copy(showModalCreateCustomer = true)
-        }
-    }
-
-
-    fun showModalDeleteCustomer(id: Long) {
-        _customerUiState.update {
-            it.copy(showModalDeleteCustomer = id)
-        }
+    private fun showModalDeleteCustomer(id: Long) = _customerUiState.update {
+        it.copy(showModalDeleteCustomer = id)
     }
 
 
-    fun closeModalAndOverlayCreatedCustomer() {
+    private fun closeModalAndOverlayCreatedCustomer() {
         _customerUiState.update {
             it.copy(
                 showModalCreateCustomer = false,
@@ -102,14 +109,12 @@ class CustomersViewModel @Inject constructor(
     }
 
 
-    fun onDismissModalDeleteCustomer() {
-        _customerUiState.update {
-            it.copy(showModalDeleteCustomer = -1)
-        }
+    private fun onDismissModalDeleteCustomer() = _customerUiState.update {
+        it.copy(showModalDeleteCustomer = -1)
     }
 
 
-    fun deleteCustomer() {
+    private fun deleteCustomer() {
         viewModelScope.launch {
             val customerId = _customerUiState.value.showModalDeleteCustomer
             val result = customerRepository.deleteCustomer(customerId)
@@ -123,7 +128,7 @@ class CustomersViewModel @Inject constructor(
     }
 
 
-    fun saveCustomer() {
+    private fun saveCustomer() {
         viewModelScope.launch {
             if (cityIdFlow <= 0) {
                 Log.e("CustomersViewModel", "Cannot save customer: Invalid cityId $cityIdFlow")
@@ -157,6 +162,19 @@ class CustomersViewModel @Inject constructor(
             )
         }
     }
+}
+
+
+sealed interface CustomersUiEvent {
+    data class OnSearchQueryChange(val query: String) : CustomersUiEvent
+    data class OnNameChange(val name: String) : CustomersUiEvent
+    data class OnExtraInfoChange(val extraInfo: String) : CustomersUiEvent
+    object OnCreateCustomerClick : CustomersUiEvent
+    object OnDeleteCustomerClick : CustomersUiEvent
+    object OnDismissModalDeleteCustomer : CustomersUiEvent
+    data class OnShowModalDeleteCustomer(val id: Long) : CustomersUiEvent
+    object OnShowModalCreateCustomer : CustomersUiEvent
+    object OnDismissOverlayCreatedCustomer : CustomersUiEvent
 }
 
 
