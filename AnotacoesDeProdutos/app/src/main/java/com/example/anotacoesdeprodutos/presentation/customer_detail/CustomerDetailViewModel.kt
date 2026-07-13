@@ -79,16 +79,22 @@ class CustomerDetailViewModel @Inject constructor(
 
         val formattedText = currencyFormatter.format(doubleValue)
 
-        _uiState.update { currentState ->
-            currentState.copy(
+        _uiState.update {
+            it.copy(
                 partialPaymentComponent = TextFieldValue(
                     text = formattedText,
                     selection = TextRange(formattedText.length)
                 ),
-                payment = currentState.payment.copy(amount = doubleValue)
+                payment = it.payment.copy(amount = doubleValue)
             )
         }
     }
+
+
+    fun onDismissToast() {
+        _uiState.update { it.copy(errorPartialPayment = false) }
+    }
+
 
     fun onTotalPaymentConfirm() {
         viewModelScope.launch {
@@ -106,13 +112,31 @@ class CustomerDetailViewModel @Inject constructor(
         }
     }
 
+
+    fun updatePartialPaymentComponent() {
+        _uiState.update { it.copy(isPartialPaymentExpanded = !it.isPartialPaymentExpanded) }
+    }
+
+
     fun showConfirmationDialog() {
+        if (_uiState.value.payment.amount <= 0) {
+            _uiState.update {
+                it.copy(
+                    errorPartialPayment = true,
+                    showConfirmationDialog = false
+                )
+            }
+            return
+        }
+
         _uiState.update { it.copy(showConfirmationDialog = true) }
     }
+
 
     fun confirmPartialPayment() {
         viewModelScope.launch {
             val partialPayment = _uiState.value.payment
+
             val totalUpdated = _uiState.value.customer.owes?.minus(partialPayment.amount)
 
             _uiState.update {
@@ -156,5 +180,7 @@ data class CustomerDetailUiState(
     val partialPaymentComponent: TextFieldValue = TextFieldValue("R$ 0,00"),
     val purchaseItems: List<CartItem> = emptyList(),
     val showConfirmationDialog: Boolean = false,
-    val showSuccessDialog: Boolean = false
+    val showSuccessDialog: Boolean = false,
+    val isPartialPaymentExpanded: Boolean = false,
+    val errorPartialPayment: Boolean = false,
 )

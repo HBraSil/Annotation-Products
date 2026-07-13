@@ -1,5 +1,6 @@
 package com.example.anotacoesdeprodutos.presentation.customer_detail
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,6 +31,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsConfirmationDialog
@@ -52,13 +54,15 @@ fun CustomerDetailScreen(
     ClientDetailsContent(
         uiState = uiState,
         onPartialPaymentChange = customerDetailViewModel::updatePartialPayment,
+        onPartialPaymentExpand = customerDetailViewModel::updatePartialPaymentComponent,
         onBackClick = onBackClick,
         onHistoryClick = onHistoryClick,
         goToNewPurchaseScreen = goToNewPurchaseScreen,
         onPartialPaymentConfirm = customerDetailViewModel::confirmPartialPayment,
         onTotalPaymentConfirm = customerDetailViewModel::onTotalPaymentConfirm,
         onDismiss = customerDetailViewModel::onDismiss,
-        showConfirmationDialog = customerDetailViewModel::showConfirmationDialog
+        showConfirmationDialog = customerDetailViewModel::showConfirmationDialog,
+        onDismissToast = customerDetailViewModel::onDismissToast
     )
 }
 
@@ -67,6 +71,7 @@ fun CustomerDetailScreen(
 fun ClientDetailsContent(
     uiState: CustomerDetailUiState = CustomerDetailUiState(),
     onPartialPaymentChange: (String) -> Unit = {},
+    onPartialPaymentExpand: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onHistoryClick: (Long) -> Unit = {},
     goToNewPurchaseScreen: (Long) -> Unit = {},
@@ -74,8 +79,9 @@ fun ClientDetailsContent(
     onTotalPaymentConfirm: () -> Unit = {},
     onDismiss: () -> Unit = {},
     showConfirmationDialog: () -> Unit = {},
+    onDismissToast: () -> Unit = {},
 ) {
-    var isPartialPaymentExpanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
 
     Scaffold(
         topBar = {
@@ -331,7 +337,7 @@ fun ClientDetailsContent(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        isPartialPaymentExpanded = !isPartialPaymentExpanded
+                                        onPartialPaymentExpand()
                                     }
                                     .padding(vertical = 16.dp, horizontal = 20.dp),
                                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -344,15 +350,15 @@ fun ClientDetailsContent(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Icon(
-                                    imageVector = if (isPartialPaymentExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (isPartialPaymentExpanded) "Recolher" else "Expandir",
+                                    imageVector = if (uiState.isPartialPaymentExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                                    contentDescription = if (uiState.isPartialPaymentExpanded) "Recolher" else "Expandir",
                                     tint = MaterialTheme.colorScheme.secondary
                                 )
                             }
 
                             // COMPONENTE ANIMADO: Desce suavemente ao clicar
                             AnimatedVisibility(
-                                visible = isPartialPaymentExpanded,
+                                visible = uiState.isPartialPaymentExpanded,
                                 enter = expandVertically() + fadeIn(),
                                 exit = shrinkVertically() + fadeOut()
                             ) {
@@ -394,7 +400,7 @@ fun ClientDetailsContent(
                         }
                     }
                 }
-                Spacer(modifier = Modifier.height(80.dp)) // Espaço extra para não cobrir o conteúdo com o FAB
+                Spacer(modifier = Modifier.height(80.dp))
             }
         }
     }
@@ -414,12 +420,18 @@ fun ClientDetailsContent(
         )
     }
 
+    if (uiState.errorPartialPayment) {
+        Toast.makeText(context, "Valor inválido", Toast.LENGTH_SHORT).show()
+        onDismissToast()
+
+    }
+
 }
 
 @Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")
 @Composable
 fun CustomerDetailScreenPreview() {
     MaterialTheme {
-        ClientDetailsContent {}
+        ClientDetailsContent()
     }
 }
