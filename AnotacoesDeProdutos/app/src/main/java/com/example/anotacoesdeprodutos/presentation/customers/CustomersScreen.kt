@@ -46,13 +46,11 @@ fun CustomersScreen(
     goToCustomerDetailScreen: (Long) -> Unit = {},
 ) {
 
-    val lastScreen by lastScreenViewModel.lastActiveProfile.collectAsState()
     val customerUiState by customersViewModel.customerUiState.collectAsState()
 
     LaunchedEffect(customerUiState.currentCity?.id) {
         if (customerUiState.currentCity?.id != null) {
             lastScreenViewModel.lastRoute("${Screens.CUSTOMERS.route}/${customerUiState.currentCity?.id}")
-            d("CustomersScreen", "CustomersScreen: $lastScreen")
         }
     }
 
@@ -68,13 +66,13 @@ fun CustomersScreen(
         onNameChange = customersViewModel::updateName,
         onExtraInfoChange = customersViewModel::updateExtraInfo,
         onCreateClientClick = customersViewModel::saveCustomer,
+        onDismissModalDeleteCustomer = customersViewModel::onDismissModalDeleteCustomer,
         goToCustomerDetailScreen = goToCustomerDetailScreen,
         showModalCreateCustomer = customersViewModel::showModalCreateCustomer,
-        showModalDeleteCustomer = customersViewModel::showModalDeleteCustomer,
         onConfirmDeleteCustomer = customersViewModel::deleteCustomer,
-        onDismissModalDeleteCustomer = customersViewModel::onDismissModalDeleteCustomer,
+        showModalDeleteCustomer = customersViewModel::showModalDeleteCustomer,
         onDismissOverlayCreatedCustomer = customersViewModel::closeModalAndOverlayCreatedCustomer,
-        onCloseModal = customersViewModel::closeModalAndOverlayCreatedCustomer
+        onCloseModal = customersViewModel::closeModalAndOverlayCreatedCustomer,
     )
 }
 
@@ -166,6 +164,7 @@ fun ClientManagementContent(
                 // Lista de Clientes (Cards)
                 item {
                     if (customerUiState.customers.isEmpty()) {
+                        Spacer(modifier = Modifier.height(40.dp))
                         AnnotationProductsNothingToShow(text = "Nenhum cliente encontrado",)
                     } else {
                         customerUiState.customers.forEach { customer ->
@@ -249,10 +248,10 @@ fun ClientManagementContent(
         if (customerUiState.showModalCreateCustomer) {
             AddNewCustomerScreen(
                 uiState = customerUiState,
-                onCreateClientClick = onCreateClientClick,
+                onDismissOverlayCreatedCustomer = onDismissOverlayCreatedCustomer,
                 onNameChange = onNameChange,
                 onExtraInfoChange = onExtraInfoChange,
-                onDismissOverlayCreatedCustomer = onDismissOverlayCreatedCustomer,
+                onCreateClientClick = onCreateClientClick,
                 onCloseModal = onCloseModal,
             )
         }

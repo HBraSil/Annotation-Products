@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,7 +29,6 @@ fun AnnotationProductsSuccessDialog(
     text: String,
     onDismiss: () -> Unit,
 ) {
-    val brandBlue = Color(0xFF254EDB)
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(
@@ -47,7 +47,7 @@ fun AnnotationProductsSuccessDialog(
                 Box(
                     modifier = Modifier
                         .size(56.dp)
-                        .background(color = brandBlue, shape = CircleShape),
+                        .background(color = MaterialTheme.colorScheme.primary, shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
@@ -78,7 +78,7 @@ fun AnnotationProductsSuccessDialog(
                 ) {
                     Button(
                         onClick = onDismiss,
-                        colors = ButtonDefaults.buttonColors(containerColor = brandBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(24.dp),
                         contentPadding = PaddingValues(horizontal = 32.dp, vertical = 12.dp),
                         modifier = Modifier.height(48.dp)

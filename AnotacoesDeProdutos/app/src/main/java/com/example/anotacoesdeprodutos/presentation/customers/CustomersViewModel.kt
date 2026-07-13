@@ -59,7 +59,6 @@ class CustomersViewModel @Inject constructor(
                     _customerUiState.update {
                         it.copy(customers = customers)
                     }
-                    Log.d("CustomersViewModel", "observeSearchQuery: $customers ---|||--- and ${customerUiState.value.customers}")
                 }
         }
     }
@@ -83,6 +82,7 @@ class CustomersViewModel @Inject constructor(
         }
     }
 
+
     fun showModalDeleteCustomer(id: Long) {
         _customerUiState.update {
             it.copy(showModalDeleteCustomer = id)
@@ -97,13 +97,17 @@ class CustomersViewModel @Inject constructor(
                 customerCreatedWithSuccess = false
             )
         }
+
+        resetAddNewCustomerFields()
     }
+
 
     fun onDismissModalDeleteCustomer() {
         _customerUiState.update {
             it.copy(showModalDeleteCustomer = -1)
         }
     }
+
 
     fun deleteCustomer() {
         viewModelScope.launch {
@@ -117,6 +121,7 @@ class CustomersViewModel @Inject constructor(
             }
         }
     }
+
 
     fun saveCustomer() {
         viewModelScope.launch {
@@ -139,6 +144,17 @@ class CustomersViewModel @Inject constructor(
                     )
                 }
             }
+        }
+    }
+
+
+    fun resetAddNewCustomerFields() {
+        _customerUiState.update {
+            it.copy(
+                name = "",
+                extraInfo = null,
+                customerCreatedWithSuccess = false
+            )
         }
     }
 }

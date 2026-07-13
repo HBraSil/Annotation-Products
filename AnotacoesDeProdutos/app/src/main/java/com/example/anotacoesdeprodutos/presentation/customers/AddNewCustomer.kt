@@ -30,8 +30,6 @@ fun AddNewCustomerScreen(
     onCreateClientClick: () -> Unit = {},
     onCloseModal: () -> Unit = {},
 ) {
-
-
     ModalBottomSheet(
         onDismissRequest = onCloseModal,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
