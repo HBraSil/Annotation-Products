@@ -17,7 +17,7 @@ class DatabaseCallback(
 
     override fun onCreate(db: SupportSQLiteDatabase) {
         super.onCreate(db)
-        scope.launch(Dispatchers.IO) {
+        scope.launch {
             val databaseList = listOf(
                 ProductEntity(name = "Sabão", price = 0),
                 ProductEntity(name = "Brilho", price = 0),

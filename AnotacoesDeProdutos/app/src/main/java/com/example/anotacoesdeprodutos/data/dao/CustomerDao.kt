@@ -33,27 +33,6 @@ interface CustomerDao {
     suspend fun deleteCustomer(customerId: Long): Int
 
     @Insert
-    suspend fun addPurchase(purchase: PurchaseEntity): Long
-
-    @Transaction
-    @Query("""
-        SELECT * FROM purchase
-        WHERE customerId = :customerId
-        ORDER BY id DESC
-        LIMIT 1
-    """)
-    fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsData?>
-
-    @Transaction
-    @Query("""
-        SELECT * FROM purchase
-        WHERE customerId = :customerId
-        ORDER BY purchaseDate DESC
-    """)
-    fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsData>>
-
-
-    @Insert
     suspend fun saveCartItems(cartItems: List<CartItemEntity>): List<Long>
 
     @Query("""
@@ -73,25 +52,4 @@ interface CustomerDao {
 
     @Query("SELECT * FROM payment WHERE customerId = :customerId")
     fun getPayments(customerId: Long): Flow<List<PaymentEntity>>
-
-    @Update
-    suspend fun updatePurchase(purchase: PurchaseEntity): Int
-
-    @Query("SELECT * FROM purchase WHERE id = :id")
-    suspend fun getPurchase(id: Long): PurchaseEntity?
-
-
-    @Transaction
-    suspend fun registerPartialPayment(
-        customer: CustomerEntity,
-        purchase: PurchaseEntity,
-        partialPayment: PaymentEntity
-    ): Boolean {
-        Log.d("CustomerDao", "registerPartialPayment: $partialPayment")
-        val customerRows = updateCustomer(customer)
-        val purchaseRow = updatePurchase(purchase)
-        val paymentId = insertPayment(partialPayment)
-
-        return customerRows > 0 && purchaseRow > 0 && paymentId > 0
-    }
 }

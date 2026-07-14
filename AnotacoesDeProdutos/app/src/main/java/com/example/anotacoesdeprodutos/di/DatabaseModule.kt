@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.example.anotacoesdeprodutos.data.dao.CityDao
 import com.example.anotacoesdeprodutos.data.dao.CustomerDao
 import com.example.anotacoesdeprodutos.data.dao.ProductDao
+import com.example.anotacoesdeprodutos.data.dao.PurchaseDao
 import com.example.anotacoesdeprodutos.data.network.AppDatabase
 import com.example.anotacoesdeprodutos.data.network.DatabaseCallback
 import com.example.anotacoesdeprodutos.data.repository.CityRepositoryImpl
@@ -31,7 +32,7 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideCoroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    fun provideCoroutineScope(): CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     @Provides
     @Singleton
@@ -56,6 +57,9 @@ object DatabaseModule {
     fun provideProductDao(database: AppDatabase) = database.productDao()
 
     @Provides
+    fun providePurchaseDao(database: AppDatabase) = database.purchaseDao()
+
+    @Provides
     fun provideCustomerDao(database: AppDatabase) = database.customerDao()
 
     @Provides
@@ -63,8 +67,8 @@ object DatabaseModule {
         CityRepositoryImpl(cityDao)
 
     @Provides
-    fun provideCustomerRepository(customerDao: CustomerDao): CustomerRepository =
-        CustomerRepositoryImpl(customerDao)
+    fun provideCustomerRepository(customerDao: CustomerDao, purchaseDao: PurchaseDao, appDatabase: AppDatabase): CustomerRepository =
+        CustomerRepositoryImpl(customerDao, purchaseDao, appDatabase)
 
     @Provides
     fun provideProductRepository(productDao: ProductDao): ProductRepository =

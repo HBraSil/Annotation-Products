@@ -1,8 +1,15 @@
 package com.example.anotacoesdeprodutos.data.repository
 
 import android.util.Log
+import androidx.room.Transaction
+import androidx.room.withTransaction
 import com.example.anotacoesdeprodutos.data.dao.CustomerDao
+import com.example.anotacoesdeprodutos.data.dao.PurchaseDao
+import com.example.anotacoesdeprodutos.data.entity.CustomerEntity
+import com.example.anotacoesdeprodutos.data.entity.PaymentEntity
+import com.example.anotacoesdeprodutos.data.entity.PurchaseEntity
 import com.example.anotacoesdeprodutos.data.entity.toDomain
+import com.example.anotacoesdeprodutos.data.network.AppDatabase
 import com.example.anotacoesdeprodutos.domain.model.CartItem
 import com.example.anotacoesdeprodutos.domain.model.Customer
 import com.example.anotacoesdeprodutos.domain.model.Payment
@@ -18,7 +25,9 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class CustomerRepositoryImpl @Inject constructor(
-    private val customerDao: CustomerDao
+    private val customerDao: CustomerDao,
+    private val purchaseDao: PurchaseDao,
+    val appDatabase: AppDatabase
 ) : CustomerRepository {
     override fun getCustomer(id: Long): Flow<Customer> {
         return customerDao.getCustomer(id).map { it.toDomain() }
@@ -33,7 +42,7 @@ class CustomerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun newPurchase(purchase: Purchase): Long {
-        return customerDao.addPurchase(purchase.toEntity())
+        return purchaseDao.addPurchase(purchase.toEntity())
     }
 
     override suspend fun updateCustomer(customer: Customer): Int {
@@ -60,11 +69,11 @@ class CustomerRepositoryImpl @Inject constructor(
     }
 
     override fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsDomain?> {
-        return customerDao.getLastPurchase(customerId).map { it?.toDomain() }
+        return purchaseDao.getLastPurchase(customerId).map { it?.toDomain() }
     }
 
     override fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsDomain>> {
-        return customerDao.getAllPurchases(customerId).map { purchaseListData ->
+        return purchaseDao.getAllPurchases(customerId).map { purchaseListData ->
             Log.d("CustomerRepositoryImpl", "getPurchase: $purchaseListData")
             purchaseListData.map { it.toDomain() }
         }
@@ -84,12 +93,16 @@ class CustomerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun partialPayment(customer: Customer, purchase: Purchase, partialPayment: Payment): Boolean {
-        Log.d("CustomerRepositoryImpl", "partialPayment: $partialPayment")
-        return customerDao.registerPartialPayment(
-            customer.toCustomerEntity(),
-            purchase.toEntity(),
-            partialPayment.toEntity()
-        )
-    }
+        val customerEntity = customer.toCustomerEntity()
+        val purchaseEntity = purchase.toEntity()
+        val partialPaymentEntity = partialPayment.toEntity()
 
+        return appDatabase.withTransaction {
+            val customerRows = customerDao.updateCustomer(customerEntity)
+            val purchaseRow = purchaseDao.updatePurchase(purchaseEntity)
+            val paymentId = customerDao.insertPayment(partialPaymentEntity)
+
+            customerRows > 0 && purchaseRow > 0 && paymentId > 0
+        }
+    }
 }

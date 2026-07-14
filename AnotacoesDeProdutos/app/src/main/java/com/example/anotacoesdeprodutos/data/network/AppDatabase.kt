@@ -6,6 +6,7 @@ import androidx.room.TypeConverters
 import com.example.anotacoesdeprodutos.data.dao.CityDao
 import com.example.anotacoesdeprodutos.data.dao.CustomerDao
 import com.example.anotacoesdeprodutos.data.dao.ProductDao
+import com.example.anotacoesdeprodutos.data.dao.PurchaseDao
 import com.example.anotacoesdeprodutos.data.entity.CartItemEntity
 import com.example.anotacoesdeprodutos.data.entity.PurchaseEntity
 import com.example.anotacoesdeprodutos.data.entity.CityEntity
@@ -24,4 +25,6 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun cityDao(): CityDao
     abstract fun productDao(): ProductDao
     abstract fun customerDao(): CustomerDao
+    abstract fun purchaseDao(): PurchaseDao
+
 }
