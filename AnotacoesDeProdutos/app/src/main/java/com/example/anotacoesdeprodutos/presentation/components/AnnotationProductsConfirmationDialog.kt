@@ -36,11 +36,6 @@ fun AnnotationProductsConfirmationDialog(
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit,
 ) {
-    // Cores alinhadas com a identidade visual e o contexto destrutivo
-    val alertRed = Color(0xFFC62828)
-    val textPrimary = Color(0xFF111111)
-    val textSecondary = Color(0xFF5F6368)
-    val dialogBgColor = Color(0xFFFFFFFF)
 
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
@@ -49,7 +44,7 @@ fun AnnotationProductsConfirmationDialog(
                 .wrapContentHeight()
                 .padding(horizontal = 8.dp),
             shape = RoundedCornerShape(28.dp),
-            color = dialogBgColor,
+            color = MaterialTheme.colorScheme.onPrimary,
             tonalElevation = 6.dp
         ) {
             Column(
@@ -63,7 +58,7 @@ fun AnnotationProductsConfirmationDialog(
                 Icon(
                     imageVector = Icons.Outlined.Delete,
                     contentDescription = null,
-                    tint = alertRed,
+                    tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(32.dp)
                 )
 
@@ -74,7 +69,7 @@ fun AnnotationProductsConfirmationDialog(
                     text = title,
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
-                    color = textPrimary,
+                    color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center
                 )
 
@@ -84,7 +79,7 @@ fun AnnotationProductsConfirmationDialog(
                 Text(
                     text = "Esta ação não pode ser desfeita.",
                     fontSize = 14.sp,
-                    color = textSecondary,
+                    color = MaterialTheme.colorScheme.secondary,
                     textAlign = TextAlign.Center,
                     lineHeight = 20.sp,
                     modifier = Modifier.padding(horizontal = 8.dp)

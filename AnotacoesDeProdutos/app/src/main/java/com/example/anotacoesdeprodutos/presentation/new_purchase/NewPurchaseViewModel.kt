@@ -34,7 +34,7 @@ class NewPurchaseViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(NewPurchaseUiState())
     val uiState: StateFlow<NewPurchaseUiState> = _uiState.asStateFlow()
 
-    val customer = customerRepository.getCustomer(customerId)
+    private val customer = customerRepository.getCustomer(customerId)
         .stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),

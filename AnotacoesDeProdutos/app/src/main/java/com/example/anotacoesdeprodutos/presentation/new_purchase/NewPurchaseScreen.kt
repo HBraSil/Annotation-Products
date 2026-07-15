@@ -43,8 +43,6 @@ fun NewPurchaseScreen(
     onBackClick: () -> Unit = {},
 ) {
     val uiState by newPurchaseViewModel.uiState.collectAsState()
-    val customers by newPurchaseViewModel.customer.collectAsState()
-    Log.d("NewPurchaseScreen", "pendingDebt variable: $customers")
 
     NewPurchaseContent(
         uiState = uiState,

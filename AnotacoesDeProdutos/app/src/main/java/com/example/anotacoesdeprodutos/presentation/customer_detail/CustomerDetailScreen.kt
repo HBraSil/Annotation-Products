@@ -48,7 +48,6 @@ fun CustomerDetailScreen(
     onHistoryClick: (Long) -> Unit = {},
     goToNewPurchaseScreen: (Long) -> Unit = {},
 ) {
-
     val uiState by customerDetailViewModel.uiState.collectAsState()
 
     ClientDetailsContent(

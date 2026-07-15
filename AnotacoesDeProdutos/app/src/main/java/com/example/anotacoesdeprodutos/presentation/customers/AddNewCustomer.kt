@@ -173,6 +173,8 @@ fun AddNewCustomerScreen(
 @Composable
 fun AddNewClientScreenPreview() {
     MaterialTheme {
-        AddNewCustomerScreen()
+        AddNewCustomerScreen(
+            
+        )
     }
 }
