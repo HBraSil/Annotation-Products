@@ -23,31 +23,23 @@ class HomeViewModel @Inject constructor(
     val uiState = _homeUiState.asStateFlow()
 
     init {
-        viewModelScope.launch {
-            cityRepository.getCitiesWithClientCount().collect { cities ->
-                _homeUiState.value = _homeUiState.value.copy(
-                    cities = cities
-                )
-            }
-        }
-
         observeCities()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun observeCities() {
         viewModelScope.launch {
-            _homeUiState.map {
-                it.searchQuery
-            }.distinctUntilChanged()
+            _homeUiState
+                .map { it.searchQuery }
+                .distinctUntilChanged()
                 .flatMapLatest {
                     cityRepository.searchCities(it)
                 }
                 .collect {  cities ->
                     _homeUiState.update {
                         it.copy(cities = cities)
+                    }
                 }
-            }
         }
     }
 

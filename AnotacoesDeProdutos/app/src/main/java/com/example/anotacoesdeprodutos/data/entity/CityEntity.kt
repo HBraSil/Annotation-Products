@@ -8,13 +8,12 @@ import com.example.anotacoesdeprodutos.domain.model.City
 data class CityEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val name: String,
-    val customerCount: Int,
-    val lastSale: String? = null,
+    val customerCount: Int = 0
 )
+
 
 fun CityEntity.toCity() = City(
     id = id,
     name = name,
-    customerCount = customerCount,
-    lastSale = lastSale,
+    customerCount = customerCount
 )

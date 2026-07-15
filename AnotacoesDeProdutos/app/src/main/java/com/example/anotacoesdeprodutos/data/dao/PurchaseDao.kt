@@ -14,9 +14,6 @@ interface PurchaseDao {
     @Update
     suspend fun updatePurchase(purchase: PurchaseEntity): Int
 
-    @Query("SELECT * FROM purchase WHERE id = :id")
-    suspend fun getPurchase(id: Long): PurchaseEntity?
-
     @Insert
     suspend fun addPurchase(purchase: PurchaseEntity): Long
 

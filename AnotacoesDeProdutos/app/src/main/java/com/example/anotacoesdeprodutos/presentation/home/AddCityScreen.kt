@@ -125,7 +125,7 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
 
                 ElevatedButton(
                     onClick = {
-                        onSaveClick(City(id = 0, name = cityName, lastSale = null))
+                        onSaveClick(City(id = 0, name = cityName))
                     },
                     enabled = cityName.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),

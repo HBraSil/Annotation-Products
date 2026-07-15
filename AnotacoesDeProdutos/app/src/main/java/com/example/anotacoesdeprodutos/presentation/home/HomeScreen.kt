@@ -1,5 +1,6 @@
 package com.example.anotacoesdeprodutos.presentation.home
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -132,6 +133,7 @@ fun HomeContent(
                     )
                 } else {
                     homeUiState.cities.forEach { city ->
+                        Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
                         CityCard(
                             city = city,
                             onClick = { onCityClick(city) },
@@ -220,6 +222,7 @@ private fun CityCard(
     onClick: () -> Unit,
 ) {
 
+    Log.d("CityCard", "CityCard: ${city.name} -> ${city.customerCount}")
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -258,25 +261,14 @@ private fun CityCard(
 
             Spacer(modifier = Modifier.size(14.dp))
 
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Text(
+                text = city.name,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
 
-                Text(
-                    text = city.name,
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                Spacer(modifier = Modifier.height(2.dp))
-
-                Text(
-                    text = "Nenhuma venda recente",
-                    fontSize = 13.sp,
-                    color = MaterialTheme.colorScheme.secondary
-                )
-            }
+            Spacer(modifier = Modifier.weight(1f))
 
             Surface(
                 shape = RoundedCornerShape(50),
@@ -290,6 +282,7 @@ private fun CityCard(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
+                    Log.d("CityCard", "CityCard: ${city.customerCount}")
                     Text(
                         text = "${city.customerCount}",
                         fontSize = 14.sp,

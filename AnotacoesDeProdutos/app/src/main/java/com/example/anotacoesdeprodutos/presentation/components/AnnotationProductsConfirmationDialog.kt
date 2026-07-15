@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -36,7 +38,6 @@ fun AnnotationProductsConfirmationDialog(
 ) {
     // Cores alinhadas com a identidade visual e o contexto destrutivo
     val alertRed = Color(0xFFC62828)
-    val actionBlue = Color(0xFF0033CC)
     val textPrimary = Color(0xFF111111)
     val textSecondary = Color(0xFF5F6368)
     val dialogBgColor = Color(0xFFFFFFFF)
@@ -94,11 +95,14 @@ fun AnnotationProductsConfirmationDialog(
                 // Botão Confirmar (Ação empilhada verticalmente idêntica à imagem)
                 TextButton(
                     onClick = onConfirmClick,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary
+                    )
                 ) {
                     Text(
                         text = "Confirmar",
-                        color = alertRed,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )
@@ -113,7 +117,7 @@ fun AnnotationProductsConfirmationDialog(
                 ) {
                     Text(
                         text = "Cancelar",
-                        color = actionBlue,
+                        color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )

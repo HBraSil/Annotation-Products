@@ -17,8 +17,8 @@ import com.example.anotacoesdeprodutos.data.util.Converters
 
 @Database(
     entities = [CityEntity::class, ProductEntity::class, CustomerEntity::class, PurchaseEntity::class, CartItemEntity::class, PaymentEntity::class],
-    version = 25,
-    exportSchema = false
+    version = 1,
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {

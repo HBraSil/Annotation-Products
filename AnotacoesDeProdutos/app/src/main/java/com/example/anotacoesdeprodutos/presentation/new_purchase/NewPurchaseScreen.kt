@@ -110,9 +110,10 @@ fun NewPurchaseContent(
                 modifier = Modifier.padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     "Adicionar Produto",
-                    color = Color.Black,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium
                 )

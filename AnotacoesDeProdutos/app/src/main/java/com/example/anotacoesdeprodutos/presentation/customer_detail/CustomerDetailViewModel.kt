@@ -69,6 +69,12 @@ class CustomerDetailViewModel @Inject constructor(
         }
     }
 
+
+    fun updatePartialPaymentComponent() {
+        _uiState.update { it.copy(isPartialPaymentExpanded = !it.isPartialPaymentExpanded) }
+    }
+
+
     fun updatePartialPayment(text: String) {
         val digitsOnly = text.filter { it.isDigit() }
 
@@ -90,12 +96,6 @@ class CustomerDetailViewModel @Inject constructor(
         }
     }
 
-
-    fun onDismissToast() {
-        _uiState.update { it.copy(errorPartialPayment = false) }
-    }
-
-
     fun onTotalPaymentConfirm() {
         viewModelScope.launch {
             customerRepository.payOffTotalDebt(
@@ -113,13 +113,9 @@ class CustomerDetailViewModel @Inject constructor(
     }
 
 
-    fun updatePartialPaymentComponent() {
-        _uiState.update { it.copy(isPartialPaymentExpanded = !it.isPartialPaymentExpanded) }
-    }
-
-
     fun showConfirmationDialog() {
-        if (_uiState.value.payment.amount <= 0) {
+        val paymentAmount = _uiState.value.payment.amount
+        if (paymentAmount <= 0 || paymentAmount > (_uiState.value.customer.owes ?: 0.0)) {
             _uiState.update {
                 it.copy(
                     errorPartialPayment = true,
@@ -136,8 +132,8 @@ class CustomerDetailViewModel @Inject constructor(
     fun confirmPartialPayment() {
         viewModelScope.launch {
             val partialPayment = _uiState.value.payment
-
             val totalUpdated = _uiState.value.customer.owes?.minus(partialPayment.amount)
+
 
             _uiState.update {
                 it.copy(
@@ -157,9 +153,20 @@ class CustomerDetailViewModel @Inject constructor(
             )
 
             if (result) {
-                _uiState.update { it.copy(showSuccessDialog = true) }
+                _uiState.update {
+                    it.copy(
+                        showSuccessDialog = true,
+                        showConfirmationDialog = false,
+                        partialPaymentComponent = TextFieldValue("R$ 0,00"),
+                    )
+                }
             }
         }
+    }
+
+
+    fun onDismissToast() {
+        _uiState.update { it.copy(errorPartialPayment = false) }
     }
 
     fun onDismiss() {

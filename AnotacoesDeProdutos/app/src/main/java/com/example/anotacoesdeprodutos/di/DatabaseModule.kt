@@ -41,7 +41,6 @@ object DatabaseModule {
         AppDatabase::class.java,
         "app_database"
     )
-        .fallbackToDestructiveMigration()
         .addCallback(
             DatabaseCallback(
                 productDaoProvider = productDaoProvider,
