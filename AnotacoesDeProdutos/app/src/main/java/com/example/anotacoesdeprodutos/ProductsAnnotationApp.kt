@@ -7,6 +7,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -88,8 +89,20 @@ fun ProductsAnnotationApp(startDestination: String) {
                     navController.navigate("${Screens.PURCHASE_HISTORY.route}/$customerId")
                 },
                 goToNewPurchaseScreen = {
-                    navController.navigate("${Screens.NEW_PURCHASE.route}/$it")
-                }
+                    // Pega a entrada atual da Tela B na pilha
+                    val currentBackStackEntry = navController.currentBackStackEntry
+
+                    // Verifica se a tela B já terminou de fazer a transição de saída
+                    // (targetState é para onde a navegação está indo)
+                    val isVisible = currentBackStackEntry
+                        ?.lifecycle
+                        ?.currentState
+                        ?.isAtLeast(Lifecycle.State.RESUMED) == true
+
+                    if (isVisible) {
+                        navController.navigate("${Screens.NEW_PURCHASE.route}/$it")
+                    }
+                },
             )
         }
 

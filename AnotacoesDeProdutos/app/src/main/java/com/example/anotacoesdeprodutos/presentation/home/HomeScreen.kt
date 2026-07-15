@@ -58,7 +58,7 @@ fun HomeScreen(
         onCityClick = onCityClick,
         addCity = homeViewModel::addCity,
         onDismiss = homeViewModel::dismissDialog,
-        showAddCityModal = homeViewModel::showDialog
+        showAddCityModal = homeViewModel::showDialog,
     )
 }
 
@@ -69,7 +69,7 @@ fun HomeContent(
     onSearchChange: (String) -> Unit,
     onUpdatePricesClick: () -> Unit,
     onCityClick: (City) -> Unit,
-    addCity: (City) -> Unit,
+    addCity: (String) -> Unit,
     onDismiss: () -> Unit,
     showAddCityModal: () -> Unit,
 ) {
@@ -172,7 +172,7 @@ fun HomeContent(
     if (homeUiState.showDialog) {
         ModalAddCityScreen(
             onBackClick = onDismiss,
-            onSaveClick = addCity
+            onSaveClick = addCity,
         )
     }
 

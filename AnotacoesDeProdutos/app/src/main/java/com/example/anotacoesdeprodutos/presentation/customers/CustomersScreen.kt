@@ -86,14 +86,14 @@ fun ClientManagementContent(
                         text = currentCity.name,
                         fontSize = 22.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.Black
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            Icons.Default.ArrowBackIosNew,
+                            imageVector = Icons.Default.ArrowBackIosNew,
                             contentDescription = "Voltar",
                             tint = MaterialTheme.colorScheme.onBackground
                         )
@@ -121,7 +121,6 @@ fun ClientManagementContent(
             }
         },
         modifier = Modifier.fillMaxSize(),
-        containerColor = Color.White
     ) { paddingValues ->
 
             LazyColumn(

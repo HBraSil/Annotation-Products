@@ -43,13 +43,17 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+
     fun updateSearchQuery(query: String) {
         _homeUiState.update { it.copy(searchQuery = query) }
     }
 
-    fun addCity(city: City) {
+    fun addCity(cityName: String) {
         viewModelScope.launch {
+            val city = City(name = cityName)
             val result = cityRepository.addCity(city)
+
+
             if(result > 0) {
                 _homeUiState.value = _homeUiState.value.copy(
                     success = true,

@@ -20,12 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.anotacoesdeprodutos.domain.model.City
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
+fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (String) -> Unit) {
 
     var cityName by remember { mutableStateOf("") }
 
@@ -84,7 +83,6 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
                         .background(color = Color.White, shape = CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    // Substitua pelo seu R.drawable.ic_building se tiver um SVG próprio
                     Icon(
                         imageVector = Icons.Default.Place,
                         contentDescription = "Cidade",
@@ -95,22 +93,11 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
 
                 Spacer(modifier = Modifier.height(32.dp))
 
-                // 2. Textos Centrais
                 Text(
-                    text = "LOCATION ENTRY",
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.5.sp
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = "Where next?",
-                    color = Color.Black,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
+                    text = "REGISTRO DE LOCALIZAÇÃO",
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.titleLarge,
+                    letterSpacing = 1.sp
                 )
 
                 Spacer(modifier = Modifier.height(48.dp))
@@ -125,9 +112,9 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
 
                 ElevatedButton(
                     onClick = {
-                        onSaveClick(City(id = 0, name = cityName))
+                        onSaveClick(cityName)
                     },
-                    enabled = cityName.isNotBlank(),
+                    //enabled = cityName.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Row(
@@ -159,5 +146,5 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (City) -> Unit) {
 @Preview
 @Composable
 fun ModalAddCityScreenPreview() {
-    ModalAddCityScreen(onBackClick = {}, onSaveClick = {})
+    ModalAddCityScreen(onBackClick = {}, onSaveClick = {},)
 }
