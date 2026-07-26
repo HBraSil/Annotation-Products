@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsConfirmationDialog
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsFab
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsSuccessDialog
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
@@ -105,30 +106,15 @@ fun ClientDetailsContent(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            AnnotationProductsFab(
                 onClick = {
                     if (uiState.customer.id > 0) {
                         goToNewPurchaseScreen(uiState.customer.id)
                     }
                 },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = Color.White,
-                shape = CircleShape
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.ArrowUpward,
-                        contentDescription = "Adicionar",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Text(
-                        text = "NOVA COMPRA"
-                    )
-                }
-            }
+                text = "Nova Compra",
+                icon = Icons.Default.ArrowUpward
+            )
         },
         containerColor = MaterialTheme.colorScheme.onPrimary,
         modifier = Modifier.fillMaxSize().imePadding()

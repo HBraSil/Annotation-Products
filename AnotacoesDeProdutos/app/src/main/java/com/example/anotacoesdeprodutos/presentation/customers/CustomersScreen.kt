@@ -31,6 +31,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
@@ -39,6 +40,7 @@ import androidx.compose.runtime.Composable
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsConfirmationDialog
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
 import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsFab
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 
 
@@ -118,14 +120,11 @@ fun ClientManagementContent(
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
+            AnnotationProductsFab(
                 onClick = { onCustomerUiEvent(CustomersUiEvent.OnShowModalCreateCustomer) },
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.padding(bottom = 16.dp, end = 8.dp),
-                containerColor = MaterialTheme.colorScheme.primary,
-            ) {
-                Text("Adicionar Cliente")
-            }
+                text = "Adicionar Cliente",
+                icon = Icons.Default.Add
+            )
         },
         modifier = Modifier.fillMaxSize(),
     ) { paddingValues ->
