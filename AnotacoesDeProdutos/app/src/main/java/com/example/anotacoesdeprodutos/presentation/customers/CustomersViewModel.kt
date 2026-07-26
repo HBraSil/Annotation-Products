@@ -1,6 +1,8 @@
 package com.example.anotacoesdeprodutos.presentation.customers
 
+import android.os.Build
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -8,6 +10,7 @@ import com.example.anotacoesdeprodutos.domain.model.City
 import com.example.anotacoesdeprodutos.domain.model.Customer
 import com.example.anotacoesdeprodutos.domain.repository.CityRepository
 import com.example.anotacoesdeprodutos.domain.repository.CustomerRepository
+import com.example.anotacoesdeprodutos.presentation.util.MonthStartAndEnd
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
@@ -20,6 +23,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class CustomersViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
@@ -39,6 +43,19 @@ class CustomersViewModel @Inject constructor(
             customerRepository.getAllCustomers(cityIdFlow).collect { customers ->
                 _customerUiState.update {
                     it.copy(customers = customers, currentCity = cities)
+                }
+            }
+        }
+
+        viewModelScope.launch {
+            cityRepository.getMonthlySalesSummary(
+                cityId = cityIdFlow,
+                startMonth = MonthStartAndEnd.currentMonth().start,
+                endMonth = MonthStartAndEnd.currentMonth().end
+            ).collect { monthlySalesSummary ->
+                _customerUiState.update {
+                    Log.d("CustomersViewModel", "MonthlySalesSummary total products: ${monthlySalesSummary.totalProducts} -> total amount: ${monthlySalesSummary.totalAmount}")
+                    it.copy(metric = monthlySalesSummary)
                 }
             }
         }
@@ -177,12 +194,17 @@ sealed interface CustomersUiEvent {
     object OnDismissOverlayCreatedCustomer : CustomersUiEvent
 }
 
+data class MonthlySalesSummary(
+    val totalProducts: Int = 0,
+    val totalAmount: Double = 0.0
+)
 
 data class CustomersUiState(
     val name: String = "",
     val searchQuery: String = "",
     val extraInfo: String? = null,
     val customers: List<Customer> = emptyList(),
+    val metric: MonthlySalesSummary = MonthlySalesSummary(),
     val currentCity: City? = null,
     val showModalCreateCustomer: Boolean = false,
     val showModalDeleteCustomer: Long = -1,

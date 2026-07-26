@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
 import com.example.anotacoesdeprodutos.data.entity.CityEntity
+import com.example.anotacoesdeprodutos.presentation.customers.MonthlySalesSummary
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -46,4 +47,18 @@ interface CityDao {
 
     @Insert
     suspend fun addCity(city: CityEntity): Long
+
+
+    @Query("""SELECT
+        COALESCE(SUM(cart_item.quantity), 0) AS totalProducts,
+        COALESCE(SUM(cart_item.subtotal), 0) AS totalAmount
+    FROM cart_item
+    INNER JOIN purchase
+        ON purchase.id = cart_item.purchaseId
+    INNER JOIN customer
+        ON customer.id = purchase.customerId
+    WHERE purchase.purchaseDate >= :startMonth
+      AND purchase.purchaseDate < :endMonth
+      AND customer.cityId = :cityId""")
+    fun getMonthlySalesSummary(cityId: Long, startMonth: Long, endMonth: Long): Flow<MonthlySalesSummary>
 }

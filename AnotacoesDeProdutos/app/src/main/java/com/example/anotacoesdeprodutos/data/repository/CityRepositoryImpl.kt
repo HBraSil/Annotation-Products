@@ -5,6 +5,7 @@ import com.example.anotacoesdeprodutos.data.entity.toCity
 import com.example.anotacoesdeprodutos.domain.model.City
 import com.example.anotacoesdeprodutos.domain.model.toCityEntity
 import com.example.anotacoesdeprodutos.domain.repository.CityRepository
+import com.example.anotacoesdeprodutos.presentation.customers.MonthlySalesSummary
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -33,5 +34,13 @@ class CityRepositoryImpl @Inject constructor(
         return cityDao.searchCities(query).map { cityList ->
             cityList.map { it.toCity() }
         }
+    }
+
+    override fun getMonthlySalesSummary(
+        cityId: Long,
+        startMonth: Long,
+        endMonth: Long,
+    ): Flow<MonthlySalesSummary> {
+        return cityDao.getMonthlySalesSummary(cityId, startMonth, endMonth)
     }
 }

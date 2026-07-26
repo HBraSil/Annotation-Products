@@ -183,7 +183,7 @@ fun ClientDetailsContent(
             // Seção 2: Cabeçalho da Listagem Mensal
             item {
                 Text(
-                    "Último Compra",
+                    "Última Compra",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface

@@ -1,6 +1,8 @@
 package com.example.anotacoesdeprodutos.presentation.customers
 
+import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,13 +31,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsConfirmationDialog
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
+import androidx.compose.ui.graphics.vector.ImageVector
+import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CustomersScreen(
     customersViewModel: CustomersViewModel = hiltViewModel(),
@@ -122,108 +129,125 @@ fun ClientManagementContent(
         },
         modifier = Modifier.fillMaxSize(),
     ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .background(MaterialTheme.colorScheme.background)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
 
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .background(MaterialTheme.colorScheme.background)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            item {
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    MetricCard(
+                        title = "Produtos Vendidos",
+                        value = customerUiState.metric.totalProducts.toString(),
+                        icon = Icons.Default.ShoppingCart,
+                    )
 
-                // Campo de Busca
-                item {
-                    AnnotationProductsSearchBar(
-                        text = customerUiState.searchQuery,
-                        placeholder = "Buscar por cliente",
-                        onSearchQueryChange = {
-                            onCustomerUiEvent(CustomersUiEvent.OnSearchQueryChange(it))
-                        }
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    MetricCard(
+                        title = "Valor À Obter",
+                        value = currencyFormatter.format(customerUiState.metric.totalAmount),
+                        icon = Icons.Default.AttachMoney,
                     )
                 }
+            }
 
-                // Lista de Clientes (Cards)
-                item {
-                    if (customerUiState.customers.isEmpty()) {
-                        Spacer(modifier = Modifier.height(40.dp))
-                        AnnotationProductsNothingToShow(text = "Nenhum cliente encontrado",)
-                    } else {
-                        customerUiState.customers.forEach { customer ->
-                            Card(
-                                onClick = { goToCustomerDetailScreen(customer.id) },
-                                modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                                shape = RoundedCornerShape(16.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
-                                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            // Campo de Busca
+            item {
+                AnnotationProductsSearchBar(
+                    text = customerUiState.searchQuery,
+                    placeholder = "Buscar por cliente",
+                    onSearchQueryChange = {
+                        onCustomerUiEvent(CustomersUiEvent.OnSearchQueryChange(it))
+                    }
+                )
+            }
+
+            // Lista de Clientes (Cards)
+            item {
+                if (customerUiState.customers.isEmpty()) {
+                    Spacer(modifier = Modifier.height(40.dp))
+                    AnnotationProductsNothingToShow(text = "Nenhum cliente encontrado",)
+                } else {
+                    customerUiState.customers.forEach { customer ->
+                        Card(
+                            onClick = { goToCustomerDetailScreen(customer.id) },
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
                             ) {
-                                Row(
-                                    modifier = Modifier.padding(16.dp),
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    Column(
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    // Nome do Cliente
+                                    Text(
+                                        text = customer.name,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black,
+
+                                        )
+
+                                    // Informação Extra (Se houver)
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        // Nome do Cliente
                                         Text(
-                                            text = customer.name,
-                                            fontSize = 18.sp,
-                                            fontWeight = FontWeight.Bold,
+                                            text = "info: ",
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onBackground.copy(
+                                                0.5f
+                                            )
+                                        )
+
+                                        Text(
+                                            text = customer.extraInfo
+                                                ?: "nenhuma informação extra",
+                                            fontSize = 14.sp,
                                             color = Color.Black,
-
-                                            )
-
-                                        // Informação Extra (Se houver)
-                                        Row(
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Text(
-                                                text = "info: ",
-                                                fontSize = 14.sp,
-                                                color = MaterialTheme.colorScheme.onBackground.copy(
-                                                    0.5f
-                                                )
-                                            )
-
-                                            Text(
-                                                text = customer.extraInfo
-                                                    ?: "nenhuma informação extra",
-                                                fontSize = 14.sp,
-                                                color = Color.Black,
-                                                fontWeight = FontWeight.W500
-                                            )
-                                        }
-
-                                        // Última Compra
-                                        customer.lastPurchaseDate?.let {
-                                            Text(
-                                                text = "Última compra: $it",
-                                                fontSize = 15.sp,
-                                                color = MaterialTheme.colorScheme.onBackground.copy(
-                                                    0.5f
-                                                )
-                                            )
-                                        }
-                                    }
-
-                                    Spacer(modifier = Modifier.weight(1f))
-
-                                    IconButton(
-                                        onClick = { onCustomerUiEvent(CustomersUiEvent.OnShowModalDeleteCustomer(customer.id)) },
-                                        modifier = Modifier.size(44.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.Delete,
-                                            contentDescription = "Excluir",
-                                            tint = Color.LightGray
+                                            fontWeight = FontWeight.W500
                                         )
                                     }
+
+                                    // Última Compra
+                                    customer.lastPurchaseDate?.let {
+                                        Text(
+                                            text = "Última compra: $it",
+                                            fontSize = 15.sp,
+                                            color = MaterialTheme.colorScheme.onBackground.copy(
+                                                0.5f
+                                            )
+                                        )
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.weight(1f))
+
+                                IconButton(
+                                    onClick = { onCustomerUiEvent(CustomersUiEvent.OnShowModalDeleteCustomer(customer.id)) },
+                                    modifier = Modifier.size(44.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "Excluir",
+                                        tint = Color.LightGray
+                                    )
                                 }
                             }
                         }
                     }
                 }
+            }
 
-                item { Spacer(modifier = Modifier.height(80.dp)) }
+            item { Spacer(modifier = Modifier.height(80.dp)) }
         }
 
         if (customerUiState.showModalCreateCustomer) {
@@ -248,6 +272,54 @@ fun ClientManagementContent(
     }
 }
 
+
+@Composable
+fun MetricCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    value: String,
+    icon: ImageVector,
+) {
+    Card(
+        modifier = modifier.padding(10.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.onPrimary,
+        ),
+    ) {
+        Row (
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.secondary,
+                    fontWeight = FontWeight.Normal
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = value,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        }
+    }
+}
 
 
 
