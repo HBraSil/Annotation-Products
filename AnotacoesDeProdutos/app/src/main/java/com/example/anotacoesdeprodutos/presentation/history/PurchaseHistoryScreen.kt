@@ -162,19 +162,20 @@ fun PurchaseHistoryCard(purchase: PurchaseWithItemsDomain) {
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.background),
     ) {
-        Column(
-            modifier = Modifier
-                .padding(12.dp)
-                .fillMaxWidth()
+        Row(
+            modifier = Modifier.padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = "Compras",
-                    tint = MaterialTheme.colorScheme.onSecondary,
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
+            Icon(
+                imageVector = Icons.Default.ShoppingCart,
+                contentDescription = "Compras",
+                tint = MaterialTheme.colorScheme.onSecondary,
+                modifier = Modifier.size(22.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            Column(modifier = Modifier.fillMaxWidth()) {
                 Text(
                     text = "COMPRAS",
                     color = MaterialTheme.colorScheme.onSecondary,
@@ -182,50 +183,47 @@ fun PurchaseHistoryCard(purchase: PurchaseWithItemsDomain) {
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.sp
                 )
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 20.dp, end = 16.dp), // Adicionei um end padding pro preço não colar na borda
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                // 1. Envolvemos a lista de produtos em uma Column ou Row com weight(1f)
-                // Isso garante que eles só usem o espaço que sobrar, protegendo o preço de ser cortado
                 Row(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // Para o texto não quebrar feio, podemos transformar a lista de produtos em uma única String inteligente
-                    val produtosFormatados = remember(purchase.items) {
-                        purchase.items.joinToString(separator = ", ") {
-                            "${it.cartItem.quantity} ${it.product.name}"
+                    // 1. Envolvemos a lista de produtos em uma Column ou Row com weight(1f)
+                    // Isso garante que eles só usem o espaço que sobrar, protegendo o preço de ser cortado
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // Para o texto não quebrar feio, podemos transformar a lista de produtos em uma única String inteligente
+                        val produtosFormatados = remember(purchase.items) {
+                            purchase.items.joinToString(separator = ", ") {
+                                "${it.cartItem.quantity} ${it.product.name}"
+                            }
                         }
+
+                        Text(
+                            text = produtosFormatados,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = MaterialTheme.typography.bodyMedium,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
 
+                    // 2. Um pequeno espaço de segurança entre os produtos e o preço
+                    Spacer(modifier = Modifier.width(8.dp))
+
+                    // 3. O preço agora está seguro, pois o weight(1f) lá de cima deu prioridade para o que sobra
                     Text(
-                        text = produtosFormatados,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.bodyMedium,
-                        overflow = TextOverflow.Ellipsis
+                        text = currencyFormatter.format(purchase.purchase.totalAmount),
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
                     )
                 }
-
-                // 2. Um pequeno espaço de segurança entre os produtos e o preço
-                Spacer(modifier = Modifier.width(8.dp))
-
-                // 3. O preço agora está seguro, pois o weight(1f) lá de cima deu prioridade para o que sobra
-                Text(
-                    text = currencyFormatter.format(purchase.purchase.totalAmount),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Bold,
-                    maxLines = 1
-                )
             }
         }
+
     }
 }
 
@@ -254,28 +252,38 @@ fun PaymentHistoryCard(
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "PAGAMENTO",
-                color = MaterialTheme.colorScheme.onSecondary,
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.SemiBold,
-                letterSpacing = 1.sp
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = payment.paymentDate.toBrazilianDate(),
-                color = MaterialTheme.colorScheme.onSurface,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            HorizontalDivider(modifier = Modifier.width(12.dp), color = MaterialTheme.colorScheme.onSurface)
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = if (isTotalPayment) "QUITADO" else currencyFormatter.format(payment.amount),
-                color = amountColor,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
-            )
+            Column {
+                Text(
+                    text = "PAGAMENTO",
+                    color = MaterialTheme.colorScheme.onSecondary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 1.sp
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = payment.paymentDate.toBrazilianDate(),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    HorizontalDivider(
+                        modifier = Modifier.weight(1f),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text(
+                        text = if (isTotalPayment) "QUITADO" else currencyFormatter.format(payment.amount),
+                        color = amountColor,
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
         }
     }
 }

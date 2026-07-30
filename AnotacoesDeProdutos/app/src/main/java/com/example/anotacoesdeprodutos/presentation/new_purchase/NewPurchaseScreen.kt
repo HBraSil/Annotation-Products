@@ -1,7 +1,6 @@
 package com.example.anotacoesdeprodutos.presentation.new_purchase
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -231,7 +230,6 @@ fun NewPurchaseContent(
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Linha 1: Subtotal
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
@@ -239,22 +237,26 @@ fun NewPurchaseContent(
                         Text(
                             text = "Subtotal de Produtos",
                             color = MaterialTheme.colorScheme.secondary,
-                            fontSize = 15.sp
+                            fontSize = 15.sp,
+                            modifier = Modifier.weight(2f)
                         )
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = currencyFormatter.format(uiState.selectedProductsSubtotal),
                             color = Color.Black,
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Bold
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.weight(1f)
+
                         )
                     }
+                    // TODO: TRANSFORMAR ESTAS DUAS LINHAS EM UM ÚNICO COMPOSABLE
 
-                    // Linha 2: Saldo Pendente
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text("Saldo Anterior Pendente", color = MaterialTheme.colorScheme.secondary, fontSize = 15.sp)
+                        Text("Valor Pendente", color = MaterialTheme.colorScheme.secondary, fontSize = 15.sp)
                         Text(
                             text = currencyFormatter.format(uiState.pendingDebt),
                             color = MaterialTheme.colorScheme.error,
@@ -362,8 +364,7 @@ fun ProductDropdown(
         Surface(
             modifier = Modifier
                 .menuAnchor(MenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth()
-                .height(56.dp),
+                .fillMaxWidth(),
             shape = RoundedCornerShape(
                 topStart = 16.dp,
                 topEnd = 16.dp,
@@ -375,30 +376,29 @@ fun ProductDropdown(
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 16.dp),
+                    .padding(horizontal = 16.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
 
                 Icon(
                     imageVector = Icons.Default.ShoppingCart,
                     contentDescription = null,
-                    tint = Color(0xFF0066FF)
+                    tint = MaterialTheme.colorScheme.primary,
                 )
 
                 Spacer(modifier = Modifier.width(12.dp))
 
                 Text(
-                    text = selectedProduct?.product?.name
-                        ?: "Selecione um produto no catálogo...",
+                    text = selectedProduct?.product?.name ?: "Selecione um produto",
                     modifier = Modifier.weight(1f),
-                    color = Color.Gray,
+                    color = MaterialTheme.colorScheme.secondary,
                     fontSize = 14.sp
                 )
 
                 Icon(
                     imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = null,
-                    tint = Color.Gray,
+                    contentDescription = "opened or closed ExposedDropDown icon",
+                    tint = MaterialTheme.colorScheme.secondary,
                     modifier = Modifier.rotate(arrowRotation)
                 )
             }

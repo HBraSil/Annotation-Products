@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -114,7 +115,7 @@ fun HomeContent(
         ) {
             AnnotationProductsSearchBar(
                 text = homeUiState.searchQuery,
-                placeholder = "Pesquisar cidade ou cliente...",
+                placeholder = "Pesquisar cidade",
                 onSearchQueryChange = onSearchChange
             )
 
@@ -254,12 +255,12 @@ private fun CityCard(
                 text = city.name,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
             )
-
-            Spacer(modifier = Modifier.weight(1f))
-
+            Spacer(modifier = Modifier.width(10.dp))
             Surface(
+                modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(50),
                 color = MaterialTheme.colorScheme.background
             ) {
@@ -271,7 +272,6 @@ private fun CityCard(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
 
-                    Log.d("CityCard", "CityCard: ${city.customerCount}")
                     Text(
                         text = "${city.customerCount}",
                         fontSize = 14.sp,

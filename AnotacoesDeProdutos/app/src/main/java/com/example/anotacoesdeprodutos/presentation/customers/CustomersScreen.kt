@@ -40,6 +40,7 @@ import androidx.compose.runtime.Composable
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsConfirmationDialog
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsNothingToShow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.anotacoesdeprodutos.presentation.components.AnnotationProductsFab
 import com.example.anotacoesdeprodutos.presentation.formatter.currencyFormatter
 
@@ -110,8 +111,8 @@ fun ClientManagementContent(
                 },
                 actions = {
                     Text(
-                        text = "Total: ${customerUiState.customers.size} Clients",
-                        fontSize = 16.sp,
+                        text = "Clientes: ${customerUiState.customers.size}",
+                        fontSize = 14.sp,
                         color = MaterialTheme.colorScheme.onBackground.copy(0.7f),
                         fontWeight = FontWeight.W700
                     )
@@ -295,12 +296,16 @@ fun MetricCard(
 
             Spacer(modifier = Modifier.width(10.dp))
 
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
                     text = title,
                     style = MaterialTheme.typography.titleSmall,
                     color = MaterialTheme.colorScheme.secondary,
-                    fontWeight = FontWeight.Normal
+                    fontWeight = FontWeight.Normal,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
