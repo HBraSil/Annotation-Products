@@ -5,7 +5,7 @@
 
     <style name="Theme.AnotacoesDeProdutos.Splash" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/white</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/drink_icon</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/cleaning_inventory_app_icon</item>
 
 
         <item name="postSplashScreenTheme">@style/Theme.AnotacoesDeProdutos</item>

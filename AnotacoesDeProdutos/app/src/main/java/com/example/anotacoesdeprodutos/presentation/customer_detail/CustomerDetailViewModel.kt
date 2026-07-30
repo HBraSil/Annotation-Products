@@ -98,7 +98,7 @@ class CustomerDetailViewModel @Inject constructor(
 
     fun onTotalPaymentConfirm() {
         viewModelScope.launch {
-            customerRepository.payOffTotalDebt(
+            val result = customerRepository.payOffTotalDebt(
                 _uiState.value.customer.copy(
                     owes = 0.0
                 ),
@@ -109,11 +109,42 @@ class CustomerDetailViewModel @Inject constructor(
                     isTotalPayment = true
                 )
             )
+
+            if (result.first > 0 && result.second > 0) {
+                _uiState.update {
+                    it.copy(
+                        showSuccessDialog = true,
+                        showConfirmationDialog = false
+                    )
+                }
+            }
         }
     }
 
 
-    fun showConfirmationDialog() {
+    fun showConfirmationDialog(confirmationAction: ConfirmationAction) {
+
+        _uiState.update {
+            it.copy(
+                buttonConfirmationType = confirmationAction,
+                showConfirmationDialog = true
+            )
+        }
+    }
+
+    fun confirmSelectedOnDialog() {
+        when (_uiState.value.buttonConfirmationType) {
+            ConfirmationAction.PARTIAL_PAYMENT -> {
+                confirmPartialPayment()
+            }
+            ConfirmationAction.TOTAL_PAYMENT -> {
+                onTotalPaymentConfirm()
+            }
+            else -> {}
+        }
+    }
+
+    fun confirmPartialPayment() {
         val paymentAmount = _uiState.value.payment.amount
         if (paymentAmount <= 0 || paymentAmount > (_uiState.value.customer.owes ?: 0.0)) {
             _uiState.update {
@@ -125,21 +156,13 @@ class CustomerDetailViewModel @Inject constructor(
             return
         }
 
-        _uiState.update { it.copy(showConfirmationDialog = true) }
-    }
-
-
-    fun confirmPartialPayment() {
         viewModelScope.launch {
             val partialPayment = _uiState.value.payment
             val totalUpdated = _uiState.value.customer.owes?.minus(partialPayment.amount)
 
 
             _uiState.update {
-                it.copy(
-                    customer = it.customer.copy(owes = totalUpdated),
-                    //purchase = it.purchase.copy(totalAmount = totalUpdated),
-                )
+                it.copy(customer = it.customer.copy(owes = totalUpdated))
             }
 
 
@@ -190,4 +213,11 @@ data class CustomerDetailUiState(
     val showSuccessDialog: Boolean = false,
     val isPartialPaymentExpanded: Boolean = false,
     val errorPartialPayment: Boolean = false,
+    val buttonConfirmationType: ConfirmationAction? = null
 )
+
+
+enum class ConfirmationAction {
+    PARTIAL_PAYMENT,
+    TOTAL_PAYMENT
+}

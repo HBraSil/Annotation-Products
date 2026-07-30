@@ -58,8 +58,7 @@ fun CustomerDetailScreen(
         onBackClick = onBackClick,
         onHistoryClick = onHistoryClick,
         goToNewPurchaseScreen = goToNewPurchaseScreen,
-        onPartialPaymentConfirm = customerDetailViewModel::confirmPartialPayment,
-        onTotalPaymentConfirm = customerDetailViewModel::onTotalPaymentConfirm,
+        onPartialPaymentConfirm = customerDetailViewModel::confirmSelectedOnDialog,
         onDismiss = customerDetailViewModel::onDismiss,
         showConfirmationDialog = customerDetailViewModel::showConfirmationDialog,
         onDismissToast = customerDetailViewModel::onDismissToast
@@ -76,9 +75,8 @@ fun ClientDetailsContent(
     onHistoryClick: (Long) -> Unit = {},
     goToNewPurchaseScreen: (Long) -> Unit = {},
     onPartialPaymentConfirm: () -> Unit = {},
-    onTotalPaymentConfirm: () -> Unit = {},
     onDismiss: () -> Unit = {},
-    showConfirmationDialog: () -> Unit = {},
+    showConfirmationDialog: (ConfirmationAction) -> Unit = {},
     onDismissToast: () -> Unit = {},
 ) {
     val context = LocalContext.current
@@ -155,25 +153,29 @@ fun ClientDetailsContent(
                             color = MaterialTheme.colorScheme.secondary
                         )
                     }
-                    if (uiState.purchase.purchaseDate > 0L) {
-                        Text(
-                            text = "Última compra: ${uiState.purchase.purchaseDate.toBrazilianDate()}",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.surface,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
+
                 }
             }
 
             // Seção 2: Cabeçalho da Listagem Mensal
             item {
-                Text(
-                    "Última Compra",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+                Row {
+                    Text(
+                        "Última Compra",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    if (uiState.purchase.purchaseDate > 0L) {
+                        Text(
+                            text = " - ${uiState.purchase.purchaseDate.toBrazilianDate()}",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
 
                 if (uiState.purchaseItems.isEmpty()) {
                     AnnotationProductsNothingToShow(
@@ -211,7 +213,7 @@ fun ClientDetailsContent(
                                     HorizontalDivider(color = Color(0xFFB8B7B7), thickness = 1.dp, modifier = Modifier.width(10.dp))
                                     Text("unit: R$ ${item.product.price}", fontSize = 8.sp, color = Color.Gray)
                                 }
-                                Text("Quantidade: ${item.quantity}x", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary)
+                                Text("Quantidade: ${item.quantity}x", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
                             }
                         }
                         Column(horizontalAlignment = Alignment.End) {
@@ -282,7 +284,9 @@ fun ClientDetailsContent(
                             // Botão Quitar Total
                             uiState.customer.owes?.let {
                                 Button(
-                                    onClick = onTotalPaymentConfirm,
+                                    onClick = {
+                                        showConfirmationDialog(ConfirmationAction.TOTAL_PAYMENT)
+                                    },
                                     modifier = Modifier.fillMaxWidth().height(50.dp),
                                     enabled = it > 0,
                                     colors = ButtonDefaults.buttonColors(
@@ -372,7 +376,9 @@ fun ClientDetailsContent(
                                         )
                                     )
                                     Button(
-                                        onClick = showConfirmationDialog,
+                                        onClick = {
+                                            showConfirmationDialog(ConfirmationAction.PARTIAL_PAYMENT)
+                                        },
                                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                                         enabled = (uiState.customer.owes ?: 0.0) > 0,
                                         shape = RoundedCornerShape(10.dp),
@@ -390,9 +396,9 @@ fun ClientDetailsContent(
         }
     }
 
-    if (uiState.showConfirmationDialog) {
+    if (uiState.showConfirmationDialog && uiState.buttonConfirmationType != null) {
         AnnotationProductsConfirmationDialog(
-            title = "Deseja pagar parte do saldo?",
+            title = if(uiState.buttonConfirmationType == ConfirmationAction.PARTIAL_PAYMENT) "Quitar parte da dívida?" else "Quitar a dívida total?",
             onDismissRequest = onDismiss,
             onConfirmClick = onPartialPaymentConfirm,
         )

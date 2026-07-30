@@ -20,18 +20,21 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -63,6 +66,7 @@ fun HomeScreen(
 }
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent(
     homeUiState: HomeState,
@@ -74,99 +78,116 @@ fun HomeContent(
     showAddCityModal: () -> Unit,
 ) {
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .statusBarsPadding()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp)
-    ) {
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Header(
-            onUpdatePricesClick = onUpdatePricesClick
-        )
-
-        Spacer(modifier = Modifier.height(20.dp))
-
-        AnnotationProductsSearchBar(
-            text = homeUiState.searchQuery,
-            placeholder = "Pesquisar cidade ou cliente...",
-            onSearchQueryChange = onSearchChange
-        )
-
-        Spacer(modifier = Modifier.height(30.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-
-            Text(
-                text = "Cidades",
-                fontSize = 22.sp,
-                fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-
-            Text(
-                text = "${homeUiState.cities.size} resultados",
-                fontSize = 13.sp,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-
-        LazyColumn(
-            modifier = Modifier.weight(1f).fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-
-            item {
-                if (homeUiState.cities.isEmpty()) {
-                    AnnotationProductsNothingToShow(
-                        text = "Nenhum cidade encontrada",
-                        modifier = Modifier.padding(vertical = 20.dp)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Tela Inicial",
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
                     )
-                } else {
-                    homeUiState.cities.forEach { city ->
-                        Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
-                        CityCard(
-                            city = city,
-                            onClick = { onCityClick(city) },
-                            modifier = Modifier.padding(vertical = 8.dp)
+                },
+                actions = {
+                    TextButton(onClick = onUpdatePricesClick) {
+                        Text(
+                            text = "Atualizar preços",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold
                         )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        }
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .statusBarsPadding()
+                .background(MaterialTheme.colorScheme.background)
+                .padding(it)
+                .padding(horizontal = 20.dp)
+        ) {
+            AnnotationProductsSearchBar(
+                text = homeUiState.searchQuery,
+                placeholder = "Pesquisar cidade ou cliente...",
+                onSearchQueryChange = onSearchChange
+            )
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+
+                        Text(
+                            text = "Cidades",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "${homeUiState.cities.size} resultados",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                item {
+                    if (homeUiState.cities.isEmpty()) {
+                        AnnotationProductsNothingToShow(
+                            text = "Nenhum cidade encontrada",
+                            modifier = Modifier.padding(vertical = 20.dp)
+                        )
+                    } else {
+                        homeUiState.cities.forEach { city ->
+                            Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
+                            CityCard(
+                                city = city,
+                                onClick = { onCityClick(city) },
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
                     }
                 }
-            }
 
-            item {
-                Spacer(modifier = Modifier.height(22.dp))
-                Row (
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.Bottom
-                ){
-                    OutlinedButton(
-                        onClick = showAddCityModal,
+                item {
+                    Spacer(modifier = Modifier.height(22.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.Bottom
                     ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Add,
-                            contentDescription = null
-                        )
+                        OutlinedButton(
+                            onClick = showAddCityModal,
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Add,
+                                contentDescription = null
+                            )
 
-                        Spacer(modifier = Modifier.size(8.dp))
+                            Spacer(modifier = Modifier.size(8.dp))
 
-                        Text("Adicionar Cidade")
+                            Text("Adicionar Cidade")
+                        }
                     }
+                    Spacer(modifier = Modifier.height(22.dp))
                 }
             }
         }
-
-        Spacer(modifier = Modifier.height(22.dp))
     }
 
     if (homeUiState.showDialog) {
@@ -180,38 +201,6 @@ fun HomeContent(
         text = "Cidade adicionada com sucesso!",
         onDismiss = onDismiss
     )
-}
-
-// =====================================================
-// HEADER
-// =====================================================
-
-@Composable
-private fun Header(
-    onUpdatePricesClick: () -> Unit,
-) {
-
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-
-        Text(
-            text = "Tela Inicial",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-
-        TextButton(onClick = onUpdatePricesClick) {
-            Text(
-                text = "Atualizar preços",
-                color = Color(0xFF007AFF),
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-    }
 }
 
 

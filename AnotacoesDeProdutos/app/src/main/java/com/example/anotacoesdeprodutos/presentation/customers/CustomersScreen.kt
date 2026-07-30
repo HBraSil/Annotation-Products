@@ -136,26 +136,24 @@ fun ClientManagementContent(
                 .padding(horizontal = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-
             item {
                 Row(modifier = Modifier.fillMaxWidth()) {
                     MetricCard(
                         title = "Produtos Vendidos",
                         value = customerUiState.metric.totalProducts.toString(),
                         icon = Icons.Default.ShoppingCart,
+                        modifier = Modifier.weight(1f)
                     )
 
-                    Spacer(modifier = Modifier.weight(1f))
-
                     MetricCard(
-                        title = "Valor À Obter",
+                        title = "Total Vendido",
                         value = currencyFormatter.format(customerUiState.metric.totalAmount),
                         icon = Icons.Default.AttachMoney,
+                        modifier = Modifier.weight(1f)
                     )
                 }
             }
 
-            // Campo de Busca
             item {
                 AnnotationProductsSearchBar(
                     text = customerUiState.searchQuery,
@@ -166,7 +164,6 @@ fun ClientManagementContent(
                 )
             }
 
-            // Lista de Clientes (Cards)
             item {
                 if (customerUiState.customers.isEmpty()) {
                     Spacer(modifier = Modifier.height(40.dp))
@@ -184,9 +181,9 @@ fun ClientManagementContent(
                                 modifier = Modifier.padding(16.dp),
                             ) {
                                 Column(
+                                    modifier = Modifier.weight(4f),
                                     verticalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
-                                    // Nome do Cliente
                                     Text(
                                         text = customer.name,
                                         fontSize = 18.sp,
@@ -195,7 +192,6 @@ fun ClientManagementContent(
 
                                         )
 
-                                    // Informação Extra (Se houver)
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
@@ -228,11 +224,11 @@ fun ClientManagementContent(
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.weight(1f))
-
                                 IconButton(
-                                    onClick = { onCustomerUiEvent(CustomersUiEvent.OnShowModalDeleteCustomer(customer.id)) },
-                                    modifier = Modifier.size(44.dp)
+                                    onClick = {
+                                        onCustomerUiEvent(CustomersUiEvent.OnShowModalDeleteCustomer(customer.id))
+                                    },
+                                    modifier = Modifier.size(44.dp).weight(1f)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,

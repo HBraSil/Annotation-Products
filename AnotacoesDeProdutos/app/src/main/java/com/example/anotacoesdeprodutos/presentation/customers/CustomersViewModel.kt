@@ -54,7 +54,6 @@ class CustomersViewModel @Inject constructor(
                 endMonth = MonthStartAndEnd.currentMonth().end
             ).collect { monthlySalesSummary ->
                 _customerUiState.update {
-                    Log.d("CustomersViewModel", "MonthlySalesSummary total products: ${monthlySalesSummary.totalProducts} -> total amount: ${monthlySalesSummary.totalAmount}")
                     it.copy(metric = monthlySalesSummary)
                 }
             }

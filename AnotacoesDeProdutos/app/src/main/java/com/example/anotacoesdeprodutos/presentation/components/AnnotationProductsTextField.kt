@@ -16,7 +16,8 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 fun AnnotationProductsTextField(
     text: String,
     onNameChange: (String) -> Unit,
-    placeholder: String
+    placeholder: String,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.Words
 ) {
     TextField(
         value = text,
@@ -31,7 +32,7 @@ fun AnnotationProductsTextField(
             .fillMaxWidth()
             .background(Color.White, shape = MaterialTheme.shapes.medium),
         keyboardOptions = KeyboardOptions(
-            capitalization = KeyboardCapitalization.Words
+            capitalization = capitalization
         ),
         colors = TextFieldDefaults.colors(
             focusedIndicatorColor = MaterialTheme.colorScheme.primary,

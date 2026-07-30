@@ -7,7 +7,6 @@ import com.example.anotacoesdeprodutos.data.dao.ProductDao
 import com.example.anotacoesdeprodutos.data.entity.ProductEntity
 import javax.inject.Provider
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class DatabaseCallback(

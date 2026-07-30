@@ -14,6 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -115,7 +116,8 @@ fun AddNewCustomerScreen(
                         AnnotationProductsTextField(
                             text = uiState.extraInfo ?: "",
                             onNameChange = onExtraInfoChange,
-                            placeholder = "Rua, Bairro, Perto de..."
+                            placeholder = "Rua, Bairro, Perto de...",
+                            capitalization = KeyboardCapitalization.None
                         )
                     }
                 }
