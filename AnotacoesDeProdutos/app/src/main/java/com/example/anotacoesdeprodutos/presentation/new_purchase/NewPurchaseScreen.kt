@@ -246,7 +246,6 @@ fun NewPurchaseContent(
                             color = Color.Black,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.weight(1f)
 
                         )
                     }

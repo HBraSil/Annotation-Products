@@ -168,22 +168,35 @@ fun PurchaseHistoryCard(purchase: PurchaseWithItemsDomain) {
         ) {
             Icon(
                 imageVector = Icons.Default.ShoppingCart,
-                contentDescription = "Compras",
+                contentDescription = "Purchase Icon",
                 tint = MaterialTheme.colorScheme.onSecondary,
                 modifier = Modifier.size(22.dp)
             )
 
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
 
             Column(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "COMPRAS",
-                    color = MaterialTheme.colorScheme.onSecondary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.sp
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = "COMPRA",
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        letterSpacing = 1.sp
+                    )
 
+                    Spacer(modifier = Modifier.width(6.dp))
+                    HorizontalDivider(modifier = Modifier.width(14.dp), color = MaterialTheme.colorScheme.onSurface)
+                    Spacer(modifier = Modifier.width(6.dp))
+
+                    Text(
+                        text = purchase.purchase.purchaseDate.toBrazilianDate(),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically
@@ -251,7 +264,7 @@ fun PaymentHistoryCard(
                 tint = MaterialTheme.colorScheme.onSecondary,
                 modifier = Modifier.size(20.dp)
             )
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(12.dp))
             Column {
                 Text(
                     text = "PAGAMENTO",
@@ -260,7 +273,7 @@ fun PaymentHistoryCard(
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = 1.sp
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(12.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     verticalAlignment = Alignment.CenterVertically

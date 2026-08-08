@@ -244,7 +244,6 @@ fun ClientDetailsContent(
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.weight(1f)
                     )
                 }
             }

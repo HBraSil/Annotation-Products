@@ -66,7 +66,6 @@ fun HomeScreen(
     )
 }
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent(
@@ -260,7 +259,6 @@ private fun CityCard(
             )
             Spacer(modifier = Modifier.width(10.dp))
             Surface(
-                modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(50),
                 color = MaterialTheme.colorScheme.background
             ) {

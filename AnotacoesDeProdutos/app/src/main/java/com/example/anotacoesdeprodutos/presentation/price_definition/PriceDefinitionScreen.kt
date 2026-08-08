@@ -1,6 +1,5 @@
 package com.example.anotacoesdeprodutos.presentation.price_definition
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -20,6 +19,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -62,8 +62,11 @@ fun PriceDefinitionContent(
                     Text(
                         text = "Definição de Preços",
                         color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp)
+                        style = MaterialTheme.typography.titleLarge,
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
@@ -93,13 +96,10 @@ fun PriceDefinitionContent(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             item {
-                Column(modifier = Modifier.padding(top = 16.dp, bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(
-                        text = "Definição de Preços",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                Surface(
+                    modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
+                    color = Color.Transparent
+                ) {
                     Text(
                         text = "Itens sem o preço definido não irão aparecer na seleção de produtos.",
                         fontSize = 14.sp,
@@ -110,7 +110,6 @@ fun PriceDefinitionContent(
 
 
             items(uiState.items, key = { it.id }) { item ->
-                Log.d("PriceDefinitionContent", "Nome: ${item.name} --> ID: ${item.id}")
                 InventoryPriceCard(
                     item = item,
                     cardBgColor = MaterialTheme.colorScheme.onPrimary,
@@ -197,10 +196,12 @@ fun InventoryPriceCard(
                 text = item.name,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = textColor
+                color = textColor,
+                modifier = Modifier.weight(1f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
             )
 
-            Spacer(modifier = Modifier.weight(1f))
 
             OutlinedTextField(
                 value = item.priceText,
