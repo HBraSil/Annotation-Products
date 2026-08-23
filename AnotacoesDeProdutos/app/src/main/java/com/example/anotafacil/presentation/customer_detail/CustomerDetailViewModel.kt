@@ -1,6 +1,5 @@
 package com.example.anotafacil.presentation.customer_detail
 
-import android.util.Log
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
@@ -17,7 +16,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -30,33 +28,42 @@ class CustomerDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val customerRepository: CustomerRepository,
 ) : ViewModel() {
-    private val customerId: Long = checkNotNull(savedStateHandle["customerId"])
+
+    private val customer = savedStateHandle.getStateFlow("customerId", -1L)
+        .flatMapLatest(customerRepository::getCustomer)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5_000),
+            initialValue = Customer()
+        )
+
 
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
     val uiState = _uiState.asStateFlow()
 
-    val customer = customerRepository.getCustomer(customerId)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5000),
-            initialValue = null
-        )
-
 
     init {
+        updateCustomer()
+
+        searchCustomer()
+    }
+
+
+    private fun updateCustomer() {
         viewModelScope.launch {
-            customer.collect { customer ->
-                _uiState.update { it.copy(customer = customer ?: Customer()) }
+            customer.collect {
+                _uiState.update { uiState ->
+                    uiState.copy(customer = it)
+                }
             }
         }
+    }
 
+
+    private fun searchCustomer() {
         viewModelScope.launch {
-            customer.filterNotNull()
-                .flatMapLatest { customer ->
-                    customerRepository.getLastPurchase(customer.id)
-                }
+            customerRepository.getLastPurchase(customer.value.id)
                 .collect { purchaseWithItems ->
-                    Log.d("CustomerDetailViewModel", "getLastPurchase: $purchaseWithItems?.purchase")
                     _uiState.update {
                         it.copy(
                             purchase = purchaseWithItems?.purchase ?: Purchase(),
@@ -67,11 +74,6 @@ class CustomerDetailViewModel @Inject constructor(
                     }
                 }
         }
-    }
-
-
-    fun updatePartialPaymentComponent() {
-        _uiState.update { it.copy(isPartialPaymentExpanded = !it.isPartialPaymentExpanded) }
     }
 
 
@@ -96,31 +98,6 @@ class CustomerDetailViewModel @Inject constructor(
         }
     }
 
-    fun onTotalPaymentConfirm() {
-        viewModelScope.launch {
-            val result = customerRepository.payOffTotalDebt(
-                customer = _uiState.value.customer.copy(
-                    owes = 0.0
-                ),
-                Payment(
-                    customerId = _uiState.value.customer.id,
-                    paymentDate = System.currentTimeMillis(),
-                    amount = _uiState.value.customer.owes ?: 0.0,
-                    isTotalPayment = true
-                )
-            )
-
-            if (result.first > 0 && result.second > 0) {
-                _uiState.update {
-                    it.copy(
-                        showSuccessDialog = true,
-                        showConfirmationDialog = false
-                    )
-                }
-            }
-        }
-    }
-
 
     fun showConfirmationDialog(confirmationAction: ConfirmationAction) {
 
@@ -137,9 +114,11 @@ class CustomerDetailViewModel @Inject constructor(
             ConfirmationAction.PARTIAL_PAYMENT -> {
                 confirmPartialPayment()
             }
+
             ConfirmationAction.TOTAL_PAYMENT -> {
                 onTotalPaymentConfirm()
             }
+
             else -> {}
         }
     }
@@ -187,6 +166,36 @@ class CustomerDetailViewModel @Inject constructor(
     }
 
 
+    fun onTotalPaymentConfirm() {
+        viewModelScope.launch {
+            val customer = _uiState.value.customer.copy(
+                owes = 0.0
+            )
+
+            val payment = Payment(
+                customerId = _uiState.value.customer.id,
+                paymentDate = System.currentTimeMillis(),
+                amount = _uiState.value.customer.owes ?: 0.0,
+                isTotalPayment = true
+            )
+
+            val result = customerRepository.payOffTotalDebt(
+                customer = customer,
+                payment = payment
+            )
+
+            if (result.first > 0 && result.second > 0) {
+                _uiState.update {
+                    it.copy(
+                        showSuccessDialog = true,
+                        showConfirmationDialog = false
+                    )
+                }
+            }
+        }
+    }
+
+
     fun onDismissToast() {
         _uiState.update { it.copy(errorPartialPayment = false) }
     }
@@ -210,9 +219,8 @@ data class CustomerDetailUiState(
     val purchaseItems: List<CartItem> = emptyList(),
     val showConfirmationDialog: Boolean = false,
     val showSuccessDialog: Boolean = false,
-    val isPartialPaymentExpanded: Boolean = false,
     val errorPartialPayment: Boolean = false,
-    val buttonConfirmationType: ConfirmationAction? = null
+    val buttonConfirmationType: ConfirmationAction? = null,
 )
 
 

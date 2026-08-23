@@ -17,6 +17,7 @@ import com.example.anotafacil.domain.model.toDomain
 import com.example.anotafacil.domain.model.toEntity
 import com.example.anotafacil.domain.repository.CustomerRepository
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
@@ -26,6 +27,8 @@ class CustomerRepositoryImpl @Inject constructor(
     val appDatabase: AppDatabase
 ) : CustomerRepository {
     override fun getCustomer(id: Long): Flow<Customer> {
+        Log.d("CustomerRepositoryImpl", "getCustomer: $id")
+        if (id <= 0) return flowOf(Customer())
         return customerDao.getCustomer(id).map { it.toDomain() }
     }
 

@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -50,10 +51,9 @@ fun CustomerDetailScreen(
 ) {
     val uiState by customerDetailViewModel.uiState.collectAsState()
 
-    ClientDetailsContent(
+    CustomerDetailContent(
         uiState = uiState,
         onPartialPaymentChange = customerDetailViewModel::updatePartialPayment,
-        onPartialPaymentExpand = customerDetailViewModel::updatePartialPaymentComponent,
         onBackClick = onBackClick,
         onHistoryClick = onHistoryClick,
         goToNewPurchaseScreen = goToNewPurchaseScreen,
@@ -66,10 +66,9 @@ fun CustomerDetailScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ClientDetailsContent(
+fun CustomerDetailContent(
     uiState: CustomerDetailUiState = CustomerDetailUiState(),
     onPartialPaymentChange: (String) -> Unit = {},
-    onPartialPaymentExpand: () -> Unit = {},
     onBackClick: () -> Unit = {},
     onHistoryClick: (Long) -> Unit = {},
     goToNewPurchaseScreen: (Long) -> Unit = {},
@@ -176,6 +175,7 @@ fun ClientDetailsContent(
                     }
                 }
 
+
                 if (uiState.purchaseItems.isEmpty()) {
                     AnnotationProductsNothingToShow(
                         modifier = Modifier.padding(vertical = 40.dp),
@@ -250,146 +250,13 @@ fun ClientDetailsContent(
             item {HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 2.dp)
             }
 
-            // Seção 4: O CARD DE SALDO TOTAL EM ABERTO COM ANIMAÇÃO
             item {
                 Spacer(modifier = Modifier.height(10.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(24.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Gerenciado internamente pelas seções
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.primary)
-                                .padding(vertical = 24.dp, horizontal = 20.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(16.dp)
-                        ) {
-                            Text(
-                                "DÍVIDA TOTAL DO CLIENTE",
-                                fontSize = 12.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = currencyFormatter.format(uiState.customer.owes ?: 0.0),
-                                fontSize = 32.sp,
-                                color = Color.White,
-                                fontWeight = FontWeight.Black
-                            )
-
-                            // Botão Quitar Total
-                            uiState.customer.owes?.let {
-                                Button(
-                                    onClick = {
-                                        showConfirmationDialog(ConfirmationAction.TOTAL_PAYMENT)
-                                    },
-                                    modifier = Modifier.fillMaxWidth().height(50.dp),
-                                    enabled = it > 0,
-                                    colors = ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.onPrimary,
-                                        contentColor = MaterialTheme.colorScheme.surface,
-                                        disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(alpha = 0.5f),
-                                        disabledContentColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-                                    ),
-                                    shape = RoundedCornerShape(14.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Default.CheckCircle,
-                                            contentDescription = "Icon Check",
-                                        )
-                                        Text(
-                                            text = "Quitar Total",
-                                            fontWeight = FontWeight.Bold,
-                                            fontSize = 16.sp
-                                        )
-                                    }
-                                }
-                            }
-                        }
-
-                        // Aba Inferior de Pagamento Parcial (Gatilho da Animação)
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.secondary.copy(0.4f))
-                        ) {
-                            // Cabeçalho clicável que dispara a expansão
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        onPartialPaymentExpand()
-                                    }
-                                    .padding(vertical = 16.dp, horizontal = 20.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "PAGAMENTO PARCIAL",
-                                    fontSize = 13.sp,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Icon(
-                                    imageVector = if (uiState.isPartialPaymentExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                                    contentDescription = if (uiState.isPartialPaymentExpanded) "Recolher" else "Expandir",
-                                    tint = MaterialTheme.colorScheme.secondary
-                                )
-                            }
-
-                            // COMPONENTE ANIMADO: Desce suavemente ao clicar
-                            AnimatedVisibility(
-                                visible = uiState.isPartialPaymentExpanded,
-                                enter = expandVertically() + fadeIn(),
-                                exit = shrinkVertically() + fadeOut()
-                            ) {
-                                Row(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
-                                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    OutlinedTextField(
-                                        value = uiState.partialPaymentComponent,
-                                        onValueChange = {
-                                            onPartialPaymentChange(it.text)
-                                        },
-                                        placeholder = { Text("R$ 0,00", color = MaterialTheme.colorScheme.secondary) },
-                                        modifier = Modifier.weight(1f),
-                                        shape = RoundedCornerShape(10.dp),
-                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                                        singleLine = true,
-                                        colors = OutlinedTextFieldDefaults.colors(
-                                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                            unfocusedBorderColor = MaterialTheme.colorScheme.primary,
-                                            focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                                            unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary
-                                        )
-                                    )
-                                    Button(
-                                        onClick = {
-                                            showConfirmationDialog(ConfirmationAction.PARTIAL_PAYMENT)
-                                        },
-                                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                                        enabled = (uiState.customer.owes ?: 0.0) > 0,
-                                        shape = RoundedCornerShape(10.dp),
-                                        modifier = Modifier.height(54.dp)
-                                    ) {
-                                        Text("Confirmar", fontWeight = FontWeight.Bold)
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
+                DebtAndPartialPayment(
+                    uiState = uiState,
+                    showConfirmationDialog = showConfirmationDialog,
+                    onPartialPaymentChange = onPartialPaymentChange,
+                )
                 Spacer(modifier = Modifier.height(80.dp))
             }
         }
@@ -418,10 +285,167 @@ fun ClientDetailsContent(
 
 }
 
+
+@Composable
+fun DebtAndPartialPayment(
+    uiState: CustomerDetailUiState = CustomerDetailUiState(),
+    showConfirmationDialog: (ConfirmationAction) -> Unit = {},
+    onPartialPaymentChange: (String) -> Unit = {},
+) {
+    var partialPaymentExpanded by rememberSaveable { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Gerenciado internamente pelas seções
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.primary)
+                    .padding(vertical = 24.dp, horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    "DÍVIDA TOTAL DO CLIENTE",
+                    fontSize = 12.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = currencyFormatter.format(uiState.customer.owes ?: 0.0),
+                    fontSize = 32.sp,
+                    color = Color.White,
+                    fontWeight = FontWeight.Black
+                )
+
+                // Botão Quitar Total
+                uiState.customer.owes?.let {
+                    Button(
+                        onClick = {
+                            showConfirmationDialog(ConfirmationAction.TOTAL_PAYMENT)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        enabled = it > 0,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onPrimary,
+                            contentColor = MaterialTheme.colorScheme.surface,
+                            disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(
+                                alpha = 0.5f
+                            ),
+                            disabledContentColor = MaterialTheme.colorScheme.surface.copy(
+                                alpha = 0.5f
+                            )
+                        ),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Icon Check",
+                            )
+                            Text(
+                                text = "Quitar Total",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondary.copy(0.4f))
+            ) {
+                // Cabeçalho clicável que dispara a expansão
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            partialPaymentExpanded = !partialPaymentExpanded
+                        }
+                        .padding(vertical = 16.dp, horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "PAGAMENTO PARCIAL",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = if (partialPaymentExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (partialPaymentExpanded) "Recolher" else "Expandir",
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                // COMPONENTE ANIMADO: Desce suavemente ao clicar
+                AnimatedVisibility(
+                    visible = partialPaymentExpanded,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = uiState.partialPaymentComponent,
+                            onValueChange = {
+                                onPartialPaymentChange(it.text)
+                            },
+                            placeholder = {
+                                Text(
+                                    "R$ 0,00",
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                        Button(
+                            onClick = {
+                                showConfirmationDialog(ConfirmationAction.PARTIAL_PAYMENT)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            enabled = (uiState.customer.owes ?: 0.0) > 0,
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.height(54.dp)
+                        ) {
+                            Text("Confirmar", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
 @Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")
 @Composable
 fun CustomerDetailScreenPreview() {
     MaterialTheme {
-        ClientDetailsContent()
+        CustomerDetailContent()
     }
 }
