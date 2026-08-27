@@ -41,6 +41,7 @@ import com.example.anotafacil.presentation.components.AnnotationProductsConfirma
 import com.example.anotafacil.presentation.components.AnnotationProductsNothingToShow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextOverflow
+import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.presentation.components.AnnotationProductsFab
 import com.example.anotafacil.presentation.formatter.currencyFormatter
 
@@ -171,74 +172,11 @@ fun ClientManagementContent(
                     AnnotationProductsNothingToShow(text = "Nenhum cliente encontrado",)
                 } else {
                     customerUiState.customers.forEach { customer ->
-                        Card(
-                            onClick = { goToCustomerDetailScreen(customer.id) },
-                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(16.dp),
-                            ) {
-                                Column(
-                                    modifier = Modifier.weight(4f),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = customer.name,
-                                        fontSize = 18.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black,
-
-                                        )
-
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = "info: ",
-                                            fontSize = 14.sp,
-                                            color = MaterialTheme.colorScheme.onBackground.copy(
-                                                0.5f
-                                            )
-                                        )
-
-                                        Text(
-                                            text = customer.extraInfo
-                                                ?: "nenhuma informação extra",
-                                            fontSize = 14.sp,
-                                            color = Color.Black,
-                                            fontWeight = FontWeight.W500
-                                        )
-                                    }
-
-                                    // Última Compra
-                                    customer.lastPurchaseDate?.let {
-                                        Text(
-                                            text = "Última compra: $it",
-                                            fontSize = 15.sp,
-                                            color = MaterialTheme.colorScheme.onBackground.copy(
-                                                0.5f
-                                            )
-                                        )
-                                    }
-                                }
-
-                                IconButton(
-                                    onClick = {
-                                        onCustomerUiEvent(CustomersUiEvent.OnShowModalDeleteCustomer(customer.id))
-                                    },
-                                    modifier = Modifier.size(44.dp).weight(1f)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Excluir",
-                                        tint = Color.LightGray
-                                    )
-                                }
-                            }
-                        }
+                        CardCustomers(
+                            customer = customer,
+                            onCustomerUiEvent = onCustomerUiEvent,
+                            goToCustomerDetailScreen = goToCustomerDetailScreen
+                        )
                     }
                 }
             }
@@ -322,6 +260,80 @@ fun MetricCard(
 }
 
 
+@Composable
+fun CardCustomers(
+    customer: Customer,
+    onCustomerUiEvent: (CustomersUiEvent) -> Unit,
+    goToCustomerDetailScreen: (Long) -> Unit
+) {
+    Card(
+        onClick = { goToCustomerDetailScreen(customer.id) },
+        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+        ) {
+            Column(
+                modifier = Modifier.weight(4f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = customer.name,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                )
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "info: ",
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.onBackground.copy(
+                            0.5f
+                        )
+                    )
+
+                    Text(
+                        text = customer.extraInfo
+                            ?: "nenhuma informação extra",
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        fontWeight = FontWeight.W500
+                    )
+                }
+
+                // Última Compra
+                customer.lastPurchaseDate?.let {
+                    Text(
+                        text = "Última compra: $it",
+                        fontSize = 15.sp,
+                        color = MaterialTheme.colorScheme.onBackground.copy(
+                            0.5f
+                        )
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = {
+                    onCustomerUiEvent(CustomersUiEvent.OnShowModalDeleteCustomer(customer.id))
+                },
+                modifier = Modifier.size(44.dp).weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Excluir",
+                    tint = Color.LightGray
+                )
+            }
+        }
+    }
+}
 
 // 4. Preview da Tela
 @Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")

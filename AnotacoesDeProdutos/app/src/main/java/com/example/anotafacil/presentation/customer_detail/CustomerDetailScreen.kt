@@ -135,7 +135,7 @@ fun CustomerDetailContent(
                             text = uiState.customer.name,
                             fontSize = 26.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primaryContainer
                         )
                         /*Icon(
                             Icons.Default.Edit,

@@ -55,28 +55,14 @@ class HomeViewModel @Inject constructor(
 
 
             if(result > 0) {
-                _homeUiState.value = _homeUiState.value.copy(
-                    success = true,
-                    error = null
-                )
+                _homeUiState.update {
+                    it.copy(success = true, error = null)
+                }
             } else {
-                _homeUiState.value = _homeUiState.value.copy(
-                    success = false,
-                    error = "Erro ao adicionar cidade"
-                )
+                _homeUiState.update {
+                    it.copy(success = false, error = "Erro ao adicionar cidade")
+                }
             }
-        }
-    }
-
-    fun showDialog() {
-        _homeUiState.update {
-            it.copy(showDialog = true)
-        }
-    }
-
-    fun dismissDialog() {
-        _homeUiState.update {
-            it.copy(showDialog = false, success = false, error = null)
         }
     }
 }

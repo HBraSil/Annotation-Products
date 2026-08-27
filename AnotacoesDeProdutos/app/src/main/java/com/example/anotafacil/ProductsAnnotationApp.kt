@@ -20,9 +20,11 @@ import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
 import com.example.anotafacil.presentation.home.HomeScreen
 import com.example.anotafacil.presentation.new_purchase.NewPurchaseScreen
 import com.example.anotafacil.presentation.price_definition.PriceDefinitionScreen
+import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
 
 enum class Screens(val route: String) {
     HOME("home"),
+    SALES_OVERVIEW("sales_overview"),
     CUSTOMER_DETAIL("customer_detail"),
     CUSTOMERS("customers"),
     NEW_PURCHASE("new_purchase"),
@@ -43,10 +45,17 @@ fun ProductsAnnotationApp(startDestination: String) {
                 onCityClick = {
                     navController.navigate("${Screens.CUSTOMERS.route}/${it.id}")
                 },
-                onUpdatePricesClick = {
-                    navController.navigate(Screens.PRICE_DEFINITION.route)
+                onFabClick = {
+                    when (it) {
+                        Screens.PRICE_DEFINITION.route -> navController.navigate(Screens.PRICE_DEFINITION.route)
+                        Screens.SALES_OVERVIEW.route -> navController.navigate(Screens.SALES_OVERVIEW.route)
+                    }
                 }
             )
+        }
+
+        composable(route = Screens.SALES_OVERVIEW.route) {
+            SalesOverviewScreen()
         }
 
         composable(

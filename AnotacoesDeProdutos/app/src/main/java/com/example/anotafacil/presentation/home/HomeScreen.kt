@@ -1,7 +1,20 @@
 package com.example.anotafacil.presentation.home
 
 import android.util.Log
+import android.widget.Button
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.updateTransition
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,33 +27,54 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.InsertChart
+import androidx.compose.material.icons.outlined.LocationCity
 import androidx.compose.material.icons.outlined.LocationOn
+import androidx.compose.material.icons.outlined.PriceChange
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.Screens
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.presentation.components.AnnotationProductsNothingToShow
 import com.example.anotafacil.presentation.components.AnnotationProductsSearchBar
@@ -50,19 +84,17 @@ import com.example.anotafacil.presentation.components.AnnotationProductsSuccessD
 @Composable
 fun HomeScreen(
     homeViewModel: HomeViewModel = hiltViewModel(),
-    onUpdatePricesClick: () -> Unit = {},
-    onCityClick: (City) -> Unit = {},
+    onCityClick: (City) -> Unit,
+    onFabClick: (String) -> Unit = {},
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
 
     HomeContent(
         homeUiState = homeUiState,
         onSearchChange = homeViewModel::updateSearchQuery,
-        onUpdatePricesClick = onUpdatePricesClick,
-        onCityClick = onCityClick,
         addCity = homeViewModel::addCity,
-        onDismiss = homeViewModel::dismissDialog,
-        showAddCityModal = homeViewModel::showDialog,
+        onCityClick = onCityClick,
+        onFabClick = onFabClick,
     )
 }
 
@@ -71,12 +103,11 @@ fun HomeScreen(
 fun HomeContent(
     homeUiState: HomeState,
     onSearchChange: (String) -> Unit,
-    onUpdatePricesClick: () -> Unit,
-    onCityClick: (City) -> Unit,
     addCity: (String) -> Unit,
-    onDismiss: () -> Unit,
-    showAddCityModal: () -> Unit,
+    onCityClick: (City) -> Unit,
+    onFabClick: (String) -> Unit,
 ) {
+    var showAddCityModalBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -89,19 +120,21 @@ fun HomeContent(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 },
-                actions = {
-                    TextButton(onClick = onUpdatePricesClick) {
-                        Text(
-                            text = "Atualizar preços",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.onPrimary
                 )
             )
+        },
+        floatingActionButton = {
+            Column(
+                modifier = Modifier.padding(bottom = 16.dp, end = 8.dp),
+            ) {
+                MultiFloatingButtons {
+                    if (it != null) onFabClick(it.route)
+                    else showAddCityModalBottomSheet = true
+                }
+
+            }
         }
     ) {
         Column(
@@ -163,43 +196,20 @@ fun HomeContent(
                         }
                     }
                 }
-
-                item {
-                    Spacer(modifier = Modifier.height(22.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        OutlinedButton(
-                            onClick = showAddCityModal,
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Add,
-                                contentDescription = null
-                            )
-
-                            Spacer(modifier = Modifier.size(8.dp))
-
-                            Text("Adicionar Cidade")
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(22.dp))
-                }
             }
         }
     }
 
-    if (homeUiState.showDialog) {
+    if (showAddCityModalBottomSheet) {
         ModalAddCityScreen(
-            onBackClick = onDismiss,
+            onBackClick = { showAddCityModalBottomSheet = false },
             onSaveClick = addCity,
         )
     }
 
     if (homeUiState.success) AnnotationProductsSuccessDialog(
         text = "Cidade adicionada com sucesso!",
-        onDismiss = onDismiss
+        onDismiss = { showAddCityModalBottomSheet = false }
     )
 }
 
@@ -211,7 +221,6 @@ private fun CityCard(
     onClick: () -> Unit,
 ) {
 
-    Log.d("CityCard", "CityCard: ${city.name} -> ${city.customerCount}")
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -254,7 +263,7 @@ private fun CityCard(
                 text = city.name,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = MaterialTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.primaryContainer,
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(10.dp))
@@ -289,6 +298,105 @@ private fun CityCard(
 }
 
 
+@Composable
+fun MultiFloatingButtons(onClick: (Screens?) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val minFabList = listOf(
+        MinFabItem(Icons.Outlined.PriceChange, "Atualizar Preços", Screens.PRICE_DEFINITION),
+        MinFabItem(Icons.Outlined.InsertChart, "Ver Relatório", Screens.SALES_OVERVIEW),
+        MinFabItem(Icons.Outlined.LocationCity, "Adicionar Cidade")
+    )
+
+
+    Column(
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.Center
+    ) {
+        AnimatedVisibility(
+            visible = expanded,
+            enter = fadeIn() + slideInVertically(initialOffsetY = { it }) + expandVertically(),
+            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }) + shrinkVertically(),
+            modifier = Modifier.wrapContentWidth()
+        ) {
+            Column(
+                modifier = Modifier.wrapContentHeight().wrapContentWidth()
+            ) {
+                minFabList.forEach { item ->
+                    MinFab(item) {
+                        onClick(item.route)
+                    }
+                }
+            }
+        }
+
+
+        val transition = updateTransition(targetState = expanded, label = "transition")
+        val rotate by transition.animateFloat(label = "rotate") {
+            if (it) 90f else 0f
+        }
+
+        ElevatedCard(
+            onClick = { expanded = !expanded },
+            shape = CircleShape,
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.onPrimary,
+                contentColor = MaterialTheme.colorScheme.onBackground
+            )
+        ) {
+            Icon(
+                imageVector = if (expanded) Icons.Default.Close else Icons.Default.MoreVert,
+                contentDescription = null,
+                modifier = Modifier.rotate(rotate).padding(18.dp)
+            )
+        }
+    }
+}
+
+
+
+@Composable
+fun MinFab(item: MinFabItem, onClick: () -> Unit = {}) {
+
+    Row(
+        modifier = Modifier.clickable(
+            indication = null,
+            interactionSource = remember { MutableInteractionSource() }
+        ) {
+            onClick()
+        }.wrapContentWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Spacer(Modifier.weight(1f))
+        Box(
+            modifier = Modifier
+                .border(1.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(10.dp))
+                //.background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
+                .padding(4.dp)
+                .wrapContentWidth(),
+        ) {
+            Text(
+                text = item.name, modifier = Modifier.wrapContentWidth(),
+                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                style = MaterialTheme.typography.titleMedium
+            )
+        }
+
+
+        FloatingActionButton(
+            onClick = onClick,
+            modifier = Modifier
+                .padding(start = 10.dp, bottom = 7.dp)
+                .size(40.dp),
+            containerColor = MaterialTheme.colorScheme.onBackground
+        ) {
+            Icon(
+                imageVector = item.icon,
+                contentDescription = item.name,
+                tint = MaterialTheme.colorScheme.onPrimary
+            )
+        }
+    }
+}
 
 @Preview(
     showBackground = true,
@@ -301,11 +409,9 @@ private fun HomeScreenPreview() {
         HomeContent(
             homeUiState = HomeState(),
             onSearchChange = {},
-            onUpdatePricesClick = {},
             onCityClick = {},
             addCity = {},
-            onDismiss = {},
-            showAddCityModal = {}
+            onFabClick = {}
         )
     }
 }

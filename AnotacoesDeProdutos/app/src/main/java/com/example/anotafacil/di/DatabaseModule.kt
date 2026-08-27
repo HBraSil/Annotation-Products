@@ -36,11 +36,12 @@ object DatabaseModule {
 
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context, productDaoProvider: Provider<ProductDao>, scope: CoroutineScope) = Room.databaseBuilder(
-        context,
-        AppDatabase::class.java,
-        "app_database"
-    )
+    fun provideDatabase(@ApplicationContext context: Context, productDaoProvider: Provider<ProductDao>, scope: CoroutineScope): AppDatabase =
+        Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "app_database"
+        )
         .addCallback(
             DatabaseCallback(
                 productDaoProvider = productDaoProvider,

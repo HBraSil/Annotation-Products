@@ -1,20 +1,19 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.hilt.plugin)
     alias(libs.plugins.room)
+    alias(libs.plugins.hilt.plugin)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlin.android)
 }
 
 android {
     namespace = "com.hilquias.anotafacil"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.hilquias.anotafacil"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 3
         versionName = "1.0"
 
@@ -51,6 +50,10 @@ android {
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+ksp {
+    arg("room.generateKotlin", "true")
 }
 
 dependencies {
@@ -90,4 +93,8 @@ dependencies {
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.android)
     implementation(libs.hilt.navigation)
+
+    // VICO
+    implementation(libs.vico.compose)
+    implementation(libs.vico.compose.m3)
 }
