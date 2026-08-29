@@ -27,6 +27,7 @@ import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProdu
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianLayerRangeProvider
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.compose.cartesian.data.lineModel
+import com.patrykandpatrick.vico.compose.cartesian.layer.LineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.compose.cartesian.marker.CartesianMarkerController
@@ -42,68 +43,6 @@ import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
 import com.patrykandpatrick.vico.compose.common.data.ExtraStore
 import java.util.Arrays.fill
-
-/*@RequiresApi(Build.VERSION_CODES.O)
-@Composable
-fun MonthlySalesChart(
-    // Recebe a lista com os 5 valores cobrados/faturados nos últimos 5 meses
-    monthlyValues: List<Number>,
-    modifier: Modifier = Modifier
-) {
-    // 1. Gera dinamicamente a lista dos últimos 5 meses (Ex: ["Abril", "Maio", "Junho", "Julho", "Agosto"])
-    val monthLabels = remember {
-        val currentMonth = YearMonth.now()
-        val formatter = DateTimeFormatter.ofPattern("MMM", Locale("pt", "BR"))
-        (4 downTo 0).map { i ->
-            currentMonth.minusMonths(i.toLong()).format(formatter).replaceFirstChar { it.uppercase() }
-        }
-    }
-
-    // 2. Modelo de dados do Vico
-    val modelProducer = remember { CartesianChartModelProducer() }
-
-    // Atualiza os dados no modelo
-    remember(monthlyValues) {
-        modelProducer.runTransaction {
-            columnSeries { series(monthlyValues) }
-            extras { it[MonthsKey] = monthLabels }
-        }
-    }
-
-    // 3. Formatador do Eixo Y em Reais (R$)
-    val currencyFormatter = remember {
-        NumberFormat.getCurrencyInstance(Locale("pt", "BR")).apply {
-            maximumFractionDigits = 0 // Remove centavos para o gráfico ficar limpo
-        }
-    }
-
-    // 4. Renderização do Gráfico
-    CartesianChartHost(
-        chart = rememberCartesianChart(
-            rememberColumnCartesianLayer(),
-            // Eixo Y (Vertical) - Configurado com Mínimo 500 e Passo 200
-            leftAxis = VerticalAxis.rememberLeft(
-                valueFormatter = { value, _, _ -> currencyFormatter.format(value) },
-                itemPlacer = remember {
-                    VerticalAxis.ItemPlacer.step(
-                        step = { 200.0 },     // Sobe de 200 em 200 (500, 700, 900...)
-                        shiftTopLines = true
-                    )
-                }
-            ),
-            // Eixo X (Horizontal) - Nomes dos Últimos 5 Meses
-            bottomAxis = HorizontalAxis.rememberBottom(
-                valueFormatter = { x, chartValues, _ ->
-                    val months = chartValues.model.extraStore[MonthsKey]
-                    months.getOrNull(x.toInt()) ?: ""
-                }
-            )
-        ),
-        modelProducer = modelProducer,
-        modifier = modifier
-    )
-}*/
-
 
 private val MONTHS = listOf(
     "Fev/26",
@@ -132,29 +71,18 @@ fun SalesChart(
         }
     }
 
-    val lis = listOf(
-        0f,
-        600f,
-        800f,
-        1000f,
-        1200f,
-        1400f,
-        1600f,
-        1800f,
-        2000f,
-    )
     var selectedPoint by remember { mutableStateOf<Double?>(null) }
 
     val modelProducer = remember { CartesianChartModelProducer() }
     val indicatorComponent = rememberShapeComponent(
-        fill = Fill(MaterialTheme.colorScheme.background),
+        fill = Fill(MaterialTheme.colorScheme.onBackground),
         shape = CircleShape,
     )
 
     val marker = rememberDefaultCartesianMarker(
         label = rememberTextComponent(
             style = TextStyle(
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onPrimary
             ),
             margins = Insets(
                 8.dp
@@ -202,9 +130,26 @@ fun SalesChart(
         }
     }
 
+    val lineProvider = LineCartesianLayer.LineProvider.series(
+        LineCartesianLayer.Line(
+            fill = LineCartesianLayer.LineFill.single(
+                Fill(MaterialTheme.colorScheme.primary)
+            ),
+            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 2.dp),
+        )
+    )
+
     CartesianChartHost(
         chart = rememberCartesianChart(
             rememberLineCartesianLayer(
+                lineProvider = LineCartesianLayer.LineProvider.series(
+                    LineCartesianLayer.Line(
+                        fill = LineCartesianLayer.LineFill.single(
+                            Fill(MaterialTheme.colorScheme.onSurface)
+                        ),
+                        stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 2.dp),
+                    )
+                ),
                 rangeProvider = CartesianLayerRangeProvider.fixed(
                     minY = 0.0,
                     maxY = 2400.0
@@ -212,6 +157,11 @@ fun SalesChart(
             ),
 
             startAxis = VerticalAxis.rememberStart(
+                label = rememberTextComponent(
+                    style = TextStyle(
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
+                ),
                 valueFormatter = CartesianValueFormatter { _, value, _ ->
                     "R$ ${value.toInt()}"
                 },
@@ -222,6 +172,11 @@ fun SalesChart(
             ),
 
             bottomAxis = HorizontalAxis.rememberBottom(
+                label = rememberTextComponent(
+                    style = TextStyle(
+                        color = MaterialTheme.colorScheme.onSecondary
+                    )
+                ),
                 valueFormatter = CartesianValueFormatter { _, value, _ ->
                     MONTHS.getOrNull(value.toInt()) ?: ""
                 },

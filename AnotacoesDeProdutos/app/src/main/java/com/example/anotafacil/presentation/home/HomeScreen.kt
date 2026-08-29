@@ -307,7 +307,6 @@ fun MultiFloatingButtons(onClick: (Screens?) -> Unit) {
         MinFabItem(Icons.Outlined.LocationCity, "Adicionar Cidade")
     )
 
-
     Column(
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.Center
@@ -316,10 +315,9 @@ fun MultiFloatingButtons(onClick: (Screens?) -> Unit) {
             visible = expanded,
             enter = fadeIn() + slideInVertically(initialOffsetY = { it }) + expandVertically(),
             exit = fadeOut() + slideOutVertically(targetOffsetY = { it }) + shrinkVertically(),
-            modifier = Modifier.wrapContentWidth()
         ) {
             Column(
-                modifier = Modifier.wrapContentHeight().wrapContentWidth()
+                horizontalAlignment = Alignment.End
             ) {
                 minFabList.forEach { item ->
                     MinFab(item) {
@@ -356,27 +354,26 @@ fun MultiFloatingButtons(onClick: (Screens?) -> Unit) {
 
 @Composable
 fun MinFab(item: MinFabItem, onClick: () -> Unit = {}) {
-
     Row(
-        modifier = Modifier.clickable(
-            indication = null,
-            interactionSource = remember { MutableInteractionSource() }
-        ) {
-            onClick()
-        }.wrapContentWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                onClick()
+            },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End
     ) {
-        Spacer(Modifier.weight(1f))
         Box(
             modifier = Modifier
                 .border(1.dp, MaterialTheme.colorScheme.primaryContainer, RoundedCornerShape(10.dp))
-                //.background(MaterialTheme.colorScheme.surface, RoundedCornerShape(10.dp))
-                .padding(4.dp)
-                .wrapContentWidth(),
+                .background(MaterialTheme.colorScheme.onPrimary, RoundedCornerShape(10.dp))
+                .padding(4.dp),
         ) {
             Text(
                 text = item.name, modifier = Modifier.wrapContentWidth(),
-                color = MaterialTheme.colorScheme.onSecondaryContainer,
+                color = MaterialTheme.colorScheme.onBackground,
                 style = MaterialTheme.typography.titleMedium
             )
         }
@@ -398,13 +395,14 @@ fun MinFab(item: MinFabItem, onClick: () -> Unit = {}) {
     }
 }
 
+
+
 @Preview(
     showBackground = true,
     showSystemUi = true
 )
 @Composable
 private fun HomeScreenPreview() {
-
     MaterialTheme {
         HomeContent(
             homeUiState = HomeState(),

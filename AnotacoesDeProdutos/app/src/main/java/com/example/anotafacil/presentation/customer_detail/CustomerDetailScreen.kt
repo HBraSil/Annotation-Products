@@ -303,7 +303,7 @@ fun DebtAndPartialPayment(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(MaterialTheme.colorScheme.primary)
+                    .background(MaterialTheme.colorScheme.onBackground)
                     .padding(vertical = 24.dp, horizontal = 20.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -311,13 +311,13 @@ fun DebtAndPartialPayment(
                 Text(
                     "DÍVIDA TOTAL DO CLIENTE",
                     fontSize = 12.sp,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
                     text = currencyFormatter.format(uiState.customer.owes ?: 0.0),
                     fontSize = 32.sp,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Black
                 )
 
