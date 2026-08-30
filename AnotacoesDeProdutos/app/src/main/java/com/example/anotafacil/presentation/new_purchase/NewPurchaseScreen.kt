@@ -34,6 +34,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.model.CartItem
 import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.presentation.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.presentation.components.EasyNotesExposedDropDown
 import com.example.anotafacil.presentation.formatter.currencyFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -116,10 +117,23 @@ fun NewPurchaseContent(
                     fontWeight = FontWeight.Medium
                 )
 
-                ProductDropdown(
-                    products = uiState.allProducts,
-                    selectedProduct = uiState.selectedProducts.lastOrNull(),
-                    onProductSelected = onSelectProductClick
+
+                EasyNotesExposedDropDown(
+                    items = uiState.allProducts,
+                    selectedItem = uiState.selectedProducts.lastOrNull()?.product?.name,
+                    itemText = { it.name },
+                    leadingIcon = Icons.Default.ShoppingCart,
+                    containerColor = MaterialTheme.colorScheme.onPrimary,
+                    trailingContent = { item ->
+                        Text(
+                            text = currencyFormatter.format(item.price.toDouble()),
+                            fontSize = 12.sp,
+                            color = Color.Gray
+                        )
+                    },
+                    onProductSelected = { selectedProduct ->
+                        onSelectProductClick(selectedProduct)
+                    }
                 )
             }
 
@@ -335,6 +349,8 @@ fun NewPurchaseContent(
     }
 }
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductDropdown(
@@ -342,6 +358,8 @@ fun ProductDropdown(
     selectedProduct: CartItem?,
     onProductSelected: (Product) -> Unit,
 ) {
+
+
     var expanded by rememberSaveable { mutableStateOf(false) }
 
     val bottomRadius by animateDpAsState(
@@ -360,10 +378,9 @@ fun ProductDropdown(
         expanded = expanded,
         onExpandedChange = { expanded = !expanded }
     ) {
-
         Surface(
             modifier = Modifier
-                .menuAnchor(MenuAnchorType.PrimaryNotEditable)
+                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
                 .fillMaxWidth(),
             shape = RoundedCornerShape(
                 topStart = 16.dp,

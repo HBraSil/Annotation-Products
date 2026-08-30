@@ -46,6 +46,10 @@ class NewPurchaseViewModel @Inject constructor(
         viewModelScope.launch {
             val products = productRepository.getProductsWithDefinedPrice()
 
+            products.forEach { product ->
+                Log.d("NewPurchaseViewModel", "Product: $product")
+            }
+
             customer.collect { customer ->
                 _uiState.update {
                     val debt = customer.owes ?: 0.0

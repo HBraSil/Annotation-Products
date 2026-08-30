@@ -55,7 +55,9 @@ fun ProductsAnnotationApp(startDestination: String) {
         }
 
         composable(route = Screens.SALES_OVERVIEW.route) {
-            SalesOverviewScreen()
+            SalesOverviewScreen(
+                onBackClick = {}
+            )
         }
 
         composable(

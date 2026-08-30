@@ -1,9 +1,7 @@
 package com.example.anotafacil.presentation.components
 
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -16,11 +14,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.anotafacil.presentation.formatter.currencyFormatter
-import com.patrykandpatrick.vico.compose.cartesian.CartesianChart
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
-import com.patrykandpatrick.vico.compose.cartesian.CartesianDrawingContext
-import com.patrykandpatrick.vico.compose.cartesian.CartesianMeasuringContext
-import com.patrykandpatrick.vico.compose.cartesian.axis.Axis
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.compose.cartesian.data.CartesianChartModelProducer
@@ -38,11 +32,8 @@ import com.patrykandpatrick.vico.compose.cartesian.marker.rememberDefaultCartesi
 import com.patrykandpatrick.vico.compose.cartesian.rememberCartesianChart
 import com.patrykandpatrick.vico.compose.common.Fill
 import com.patrykandpatrick.vico.compose.common.Insets
-import com.patrykandpatrick.vico.compose.common.Position
 import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberTextComponent
-import com.patrykandpatrick.vico.compose.common.data.ExtraStore
-import java.util.Arrays.fill
 
 private val MONTHS = listOf(
     "Fev/26",
@@ -130,14 +121,6 @@ fun SalesChart(
         }
     }
 
-    val lineProvider = LineCartesianLayer.LineProvider.series(
-        LineCartesianLayer.Line(
-            fill = LineCartesianLayer.LineFill.single(
-                Fill(MaterialTheme.colorScheme.primary)
-            ),
-            stroke = LineCartesianLayer.LineStroke.Continuous(thickness = 2.dp),
-        )
-    )
 
     CartesianChartHost(
         chart = rememberCartesianChart(

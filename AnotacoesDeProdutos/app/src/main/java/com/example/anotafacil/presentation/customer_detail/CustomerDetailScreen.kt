@@ -41,7 +41,6 @@ import com.example.anotafacil.presentation.components.AnnotationProductsSuccessD
 import com.example.anotafacil.presentation.formatter.currencyFormatter
 import com.example.anotafacil.presentation.formatter.toBrazilianDate
 
-
 @Composable
 fun CustomerDetailScreen(
     customerDetailViewModel: CustomerDetailViewModel = hiltViewModel(),
