@@ -28,8 +28,9 @@ class CustomerRepositoryImpl @Inject constructor(
     val appDatabase: AppDatabase
 ) : CustomerRepository {
     override fun getCustomer(id: Uuid?): Flow<Customer?> {
-        Log.d("CustomerRepositoryImpl", "getCustomer: $id")
-        return customerDao.getCustomer(id).map { it?.toDomain() }
+        return customerDao.getCustomer(id).map {
+            Log.d("CustomerRepositoryImpl", "getCustomer: $it")
+            it?.toDomain() }
     }
 
     override fun getAllCustomers(cityId: Uuid?): Flow<Result<List<Customer>>> {

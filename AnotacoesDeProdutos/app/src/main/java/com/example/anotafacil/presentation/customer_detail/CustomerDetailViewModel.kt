@@ -15,6 +15,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -26,23 +29,25 @@ class CustomerDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val customerRepository: CustomerRepository,
 ) : ViewModel() {
-
-    private val customerId = savedStateHandle.get<String>("customerId")?.let(Uuid::parse)
-
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
     val uiState = _uiState.asStateFlow()
 
+    private val customerUuid = savedStateHandle.getStateFlow<String?>("customerId", null)
+        .filterNotNull()
+        .map(Uuid::parse)
+
 
     init {
-        updateCustomer()
-
-        searchCustomer()
+        getCustomer()
+        getLastPurchase()
     }
 
 
-    private fun updateCustomer() {
+    private fun getCustomer() {
         viewModelScope.launch {
-            customerRepository.getCustomer(customerId).collect {
+            customerUuid.flatMapLatest {
+                customerRepository.getCustomer(it)
+            }.collect {
                 _uiState.update { state ->
                     state.copy(customer = it ?: Customer())
                 }
@@ -51,19 +56,21 @@ class CustomerDetailViewModel @Inject constructor(
     }
 
 
-    private fun searchCustomer() {
+    private fun getLastPurchase() {
         viewModelScope.launch {
-            customerRepository.getLastPurchase(customerId)
-                .collect { purchaseWithItems ->
-                    _uiState.update {
-                        it.copy(
-                            purchase = purchaseWithItems?.purchase ?: Purchase(),
-                            purchaseItems = purchaseWithItems?.items?.map { item ->
-                                item.cartItem.copy(product = item.product)
-                            } ?: emptyList()
-                        )
-                    }
+            customerUuid.flatMapLatest {
+                customerRepository.getLastPurchase(it)
+
+            }.collect { purchaseWithItems ->
+                _uiState.update {
+                    it.copy(
+                        purchase = purchaseWithItems?.purchase ?: Purchase(),
+                        purchaseItems = purchaseWithItems?.items?.map { item ->
+                            item.cartItem.copy(product = item.product)
+                        } ?: emptyList()
+                    )
                 }
+            }
         }
     }
 

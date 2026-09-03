@@ -122,7 +122,7 @@ fun PurchaseHistoryContent(
                     items(history) { movement ->
                         when (movement) {
                             is HistoryMovement.UiPurchase -> {
-                                PurchaseHistoryCard(movement.purchase)
+                                PurchaseHistoryCard(movement.purchaseWithItemsDomain)
                             }
 
                             is HistoryMovement.UiPayment -> {

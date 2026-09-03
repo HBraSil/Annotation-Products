@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -34,9 +35,8 @@ class NewPurchaseViewModel @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val customer = savedStateHandle.getStateFlow<String?>("customerId", null)
-        .map { idString ->
-            idString?.let { Uuid.parse(idString) }
-        }
+        .filterNotNull()
+        .map(Uuid::parse)
         .flatMapLatest(customerRepository::getCustomer)
         .stateIn(
             scope = viewModelScope,
@@ -48,7 +48,6 @@ class NewPurchaseViewModel @Inject constructor(
     val uiState: StateFlow<NewPurchaseUiState> = _uiState.asStateFlow()
 
     init {
-
         getProductsWithDefinedPrice()
     }
 

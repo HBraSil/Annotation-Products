@@ -61,9 +61,10 @@ fun CustomersScreen(
 
     val customerUiState by customersViewModel.customerUiState.collectAsState()
 
-    LaunchedEffect(customerUiState.currentCity?.id) {
-        if (customerUiState.currentCity?.id != null) {
-            lastScreenViewModel.lastRoute("${Screens.CUSTOMERS.route}/${customerUiState.currentCity?.id}")
+    val currentCity = customerUiState.currentCity
+    LaunchedEffect(currentCity?.id) {
+        if (currentCity?.id != null) {
+            lastScreenViewModel.lastRoute("${Screens.CUSTOMERS.route}/${currentCity.id}")
         }
     }
 
@@ -72,7 +73,7 @@ fun CustomersScreen(
     }
 
     ClientManagementContent(
-        currentCity = customerUiState.currentCity ?: City(),
+        currentCity = currentCity ?: City(),
         customerUiState = customerUiState,
         onBackClick = onBackClick,
         goToCustomerDetailScreen = goToCustomerDetailScreen,

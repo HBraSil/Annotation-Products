@@ -9,6 +9,7 @@ import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.CustomerRepository
+import com.example.anotafacil.presentation.util.MonthStartAndEnd
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
@@ -39,9 +40,8 @@ class CustomersViewModel @Inject constructor(
 
 
     val cityIdFlow = savedStateHandle.getStateFlow<String?>("cityId", null)
-        .map { idString ->
-            idString?.let { Uuid.parse(it) }
-        }
+        .filterNotNull()
+        .map(Uuid::parse)
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.Eagerly, // Eagerly garante que ele leia o argumento imediatamente!
@@ -52,52 +52,49 @@ class CustomersViewModel @Inject constructor(
 
 
     init {
-        println("CustomersViewModel init: ${cityIdFlow.value}")
-        observeCityDetails()
-        observeCustomersList()
-
-        /*viewModelScope.launch {
-            cityIdFlow
-                .filterNotNull()
-                .flatMapLatest { cityId ->
-                    cityRepository.getMonthlySalesSummary(
-                        cityId = cityId,
-                        startMonth = MonthStartAndEnd.currentMonth().start,
-                        endMonth = MonthStartAndEnd.currentMonth().end
-                    )
-                }
-                .collect { monthlySalesSummary ->
-                    _customerUiState.update { it.copy(metric = monthlySalesSummary) }
-                }
-        }*/
-
-
+        getCityName()
+        getCustomersList()
+        getMonthlySalesSummary()
         observeSearchQuery()
     }
-    private fun observeCityDetails() {
+
+
+    fun customersEvent(event: CustomersUiEvent) {
+        when (event) {
+            is CustomersUiEvent.OnSearchQueryChange -> updateSearchQuery(event.query)
+            is CustomersUiEvent.OnNameChange -> updateName(event.name)
+            is CustomersUiEvent.OnExtraInfoChange -> updateExtraInfo(event.extraInfo)
+            is CustomersUiEvent.OnCreateCustomerClick -> saveCustomer()
+            is CustomersUiEvent.OnDismissModalDeleteCustomer -> onDismissModalDeleteCustomer()
+            is CustomersUiEvent.OnShowModalDeleteCustomer -> showModalDeleteCustomer(event.id)
+            is CustomersUiEvent.OnShowModalCreateCustomer -> showModalCreateCustomer()
+            is CustomersUiEvent.OnDeleteCustomerClick -> deleteCustomer()
+            is CustomersUiEvent.OnDismissOverlayCreatedCustomer -> closeModalAndOverlayCreatedCustomer()
+        }
+
+    }
+
+
+    private fun getCityName() {
         viewModelScope.launch {
-            cityIdFlow
-                .filterNotNull()
-                .collect { cityId ->
-                    cityRepository.getCity(cityId)
-                        .onSuccess { city ->
-                            _customerUiState.update { it.copy(currentCity = city) }
+            cityIdFlow.collect { cityId ->
+                cityRepository.getCity(cityId)
+                    .onSuccess { city ->
+                        _customerUiState.update { it.copy(currentCity = city) }
+                    }
+                    .onFailure { error ->
+                        _customerUiState.update {
+                            it.copy(errorMessage = error.message ?: "Erro ao carregar cidade")
                         }
-                        .onFailure { error ->
-                            _customerUiState.update {
-                                it.copy(errorMessage = error.message ?: "Erro ao carregar cidade")
-                            }
-                        }
-                }
+                    }
+            }
         }
     }
 
-    private fun observeCustomersList() {
+    private fun getCustomersList() {
         viewModelScope.launch {
             cityIdFlow
-                .filterNotNull()
                 .flatMapLatest { cityId ->
-                    // getAllCustomers(cityId) retorna Flow<Result<List<Customer>>>
                     customerRepository.getAllCustomers(cityId)
                 }
                 .collect { result ->
@@ -118,20 +115,22 @@ class CustomersViewModel @Inject constructor(
         }
     }
 
-    fun customersEvent(event: CustomersUiEvent) {
-        when (event) {
-            is CustomersUiEvent.OnSearchQueryChange -> updateSearchQuery(event.query)
-            is CustomersUiEvent.OnNameChange -> updateName(event.name)
-            is CustomersUiEvent.OnExtraInfoChange -> updateExtraInfo(event.extraInfo)
-            is CustomersUiEvent.OnCreateCustomerClick -> saveCustomer()
-            is CustomersUiEvent.OnDismissModalDeleteCustomer -> onDismissModalDeleteCustomer()
-            is CustomersUiEvent.OnShowModalDeleteCustomer -> showModalDeleteCustomer(event.id)
-            is CustomersUiEvent.OnShowModalCreateCustomer -> showModalCreateCustomer()
-            is CustomersUiEvent.OnDeleteCustomerClick -> deleteCustomer()
-            is CustomersUiEvent.OnDismissOverlayCreatedCustomer -> closeModalAndOverlayCreatedCustomer()
+    private fun getMonthlySalesSummary() {
+        viewModelScope.launch {
+            cityIdFlow
+                .flatMapLatest { cityId ->
+                    cityRepository.getMonthlySalesSummary(
+                        cityId = cityId,
+                        startMonth = MonthStartAndEnd.currentMonth().start,
+                        endMonth = MonthStartAndEnd.currentMonth().end
+                    )
+                }
+                .collect { monthlySalesSummary ->
+                    _customerUiState.update { it.copy(metric = monthlySalesSummary) }
+                }
         }
-
     }
+
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeSearchQuery() {
@@ -201,12 +200,7 @@ class CustomersViewModel @Inject constructor(
 
     private fun saveCustomer() {
         viewModelScope.launch {
-            println("SALVANDO CLIENTE AQUI")
-            if (cityIdFlow.value == null) return@launch
-            println("PASSOU E CHEGOU AQUI")
 
-
-            println("ANALISAR VIEWMODEL ----> ${cityIdFlow.value}")
             val customer = Customer(
                 name = _customerUiState.value.name,
                 extraInfo = _customerUiState.value.extraInfo,
