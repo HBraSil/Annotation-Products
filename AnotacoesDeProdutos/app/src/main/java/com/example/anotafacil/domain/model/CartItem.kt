@@ -1,12 +1,13 @@
 package com.example.anotafacil.domain.model
 
 import com.example.anotafacil.data.entity.CartItemEntity
+import kotlin.uuid.Uuid
 
 data class CartItem(
     val id: Long = 0,
     val product: Product = Product(),
-    val productId: Long = 0,
-    val purchaseId: Long = 0,
+    val productId: Uuid = Uuid.NIL,
+    val purchaseId: Uuid = Uuid.NIL,
     val quantity: Int = 0,
 ) {
     fun subtotal() = product.price * quantity

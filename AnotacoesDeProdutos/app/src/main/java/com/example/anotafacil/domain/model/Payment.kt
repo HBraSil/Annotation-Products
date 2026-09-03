@@ -1,10 +1,11 @@
 package com.example.anotafacil.domain.model
 
 import com.example.anotafacil.data.entity.PaymentEntity
+import kotlin.uuid.Uuid
 
 data class Payment(
-    val id: Long = 0,
-    val customerId: Long = 0,
+    val id: Uuid = Uuid.random(),
+    val customerId: Uuid? = null,
     val paymentDate: Long = 0,
     val amount: Double = 0.0,
     val isTotalPayment: Boolean = false
@@ -12,7 +13,7 @@ data class Payment(
 
 fun Payment.toEntity() = PaymentEntity(
     id = id,
-    customerId = customerId,
+    customerId = customerId ?: Uuid.random(),
     paymentDate = paymentDate,
     amount = amount,
     isTotalPayment = isTotalPayment

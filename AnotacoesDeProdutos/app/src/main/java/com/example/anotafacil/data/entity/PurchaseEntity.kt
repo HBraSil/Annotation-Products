@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.example.anotafacil.domain.model.Purchase
+import kotlin.uuid.Uuid
 
 @Entity(
     tableName = "purchase",
@@ -17,8 +18,10 @@ import com.example.anotafacil.domain.model.Purchase
     ]
 )
 data class PurchaseEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val customerId: Long = 0,
+    @PrimaryKey
+    val id: Uuid = Uuid.NIL,
+    val customerId: Uuid = Uuid.NIL,
+    val sellerId: Uuid = Uuid.NIL,
     val purchaseDate: Long = 0,
     val totalAmount: Double = 0.0,
 )
@@ -26,6 +29,7 @@ data class PurchaseEntity(
 fun PurchaseEntity.toDomain() = Purchase(
     id = id,
     customerId = customerId,
+    sellerId = sellerId,
     purchaseDate = purchaseDate,
     totalAmount = totalAmount,
 )

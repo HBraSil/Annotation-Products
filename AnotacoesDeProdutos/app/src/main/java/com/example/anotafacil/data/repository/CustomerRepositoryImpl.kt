@@ -20,28 +20,48 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import javax.inject.Inject
+import kotlin.uuid.Uuid
 
 class CustomerRepositoryImpl @Inject constructor(
     private val customerDao: CustomerDao,
     private val purchaseDao: PurchaseDao,
     val appDatabase: AppDatabase
 ) : CustomerRepository {
-    override fun getCustomer(id: Long): Flow<Customer> {
+    override fun getCustomer(id: Uuid?): Flow<Customer?> {
         Log.d("CustomerRepositoryImpl", "getCustomer: $id")
-        if (id <= 0) return flowOf(Customer())
-        return customerDao.getCustomer(id).map { it.toDomain() }
+        return customerDao.getCustomer(id).map { it?.toDomain() }
     }
 
-    override fun getAllCustomers(cityId: Long): Flow<List<Customer>> = customerDao.getAll(cityId).map { customerList ->
-        customerList.map { it.toDomain() }
+    override fun getAllCustomers(cityId: Uuid?): Flow<Result<List<Customer>>> {
+
+        return try {
+            customerDao.getAll(cityId).map { customerList ->
+                Result.success(customerList.map { it.toDomain() })
+            }
+        } catch (e: Exception) {
+            flowOf(Result.failure(Exception("Error ao carregar clientes")))
+        }
     }
 
-    override suspend fun addCustomer(customer: Customer): Long {
-        return customerDao.saveCustomer(customer.toCustomerEntity())
+    override suspend fun addCustomer(customer: Customer): Result<Boolean> {
+        return try {
+            println(
+                "ANALISAR ----> ${customer.toCustomerEntity()}"
+            )
+            customerDao.saveCustomer(customer.toCustomerEntity())
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(Exception("Error ao adicionar cliente"))
+        }
     }
 
-    override suspend fun newPurchase(purchase: Purchase): Long {
-        return purchaseDao.addPurchase(purchase.toEntity())
+    override suspend fun newPurchase(purchase: Purchase): Result<Boolean> {
+        return try {
+            purchaseDao.addPurchase(purchase.toEntity())
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(Exception("Error ao adicionar compra"))
+        }
     }
 
     override suspend fun updateCustomer(customer: Customer): Int {
@@ -63,29 +83,29 @@ class CustomerRepositoryImpl @Inject constructor(
         return customerDao.saveCartItems(cartItems.map { it.toCartEntity() })
     }
 
-    override suspend fun deleteCustomer(customerId: Long): Int {
+    override suspend fun deleteCustomer(customerId: Uuid?): Int {
         return customerDao.deleteCustomer(customerId)
     }
 
-    override fun getLastPurchase(customerId: Long): Flow<PurchaseWithItemsDomain?> {
+    override fun getLastPurchase(customerId: Uuid?): Flow<PurchaseWithItemsDomain?> {
         return purchaseDao.getLastPurchase(customerId).map { it?.toDomain() }
     }
 
-    override fun getAllPurchases(customerId: Long): Flow<List<PurchaseWithItemsDomain>> {
+    override fun getAllPurchases(customerId: Uuid?): Flow<List<PurchaseWithItemsDomain>> {
         return purchaseDao.getAllPurchases(customerId).map { purchaseListData ->
             Log.d("CustomerRepositoryImpl", "getPurchase: $purchaseListData")
             purchaseListData.map { it.toDomain() }
         }
     }
 
-    override fun getAllPayments(customerId: Long): Flow<List<Payment>> {
+    override fun getAllPayments(customerId: Uuid?): Flow<List<Payment>> {
         return customerDao.getPayments(customerId).map { paymentList ->
             Log.d("CustomerRepositoryImpl", "getPayments: $paymentList")
             paymentList.map { it.toDomain() }
         }
     }
 
-    override fun searchCustomer(query: String, cityId: Long): Flow<List<Customer>> {
+    override fun searchCustomer(query: String, cityId: Uuid?): Flow<List<Customer>> {
         return customerDao.searchCustomer(query, cityId).map { customerList ->
             customerList.map { it.toDomain() }
         }

@@ -1,10 +1,12 @@
 package com.example.anotafacil.domain.model
 
 import com.example.anotafacil.data.entity.PurchaseEntity
+import kotlin.uuid.Uuid
 
 data class Purchase(
-    val id: Long = 0,
-    val customerId: Long = 0,
+    val id: Uuid = Uuid.random(),
+    val customerId: Uuid? = null,
+    val sellerId: Uuid?= null,
     val purchaseDate: Long = 0,
     val totalAmount: Double = 0.0,
     val items: List<CartItem> = emptyList()
@@ -12,7 +14,8 @@ data class Purchase(
 
 fun Purchase.toEntity() = PurchaseEntity(
     id = id,
-    customerId = customerId,
+    customerId = customerId ?: Uuid.random(),
+    sellerId = sellerId ?: Uuid.random(),
     purchaseDate = purchaseDate,
     totalAmount = totalAmount,
 )

@@ -2,20 +2,22 @@ package com.example.anotafacil.data.util
 
 import androidx.room.TypeConverter
 import com.example.anotafacil.data.entity.PurchaseEntity
-import com.example.anotafacil.data.entity.PaymentStatus
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlin.uuid.Uuid
 
 class Converters {
+
     @TypeConverter
-    fun fromPaymentStatus(status: PaymentStatus?): String? {
-        return status?.name
+    fun fromUuid(uuid: Uuid): String {
+        return uuid.toString()
     }
 
     @TypeConverter
-    fun toPaymentStatus(status: String?): PaymentStatus? {
-        return status?.let { PaymentStatus.valueOf(it) }
+    fun toUuid(value: String): Uuid {
+        return Uuid.parse(value)
     }
+
 
     @TypeConverter
     fun fromCartItemEntityList(value: List<PurchaseEntity>?): String? {

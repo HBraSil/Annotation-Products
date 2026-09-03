@@ -1,7 +1,6 @@
 package com.example.anotafacil.presentation.customers
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -10,19 +9,23 @@ import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.CustomerRepository
-import com.example.anotafacil.presentation.util.MonthStartAndEnd
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.uuid.Uuid
 
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class CustomersViewModel @Inject constructor(
@@ -30,38 +33,90 @@ class CustomersViewModel @Inject constructor(
     private val customerRepository: CustomerRepository,
     private val cityRepository: CityRepository,
 ) : ViewModel() {
-    val cityIdFlow: Long = checkNotNull(savedStateHandle["cityId"])
 
     private val _customerUiState = MutableStateFlow(CustomersUiState())
     val customerUiState = _customerUiState.asStateFlow()
 
 
+    val cityIdFlow = savedStateHandle.getStateFlow<String?>("cityId", null)
+        .map { idString ->
+            idString?.let { Uuid.parse(it) }
+        }
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.Eagerly, // Eagerly garante que ele leia o argumento imediatamente!
+            initialValue = Uuid.NIL
+        )
+
+
+
+
     init {
-        viewModelScope.launch {
-            val cities = cityRepository.getCity(cityIdFlow)
+        println("CustomersViewModel init: ${cityIdFlow.value}")
+        observeCityDetails()
+        observeCustomersList()
 
-            customerRepository.getAllCustomers(cityIdFlow).collect { customers ->
-                _customerUiState.update {
-                    it.copy(customers = customers, currentCity = cities)
+        /*viewModelScope.launch {
+            cityIdFlow
+                .filterNotNull()
+                .flatMapLatest { cityId ->
+                    cityRepository.getMonthlySalesSummary(
+                        cityId = cityId,
+                        startMonth = MonthStartAndEnd.currentMonth().start,
+                        endMonth = MonthStartAndEnd.currentMonth().end
+                    )
                 }
-            }
-        }
+                .collect { monthlySalesSummary ->
+                    _customerUiState.update { it.copy(metric = monthlySalesSummary) }
+                }
+        }*/
 
-        viewModelScope.launch {
-            cityRepository.getMonthlySalesSummary(
-                cityId = cityIdFlow,
-                startMonth = MonthStartAndEnd.currentMonth().start,
-                endMonth = MonthStartAndEnd.currentMonth().end
-            ).collect { monthlySalesSummary ->
-                _customerUiState.update {
-                    it.copy(metric = monthlySalesSummary)
-                }
-            }
-        }
 
         observeSearchQuery()
     }
+    private fun observeCityDetails() {
+        viewModelScope.launch {
+            cityIdFlow
+                .filterNotNull()
+                .collect { cityId ->
+                    cityRepository.getCity(cityId)
+                        .onSuccess { city ->
+                            _customerUiState.update { it.copy(currentCity = city) }
+                        }
+                        .onFailure { error ->
+                            _customerUiState.update {
+                                it.copy(errorMessage = error.message ?: "Erro ao carregar cidade")
+                            }
+                        }
+                }
+        }
+    }
 
+    private fun observeCustomersList() {
+        viewModelScope.launch {
+            cityIdFlow
+                .filterNotNull()
+                .flatMapLatest { cityId ->
+                    // getAllCustomers(cityId) retorna Flow<Result<List<Customer>>>
+                    customerRepository.getAllCustomers(cityId)
+                }
+                .collect { result ->
+                    // Usar .fold() trata de forma funcional e limpa os dois estados
+                    result.fold(
+                        onSuccess = { customers ->
+                            _customerUiState.update {
+                                it.copy(customers = customers, errorMessage = null)
+                            }
+                        },
+                        onFailure = { error ->
+                            _customerUiState.update {
+                                it.copy(errorMessage = error.message ?: "Erro ao carregar clientes")
+                            }
+                        }
+                    )
+                }
+        }
+    }
 
     fun customersEvent(event: CustomersUiEvent) {
         when (event) {
@@ -85,7 +140,7 @@ class CustomersViewModel @Inject constructor(
                 .map { it.searchQuery }
                 .distinctUntilChanged()
                 .flatMapLatest { query ->
-                    customerRepository.searchCustomer(query, cityIdFlow)
+                    customerRepository.searchCustomer(query, cityIdFlow.value)
                 }
                 .collect { customers ->
                     _customerUiState.update {
@@ -108,7 +163,7 @@ class CustomersViewModel @Inject constructor(
         it.copy(showModalCreateCustomer = true)
     }
 
-    private fun showModalDeleteCustomer(id: Long) = _customerUiState.update {
+    private fun showModalDeleteCustomer(id: Uuid?) = _customerUiState.update {
         it.copy(showModalDeleteCustomer = id)
     }
 
@@ -117,7 +172,7 @@ class CustomersViewModel @Inject constructor(
         _customerUiState.update {
             it.copy(
                 showModalCreateCustomer = false,
-                customerCreatedWithSuccess = false
+                success = false
             )
         }
 
@@ -126,7 +181,7 @@ class CustomersViewModel @Inject constructor(
 
 
     private fun onDismissModalDeleteCustomer() = _customerUiState.update {
-        it.copy(showModalDeleteCustomer = -1)
+        it.copy(showModalDeleteCustomer = null)
     }
 
 
@@ -137,7 +192,7 @@ class CustomersViewModel @Inject constructor(
 
             if (result > 0) {
                 _customerUiState.update {
-                    it.copy(showModalDeleteCustomer = -1)
+                    it.copy(showModalDeleteCustomer = null)
                 }
             }
         }
@@ -146,25 +201,36 @@ class CustomersViewModel @Inject constructor(
 
     private fun saveCustomer() {
         viewModelScope.launch {
-            if (cityIdFlow <= 0) {
-                Log.e("CustomersViewModel", "Cannot save customer: Invalid cityId $cityIdFlow")
-                return@launch
-            }
+            println("SALVANDO CLIENTE AQUI")
+            if (cityIdFlow.value == null) return@launch
+            println("PASSOU E CHEGOU AQUI")
 
+
+            println("ANALISAR VIEWMODEL ----> ${cityIdFlow.value}")
             val customer = Customer(
                 name = _customerUiState.value.name,
                 extraInfo = _customerUiState.value.extraInfo,
-                cityId = cityIdFlow
+                cityId = cityIdFlow.value
             )
-            val result = customerRepository.addCustomer(customer)
-
-            if (result > 0) {
-                _customerUiState.update {
-                    it.copy(
-                        customerCreatedWithSuccess = true
-                    )
+            customerRepository.addCustomer(customer)
+                .onSuccess {
+                    println("SUCESSO -------------: $it")
+                    _customerUiState.update { customerUiState ->
+                        customerUiState.copy(
+                            success = true,
+                            name = "",
+                            extraInfo = null
+                        )
+                    }
                 }
-            }
+                .onFailure { exception ->
+                    println("ERRO -------------: $exception")
+                    _customerUiState.update {
+                        it.copy(
+                            errorMessage = exception.message
+                        )
+                    }
+                }
         }
     }
 
@@ -174,7 +240,7 @@ class CustomersViewModel @Inject constructor(
             it.copy(
                 name = "",
                 extraInfo = null,
-                customerCreatedWithSuccess = false
+                success = false
             )
         }
     }
@@ -188,7 +254,7 @@ sealed interface CustomersUiEvent {
     object OnCreateCustomerClick : CustomersUiEvent
     object OnDeleteCustomerClick : CustomersUiEvent
     object OnDismissModalDeleteCustomer : CustomersUiEvent
-    data class OnShowModalDeleteCustomer(val id: Long) : CustomersUiEvent
+    data class OnShowModalDeleteCustomer(val id: Uuid?) : CustomersUiEvent
     object OnShowModalCreateCustomer : CustomersUiEvent
     object OnDismissOverlayCreatedCustomer : CustomersUiEvent
 }
@@ -199,6 +265,9 @@ data class MonthlySalesSummary(
 )
 
 data class CustomersUiState(
+    val isLoading: Boolean = false,
+    val success: Boolean = false,
+    val errorMessage: String? = null,
     val name: String = "",
     val searchQuery: String = "",
     val extraInfo: String? = null,
@@ -206,6 +275,5 @@ data class CustomersUiState(
     val metric: MonthlySalesSummary = MonthlySalesSummary(),
     val currentCity: City? = null,
     val showModalCreateCustomer: Boolean = false,
-    val showModalDeleteCustomer: Long = -1,
-    val customerCreatedWithSuccess: Boolean = false,
+    val showModalDeleteCustomer: Uuid? = null,
 )

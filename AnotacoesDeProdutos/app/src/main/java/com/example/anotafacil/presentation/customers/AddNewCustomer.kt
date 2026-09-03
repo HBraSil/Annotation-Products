@@ -162,7 +162,7 @@ fun AddNewCustomerScreen(
         }
     }
 
-    if (uiState.customerCreatedWithSuccess) {
+    if (uiState.success) {
         AnnotationProductsSuccessDialog(
             text = "Cliente adicionado com sucesso!",
             onDismiss = onDismissOverlayCreatedCustomer

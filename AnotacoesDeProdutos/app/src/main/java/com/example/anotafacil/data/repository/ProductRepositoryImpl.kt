@@ -5,6 +5,7 @@ import com.example.anotafacil.data.entity.toProductDomain
 import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.domain.repository.ProductRepository
 import javax.inject.Inject
+import kotlin.uuid.Uuid
 
 class ProductRepositoryImpl @Inject constructor(
     private val productDao: ProductDao
@@ -17,7 +18,7 @@ class ProductRepositoryImpl @Inject constructor(
         return productDao.getProductsWithDefinedPrice().map { it.toProductDomain() }
     }
 
-    override suspend fun updateProductPrice(productId: Long, newPrice: Int): Int {
+    override suspend fun updateProductPrice(productId: Uuid, newPrice: Int): Int {
         val product = productDao.getById(productId)
         return product?.let {
             val updatedProduct = it.copy(price = newPrice)

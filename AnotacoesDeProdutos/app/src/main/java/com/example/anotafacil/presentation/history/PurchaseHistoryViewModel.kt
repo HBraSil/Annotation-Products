@@ -9,13 +9,18 @@ import com.example.anotafacil.domain.model.Payment
 import com.example.anotafacil.domain.model.PurchaseWithItemsDomain
 import com.example.anotafacil.domain.repository.CustomerRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.collections.sortedByDescending
+import kotlin.uuid.Uuid
 
 
 @HiltViewModel
@@ -23,25 +28,33 @@ class PurchaseHistoryViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val customerRepository: CustomerRepository
 ): ViewModel() {
-    private val customerId: Long = checkNotNull(savedStateHandle["customerId"])
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val customer = savedStateHandle.getStateFlow<String?>("customerId", null)
+        .map { idString ->
+            idString?.let { Uuid.parse(idString) }
+        }
+        .flatMapLatest(customerRepository::getCustomer)
+        .stateIn(
+            scope = viewModelScope,
+            started = kotlinx.coroutines.flow.SharingStarted.WhileSubscribed(5_000),
+            initialValue = null
+        )
+
 
     private val _uiState = MutableStateFlow(PurchaseHistoryUiState())
     val uiState = _uiState.asStateFlow()
 
 
     init {
-        viewModelScope.launch {
-            customerRepository.getCustomer(customerId).collect { customer ->
-                _uiState.update {
-                    it.copy(clientName = customer.name)
-                }
-            }
-        }
 
         viewModelScope.launch {
+            _uiState.update {
+                it.copy(clientName = customer.value?.name ?: "Nome não encontrado")
+            }
+
             combine(
-                customerRepository.getAllPurchases(customerId),
-                customerRepository.getAllPayments(customerId)
+                customerRepository.getAllPurchases(customer.value?.id),
+                customerRepository.getAllPayments(customer.value?.id)
             ) { purchases, payments ->
                 val purchaseHistory = purchases.map {
                     HistoryMovement.UiPurchase(it)

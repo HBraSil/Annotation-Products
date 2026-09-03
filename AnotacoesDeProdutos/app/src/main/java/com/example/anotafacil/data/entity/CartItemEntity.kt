@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.example.anotafacil.domain.model.CartItem
+import kotlin.uuid.Uuid
 
 @Entity(
     tableName = "cart_item",
@@ -24,8 +25,8 @@ import com.example.anotafacil.domain.model.CartItem
 )
 data class CartItemEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val purchaseId: Long = 0,
-    val productId: Long = 0,
+    val purchaseId: Uuid,
+    val productId: Uuid,
     val quantity: Int,
     val unitPrice: Int,
     val subtotal: Int

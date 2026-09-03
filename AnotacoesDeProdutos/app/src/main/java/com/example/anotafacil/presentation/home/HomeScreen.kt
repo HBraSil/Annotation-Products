@@ -1,7 +1,6 @@
 package com.example.anotafacil.presentation.home
 
 import android.util.Log
-import android.widget.Button
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.updateTransition
@@ -27,32 +26,24 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.InsertChart
 import androidx.compose.material.icons.outlined.LocationCity
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.PriceChange
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -66,9 +57,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -93,21 +82,26 @@ fun HomeScreen(
         homeUiState = homeUiState,
         onSearchChange = homeViewModel::updateSearchQuery,
         addCity = homeViewModel::addCity,
+        showAddCityModal = homeViewModel::showAddCityModal,
+        closeSuccessDialog = homeViewModel::closeDialogs,
         onCityClick = onCityClick,
         onFabClick = onFabClick,
     )
 }
 
+
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent(
     homeUiState: HomeState,
-    onSearchChange: (String) -> Unit,
-    addCity: (String) -> Unit,
-    onCityClick: (City) -> Unit,
-    onFabClick: (String) -> Unit,
+    onSearchChange: (String) -> Unit = {},
+    addCity: (String) -> Unit = {},
+    showAddCityModal: () -> Unit = {},
+    closeSuccessDialog: () -> Unit = {},
+    onCityClick: (City) -> Unit = {},
+    onFabClick: (String) -> Unit = {},
 ) {
-    var showAddCityModalBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -131,7 +125,7 @@ fun HomeContent(
             ) {
                 MultiFloatingButtons {
                     if (it != null) onFabClick(it.route)
-                    else showAddCityModalBottomSheet = true
+                    else showAddCityModal()
                 }
 
             }
@@ -200,16 +194,19 @@ fun HomeContent(
         }
     }
 
-    if (showAddCityModalBottomSheet) {
+    if (homeUiState.showDialog) {
         ModalAddCityScreen(
-            onBackClick = { showAddCityModalBottomSheet = false },
-            onSaveClick = addCity,
+            onBackClick = closeSuccessDialog,
+            onSaveClick = { cityName ->
+                addCity(cityName)
+            }
         )
     }
 
     if (homeUiState.success) AnnotationProductsSuccessDialog(
         text = "Cidade adicionada com sucesso!",
-        onDismiss = { showAddCityModalBottomSheet = false }
+        onDismiss = closeSuccessDialog
+
     )
 }
 
@@ -220,7 +217,6 @@ private fun CityCard(
     city: City,
     onClick: () -> Unit,
 ) {
-
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
@@ -407,9 +403,9 @@ private fun HomeScreenPreview() {
         HomeContent(
             homeUiState = HomeState(),
             onSearchChange = {},
-            onCityClick = {},
             addCity = {},
-            onFabClick = {}
+            closeSuccessDialog = {},
+            onCityClick = {},
         )
     }
 }

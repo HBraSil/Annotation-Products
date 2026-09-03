@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.presentation.components.AnnotationProductsSuccessDialog
+import kotlin.uuid.Uuid
 
 
 @Composable
@@ -50,7 +51,7 @@ fun PriceDefinitionContent(
     uiState: PriceDefinitionUiState,
     onBackClick: () -> Unit,
     onSaveClick: () -> Unit,
-    onPriceChange: (Long, String) -> Unit,
+    onPriceChange: (Uuid, String) -> Unit,
     modifier: Modifier = Modifier,
     onDismiss: () -> Unit
 ) {

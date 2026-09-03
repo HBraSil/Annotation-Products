@@ -14,13 +14,11 @@ import com.example.anotafacil.presentation.formatter.currencyFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.uuid.Uuid
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -29,14 +27,7 @@ class CustomerDetailViewModel @Inject constructor(
     private val customerRepository: CustomerRepository,
 ) : ViewModel() {
 
-    private val customer = savedStateHandle.getStateFlow("customerId", -1L)
-        .flatMapLatest(customerRepository::getCustomer)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = Customer()
-        )
-
+    private val customerId = savedStateHandle.get<String>("customerId")?.let(Uuid::parse)
 
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
     val uiState = _uiState.asStateFlow()
@@ -51,9 +42,9 @@ class CustomerDetailViewModel @Inject constructor(
 
     private fun updateCustomer() {
         viewModelScope.launch {
-            customer.collect {
-                _uiState.update { uiState ->
-                    uiState.copy(customer = it)
+            customerRepository.getCustomer(customerId).collect {
+                _uiState.update { state ->
+                    state.copy(customer = it ?: Customer())
                 }
             }
         }
@@ -62,7 +53,7 @@ class CustomerDetailViewModel @Inject constructor(
 
     private fun searchCustomer() {
         viewModelScope.launch {
-            customerRepository.getLastPurchase(customer.value.id)
+            customerRepository.getLastPurchase(customerId)
                 .collect { purchaseWithItems ->
                     _uiState.update {
                         it.copy(
@@ -172,7 +163,7 @@ class CustomerDetailViewModel @Inject constructor(
                 owes = 0.0
             )
 
-            val payment = Payment(
+            val payment = _uiState.value.payment.copy(
                 customerId = _uiState.value.customer.id,
                 paymentDate = System.currentTimeMillis(),
                 amount = _uiState.value.customer.owes ?: 0.0,

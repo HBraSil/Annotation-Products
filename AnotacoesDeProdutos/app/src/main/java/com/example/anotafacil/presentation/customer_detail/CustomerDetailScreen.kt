@@ -40,13 +40,14 @@ import com.example.anotafacil.presentation.components.AnnotationProductsNothingT
 import com.example.anotafacil.presentation.components.AnnotationProductsSuccessDialog
 import com.example.anotafacil.presentation.formatter.currencyFormatter
 import com.example.anotafacil.presentation.formatter.toBrazilianDate
+import kotlin.uuid.Uuid
 
 @Composable
 fun CustomerDetailScreen(
     customerDetailViewModel: CustomerDetailViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
-    onHistoryClick: (Long) -> Unit = {},
-    goToNewPurchaseScreen: (Long) -> Unit = {},
+    onHistoryClick: (Uuid?) -> Unit = {},
+    goToNewPurchaseScreen: (Uuid?) -> Unit = {},
 ) {
     val uiState by customerDetailViewModel.uiState.collectAsState()
 
@@ -69,8 +70,8 @@ fun CustomerDetailContent(
     uiState: CustomerDetailUiState = CustomerDetailUiState(),
     onPartialPaymentChange: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
-    onHistoryClick: (Long) -> Unit = {},
-    goToNewPurchaseScreen: (Long) -> Unit = {},
+    onHistoryClick: (Uuid?) -> Unit = {},
+    goToNewPurchaseScreen: (Uuid?) -> Unit = {},
     onPartialPaymentConfirm: () -> Unit = {},
     onDismiss: () -> Unit = {},
     showConfirmationDialog: (ConfirmationAction) -> Unit = {},
@@ -103,8 +104,10 @@ fun CustomerDetailContent(
         floatingActionButton = {
             AnnotationProductsFab(
                 onClick = {
-                    if (uiState.customer.id > 0) {
-                        goToNewPurchaseScreen(uiState.customer.id)
+                    uiState.customer.id?.let {
+                        if (it.toString().isNotEmpty()) {
+                            goToNewPurchaseScreen(uiState.customer.id)
+                        }
                     }
                 },
                 text = "Nova Compra",

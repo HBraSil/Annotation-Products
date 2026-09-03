@@ -1,26 +1,29 @@
 package com.example.anotafacil.presentation.new_purchase
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.model.CartItem
-import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.domain.model.Purchase
 import com.example.anotafacil.domain.repository.CustomerRepository
 import com.example.anotafacil.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.let
+import kotlin.uuid.Uuid
 
 @HiltViewModel
 class NewPurchaseViewModel @Inject constructor(
@@ -29,30 +32,34 @@ class NewPurchaseViewModel @Inject constructor(
     private val customerRepository: CustomerRepository
 ) : ViewModel()  {
 
-    private val customerId: Long = checkNotNull(savedStateHandle["customerId"])
+    @OptIn(ExperimentalCoroutinesApi::class)
+    private val customer = savedStateHandle.getStateFlow<String?>("customerId", null)
+        .map { idString ->
+            idString?.let { Uuid.parse(idString) }
+        }
+        .flatMapLatest(customerRepository::getCustomer)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
 
     private val _uiState = MutableStateFlow(NewPurchaseUiState())
     val uiState: StateFlow<NewPurchaseUiState> = _uiState.asStateFlow()
 
-    private val customer = customerRepository.getCustomer(customerId)
-        .stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = Customer()
-    )
-
-
     init {
+
+        getProductsWithDefinedPrice()
+    }
+
+    private fun getProductsWithDefinedPrice() {
         viewModelScope.launch {
             val products = productRepository.getProductsWithDefinedPrice()
 
-            products.forEach { product ->
-                Log.d("NewPurchaseViewModel", "Product: $product")
-            }
-
             customer.collect { customer ->
+                val debt = customer?.owes ?: 0.0
+
                 _uiState.update {
-                    val debt = customer.owes ?: 0.0
                     it.copy(
                         pendingDebt = debt,
                         allProducts = products,
@@ -138,36 +145,31 @@ class NewPurchaseViewModel @Inject constructor(
     @RequiresApi(Build.VERSION_CODES.O)
     fun finalizePurchase() {
         viewModelScope.launch {
-            if (customerId <= 0) {
-                Log.e("NewPurchaseViewModel", "Cannot finalize purchase: Invalid customerId $customerId")
-                return@launch
+            if (customer.value?.id == null) return@launch
+
+
+            val purchase = Purchase(
+                customerId = customer.value?.id,
+                purchaseDate = System.currentTimeMillis(),
+                totalAmount = uiState.value.selectedProductsSubtotal.toDouble()
+            )
+
+            customer.value?.let {
+                customerRepository.updateCustomer(
+                    it.copy(
+                        id = customer.value?.id,
+                        owes = uiState.value.totalPrice
+                    )
+                )
             }
-
-            try {
-                val purchase = Purchase(
-                    customerId = customerId,
-                    purchaseDate = System.currentTimeMillis(),
-                    totalAmount = uiState.value.selectedProductsSubtotal.toDouble()
-                )
-
-                val currentCustomer = customer.value
-                val updatedCustomer = currentCustomer.copy(
-                    id = customerId,
-                    owes = uiState.value.totalPrice
-                )
-
-                val purchaseId = customerRepository.newPurchase(purchase = purchase)
-
-                customerRepository.updateCustomer(updatedCustomer)
-
-                if (purchaseId > 0) {
+            customerRepository.newPurchase(purchase = purchase)
+                .onSuccess {
                     val cartItems = _uiState.value.selectedProducts.map {
                         it.copy(
-                            purchaseId = purchaseId,
+                            purchaseId = purchase.id,
                             productId = it.product.id
                         )
                     }
-                    Log.d("NewPurchaseViewModel", "Saving cart items: $cartItems")
 
                     val saveResults = customerRepository.saveCartItems(cartItems)
 
@@ -175,20 +177,24 @@ class NewPurchaseViewModel @Inject constructor(
                         _uiState.update { it.copy(success = true) }
                     }
                 }
-            } catch (e: Exception) {
-                Log.e("NewPurchaseViewModel", "Error finalizing purchase", e)
-            }
+                .onFailure {
+                    _uiState.update { it.copy(error = true, errorMessage = it.errorMessage) }
+                }
+
         }
     }
 }
 
 
 data class NewPurchaseUiState(
+    val isLoading: Boolean = false,
+    val success: Boolean = false,
+    val error: Boolean = false,
+    val errorMessage: String = "",
     val pendingDebt: Double = 0.0, // DEPOIS REMOVER ESSA PROPRIEDADE
     val allProducts: List<Product> = emptyList(),
     val selectedProducts: List<CartItem> = mutableListOf(),
     val selectedProductsSubtotal: Int = 0,
     val totalPrice: Double = pendingDebt,
     val isDropdownExpanded: Boolean = false,
-    val success: Boolean = false,
 )

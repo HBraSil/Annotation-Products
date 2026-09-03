@@ -3,6 +3,7 @@ package com.example.anotafacil.domain.repository
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.presentation.customers.MonthlySalesSummary
 import kotlinx.coroutines.flow.Flow
+import kotlin.uuid.Uuid
 
 
 interface CityRepository {
@@ -10,9 +11,9 @@ interface CityRepository {
 
     suspend fun addCity(city: City): Long
 
-    suspend fun getCity(cityId: Long?): City?
+    suspend fun getCity(cityId: Uuid?): Result<City?>
 
     fun searchCities(query: String): Flow<List<City>>
 
-    fun getMonthlySalesSummary(cityId: Long, startMonth: Long, endMonth: Long): Flow<MonthlySalesSummary>
+    fun getMonthlySalesSummary(cityId: Uuid?, startMonth: Long, endMonth: Long): Flow<MonthlySalesSummary>
 }

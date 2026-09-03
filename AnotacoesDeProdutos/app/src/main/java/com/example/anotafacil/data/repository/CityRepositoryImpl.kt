@@ -10,6 +10,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlin.collections.map
+import kotlin.uuid.Uuid
 
 class CityRepositoryImpl @Inject constructor(
     private val cityDao: CityDao
@@ -26,8 +27,11 @@ class CityRepositoryImpl @Inject constructor(
         return cityDao.addCity(newCity)
     }
 
-    override suspend fun getCity(cityId: Long?): City? {
-        return cityDao.getCity(cityId)?.toCity()
+    override suspend fun getCity(cityId: Uuid?): Result<City?> {
+        return if (cityId == null)
+            Result.failure(Exception("cityId não existe"))
+        else
+            Result.success(cityDao.getCity(cityId)?.toCity())
     }
 
     override fun searchCities(query: String): Flow<List<City>> {
@@ -37,10 +41,14 @@ class CityRepositoryImpl @Inject constructor(
     }
 
     override fun getMonthlySalesSummary(
-        cityId: Long,
+        cityId: Uuid?,
         startMonth: Long,
         endMonth: Long,
     ): Flow<MonthlySalesSummary> {
+        if (cityId == null) {
+            throw IllegalArgumentException("cityId cannot be null")
+        }
+
         return cityDao.getMonthlySalesSummary(cityId, startMonth, endMonth)
     }
 }

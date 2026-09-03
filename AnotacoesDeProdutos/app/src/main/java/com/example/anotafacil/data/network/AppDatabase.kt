@@ -17,7 +17,7 @@ import com.example.anotafacil.data.util.Converters
 
 @Database(
     entities = [CityEntity::class, ProductEntity::class, CustomerEntity::class, PurchaseEntity::class, CartItemEntity::class, PaymentEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

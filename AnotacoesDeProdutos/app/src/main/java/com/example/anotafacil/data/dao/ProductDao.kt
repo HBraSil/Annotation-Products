@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.anotafacil.data.entity.ProductEntity
+import kotlin.uuid.Uuid
 
 
 @Dao
@@ -24,7 +25,7 @@ interface ProductDao {
 
 
     @Query("SELECT * FROM product WHERE id = :id")
-    suspend fun getById(id: Long): ProductEntity?
+    suspend fun getById(id: Uuid): ProductEntity?
 
     @Query("SELECT * FROM product WHERE name LIKE '%' || :query || '%'")
     suspend fun search(query: String): List<ProductEntity>

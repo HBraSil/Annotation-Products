@@ -6,6 +6,7 @@ import androidx.room.Query
 import com.example.anotafacil.data.entity.CityEntity
 import com.example.anotafacil.presentation.customers.MonthlySalesSummary
 import kotlinx.coroutines.flow.Flow
+import kotlin.uuid.Uuid
 
 @Dao
 interface CityDao {
@@ -16,7 +17,7 @@ interface CityDao {
     suspend fun getById(id: Long): CityEntity?
 
     @Query("SELECT * FROM city WHERE id = :id")
-    suspend fun getCity(id: Long?): CityEntity?
+    suspend fun getCity(id: Uuid): CityEntity?
 
 
     @Query("""
@@ -60,5 +61,5 @@ interface CityDao {
     WHERE purchase.purchaseDate >= :startMonth
       AND purchase.purchaseDate < :endMonth
       AND customer.cityId = :cityId""")
-    fun getMonthlySalesSummary(cityId: Long, startMonth: Long, endMonth: Long): Flow<MonthlySalesSummary>
+    fun getMonthlySalesSummary(cityId: Uuid, startMonth: Long, endMonth: Long): Flow<MonthlySalesSummary>
 }

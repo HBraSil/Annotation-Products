@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.uuid.Uuid
 
 @HiltViewModel
 class PriceDefinitionViewModel @Inject constructor(
@@ -34,7 +35,7 @@ class PriceDefinitionViewModel @Inject constructor(
     }
 
 
-    fun updateProductPrice(productId: Long, newPrice: String) {
+    fun updateProductPrice(productId: Uuid, newPrice: String) {
         _uiState.update { uiState ->
             uiState.copy(
                 items = uiState.items.map { product ->
@@ -79,7 +80,7 @@ data class PriceDefinitionUiState(
 )
 
 data class EditableProduct(
-    val id: Long,
+    val id: Uuid,
     val name: String,
     val priceText: String
 )

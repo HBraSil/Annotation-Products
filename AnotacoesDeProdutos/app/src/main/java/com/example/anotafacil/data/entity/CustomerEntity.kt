@@ -4,8 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.example.anotafacil.domain.model.Customer
-
-enum class PaymentStatus { DEVE, TUDO_PAGO }
+import kotlin.uuid.Uuid
 
 @Entity(
     tableName = "customer",
@@ -19,12 +18,13 @@ enum class PaymentStatus { DEVE, TUDO_PAGO }
     ]
 )
 data class CustomerEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey
+    val id: Uuid,
     val name: String = "",
-    val lastPurchaseDate: String? = null,
-    val owes: Double? = null,
-    val extraInfo: String? = null,
-    val cityId: Long
+    val lastPurchaseDate: String?,
+    val owes: Double?,
+    val extraInfo: String?,
+    val cityId: Uuid
 )
 
 fun CustomerEntity.toDomain() = Customer(

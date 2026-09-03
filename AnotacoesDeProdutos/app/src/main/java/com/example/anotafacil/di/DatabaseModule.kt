@@ -11,9 +11,11 @@ import com.example.anotafacil.data.network.DatabaseCallback
 import com.example.anotafacil.data.repository.CityRepositoryImpl
 import com.example.anotafacil.data.repository.CustomerRepositoryImpl
 import com.example.anotafacil.data.repository.ProductRepositoryImpl
+import com.example.anotafacil.data.repository.SalesOverviewRepositoryImpl
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.CustomerRepository
 import com.example.anotafacil.domain.repository.ProductRepository
+import com.example.anotafacil.domain.repository.SalesOverviewRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -42,12 +44,13 @@ object DatabaseModule {
             AppDatabase::class.java,
             "app_database"
         )
-        .addCallback(
-            DatabaseCallback(
-                productDaoProvider = productDaoProvider,
-                scope = scope
+            .addCallback(
+                DatabaseCallback(
+                    productDaoProvider = productDaoProvider,
+                    scope = scope
+                )
             )
-        )
+            .fallbackToDestructiveMigration(false)
         .build()
 
     @Provides
@@ -73,4 +76,8 @@ object DatabaseModule {
     @Provides
     fun provideProductRepository(productDao: ProductDao): ProductRepository =
         ProductRepositoryImpl(productDao)
+
+    @Provides
+    fun provideSalesOverviewRepository(purchaseDao: PurchaseDao): SalesOverviewRepository =
+        SalesOverviewRepositoryImpl(purchaseDao)
 }

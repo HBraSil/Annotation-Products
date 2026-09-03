@@ -1,6 +1,5 @@
 package com.example.anotafacil
 
-import android.util.Log
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -21,6 +20,8 @@ import com.example.anotafacil.presentation.home.HomeScreen
 import com.example.anotafacil.presentation.new_purchase.NewPurchaseScreen
 import com.example.anotafacil.presentation.price_definition.PriceDefinitionScreen
 import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
+import kotlinx.serialization.Serializable
+import kotlin.uuid.ExperimentalUuidApi
 
 enum class Screens(val route: String) {
     HOME("home"),
@@ -62,7 +63,7 @@ fun ProductsAnnotationApp(startDestination: String) {
 
         composable(
             route = "${Screens.CUSTOMERS.route}/{cityId}",
-            arguments = listOf(navArgument("cityId") { type = NavType.LongType }),
+            arguments = listOf(navArgument("cityId") { type = NavType.StringType }),
             popExitTransition = { ExitTransition.None }
         ) { navBackStackEntry ->
             val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStackEntry)
@@ -71,26 +72,27 @@ fun ProductsAnnotationApp(startDestination: String) {
                 lastScreenViewModel = lastScreenViewModel,
                 onBackClick = {
                     lastScreenViewModel.lastRoute(Screens.HOME.route)
-                    Log.d("CustomersScreenNav", "onBackClick: ${lastScreenViewModel.lastActiveProfile.value}")
                     navController.navigateUp()
                 },
                 goToHomeScreen = {
                     lastScreenViewModel.lastRoute(Screens.HOME.route)
-                    Log.d("CustomersScreenNav", "onBackClick: ${lastScreenViewModel.lastActiveProfile.value}")
                     navController.navigate(Screens.HOME.route) {
                         popUpTo(Screens.HOME.route) { inclusive = false }
                         launchSingleTop = true
                     }
                 },
-                goToCustomerDetailScreen = {
-                    navController.navigate("${Screens.CUSTOMER_DETAIL.route}/$it")
+                goToCustomerDetailScreen = { uuid ->
+                    uuid?.let {
+                        println("UUID: $it")
+                        navController.navigate("${Screens.CUSTOMER_DETAIL.route}/$it")
+                    }
                 }
             )
         }
 
         composable(
             route = "${Screens.CUSTOMER_DETAIL.route}/{customerId}",
-            arguments = listOf(navArgument("customerId") { type = NavType.LongType })
+            arguments = listOf(navArgument("customerId") { type = NavType.StringType })
         ) {
             CustomerDetailScreen(
                 onBackClick = {
@@ -100,7 +102,6 @@ fun ProductsAnnotationApp(startDestination: String) {
                     navController.navigate("${Screens.PURCHASE_HISTORY.route}/$customerId")
                 },
                 goToNewPurchaseScreen = {
-                    // Pega a entrada atual da Tela B na pilha
                     val currentBackStackEntry = navController.currentBackStackEntry
 
                     // Verifica se a tela B já terminou de fazer a transição de saída
@@ -131,7 +132,7 @@ fun ProductsAnnotationApp(startDestination: String) {
                     animationSpec = tween(durationMillis = 600)
                 )
             },
-            arguments = listOf(navArgument("customerId") { type = NavType.LongType })
+            arguments = listOf(navArgument("customerId") { type = NavType.StringType })
         ) {
             NewPurchaseScreen(
                 onBackClick = { navController.navigateUp() }
@@ -144,7 +145,7 @@ fun ProductsAnnotationApp(startDestination: String) {
 
         composable(
             route = "${Screens.PURCHASE_HISTORY.route}/{customerId}",
-            arguments = listOf(navArgument("customerId") { type = NavType.LongType })
+            arguments = listOf(navArgument("customerId") { type = NavType.StringType })
         ) {
             PurchaseHistoryScreen(onBackClick = { navController.navigateUp() })
         }

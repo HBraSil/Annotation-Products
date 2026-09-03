@@ -43,6 +43,20 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun showAddCityModal() {
+        _homeUiState.update {
+            it.copy(showDialog = true)
+        }
+    }
+
+    fun closeDialogs() {
+        _homeUiState.update {
+            it.copy(
+                success = false,
+                showDialog = false
+            )
+        }
+    }
 
     fun updateSearchQuery(query: String) {
         _homeUiState.update { it.copy(searchQuery = query) }

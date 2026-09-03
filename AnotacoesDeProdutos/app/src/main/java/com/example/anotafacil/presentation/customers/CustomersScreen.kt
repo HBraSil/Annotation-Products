@@ -1,6 +1,7 @@
 package com.example.anotafacil.presentation.customers
 
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
@@ -40,10 +41,12 @@ import androidx.compose.runtime.Composable
 import com.example.anotafacil.presentation.components.AnnotationProductsConfirmationDialog
 import com.example.anotafacil.presentation.components.AnnotationProductsNothingToShow
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.presentation.components.AnnotationProductsFab
 import com.example.anotafacil.presentation.formatter.currencyFormatter
+import kotlin.uuid.Uuid
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -53,7 +56,7 @@ fun CustomersScreen(
     lastScreenViewModel: LastScreenViewModel,
     goToHomeScreen: () -> Unit = {},
     onBackClick: () -> Unit = {},
-    goToCustomerDetailScreen: (Long) -> Unit = {},
+    goToCustomerDetailScreen: (Uuid?) -> Unit = {},
 ) {
 
     val customerUiState by customersViewModel.customerUiState.collectAsState()
@@ -85,7 +88,7 @@ fun ClientManagementContent(
     customerUiState: CustomersUiState = CustomersUiState(),
     currentCity: City = City(),
     onBackClick: () -> Unit = {},
-    goToCustomerDetailScreen: (Long) -> Unit = {},
+    goToCustomerDetailScreen: (Uuid?) -> Unit = {},
     onCustomerUiEvent: (CustomersUiEvent) -> Unit = {}
 ) {
 
@@ -174,8 +177,12 @@ fun ClientManagementContent(
                     customerUiState.customers.forEach { customer ->
                         CardCustomers(
                             customer = customer,
-                            onCustomerUiEvent = onCustomerUiEvent,
-                            goToCustomerDetailScreen = goToCustomerDetailScreen
+                            onCustomerUiEvent = {
+                                CustomersUiEvent.OnShowModalDeleteCustomer(customer.id)
+                            },
+                            goToCustomerDetailScreen = {
+                                goToCustomerDetailScreen(customer.id)
+                            }
                         )
                     }
                 }
@@ -195,13 +202,21 @@ fun ClientManagementContent(
             )
         }
 
-        if (customerUiState.showModalDeleteCustomer >= 0) {
+        if (customerUiState.showModalDeleteCustomer != null) {
             AnnotationProductsConfirmationDialog(
                 title = "Excluir Cliente?",
                 onDismissRequest = { onCustomerUiEvent(CustomersUiEvent.OnDismissModalDeleteCustomer) },
                 onConfirmClick = { onCustomerUiEvent(CustomersUiEvent.OnDeleteCustomerClick) },
                 modifier = Modifier.fillMaxWidth()
             )
+        }
+
+        customerUiState.errorMessage?.let {
+            Toast.makeText(
+                LocalContext.current,
+                it,
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 }
@@ -263,11 +278,11 @@ fun MetricCard(
 @Composable
 fun CardCustomers(
     customer: Customer,
-    onCustomerUiEvent: (CustomersUiEvent) -> Unit,
-    goToCustomerDetailScreen: (Long) -> Unit
+    onCustomerUiEvent: () -> Unit,
+    goToCustomerDetailScreen: () -> Unit
 ) {
     Card(
-        onClick = { goToCustomerDetailScreen(customer.id) },
+        onClick = goToCustomerDetailScreen,
         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
@@ -320,9 +335,7 @@ fun CardCustomers(
             }
 
             IconButton(
-                onClick = {
-                    onCustomerUiEvent(CustomersUiEvent.OnShowModalDeleteCustomer(customer.id))
-                },
+                onClick = onCustomerUiEvent,
                 modifier = Modifier.size(44.dp).weight(1f)
             ) {
                 Icon(

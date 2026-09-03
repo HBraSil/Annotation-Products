@@ -1,8 +1,10 @@
 package com.example.anotafacil.domain.model
 
+import kotlin.uuid.Uuid
+
 
 data class Product(
-    val id: Long = 0,
+    val id: Uuid = Uuid.random(),
     val name: String = "",
     val price: Int = 0,
 )
