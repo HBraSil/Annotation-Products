@@ -17,9 +17,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -38,17 +40,10 @@ class CustomersViewModel @Inject constructor(
     private val _customerUiState = MutableStateFlow(CustomersUiState())
     val customerUiState = _customerUiState.asStateFlow()
 
-
-    val cityIdFlow = savedStateHandle.getStateFlow<String?>("cityId", null)
+    val cityIdFlow = savedStateHandle
+        .getStateFlow<String?>("cityId", null)
         .filterNotNull()
         .map(Uuid::parse)
-        .stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.Eagerly, // Eagerly garante que ele leia o argumento imediatamente!
-            initialValue = Uuid.NIL
-        )
-
-
 
 
     init {
@@ -77,16 +72,17 @@ class CustomersViewModel @Inject constructor(
 
     private fun getCityName() {
         viewModelScope.launch {
-            cityIdFlow.collect { cityId ->
+            cityIdFlow.mapLatest { cityId ->
                 cityRepository.getCity(cityId)
-                    .onSuccess { city ->
-                        _customerUiState.update { it.copy(currentCity = city) }
+            }.collect { result ->
+                result.onSuccess { city ->
+                    _customerUiState.update { it.copy(currentCity = city) }
+                }
+                .onFailure { error ->
+                    _customerUiState.update {
+                        it.copy(errorMessage = error.message ?: "Erro ao carregar cidade")
                     }
-                    .onFailure { error ->
-                        _customerUiState.update {
-                            it.copy(errorMessage = error.message ?: "Erro ao carregar cidade")
-                        }
-                    }
+                }
             }
         }
     }
@@ -132,18 +128,22 @@ class CustomersViewModel @Inject constructor(
     }
 
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private fun observeSearchQuery() {
         viewModelScope.launch {
             _customerUiState
                 .map { it.searchQuery }
                 .distinctUntilChanged()
-                .flatMapLatest { query ->
-                    customerRepository.searchCustomer(query, cityIdFlow.value)
-                }
-                .collect { customers ->
-                    _customerUiState.update {
-                        it.copy(customers = customers)
+                .collect { query ->
+
+                    _customerUiState.update { state ->
+                        state.copy(
+                            customers = state.customers.filter { customer ->
+                                customer.name.contains(
+                                    query,
+                                    ignoreCase = true
+                                )
+                            }
+                        )
                     }
                 }
         }
@@ -204,7 +204,7 @@ class CustomersViewModel @Inject constructor(
             val customer = Customer(
                 name = _customerUiState.value.name,
                 extraInfo = _customerUiState.value.extraInfo,
-                cityId = cityIdFlow.value
+                cityId = _customerUiState.value.currentCity?.id
             )
             customerRepository.addCustomer(customer)
                 .onSuccess {

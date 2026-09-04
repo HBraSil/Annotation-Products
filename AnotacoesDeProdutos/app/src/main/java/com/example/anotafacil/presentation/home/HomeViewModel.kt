@@ -23,11 +23,11 @@ class HomeViewModel @Inject constructor(
     val uiState = _homeUiState.asStateFlow()
 
     init {
-        observeCities()
+        searchCity()
     }
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun observeCities() {
+    fun searchCity() {
         viewModelScope.launch {
             _homeUiState
                 .map { it.searchQuery }

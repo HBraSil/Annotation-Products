@@ -32,7 +32,8 @@ class CustomerDetailViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
     val uiState = _uiState.asStateFlow()
 
-    private val customerUuid = savedStateHandle.getStateFlow<String?>("customerId", null)
+    private val customerUuid = savedStateHandle
+        .getStateFlow<String?>("customerId", null)
         .filterNotNull()
         .map(Uuid::parse)
 
@@ -60,7 +61,6 @@ class CustomerDetailViewModel @Inject constructor(
         viewModelScope.launch {
             customerUuid.flatMapLatest {
                 customerRepository.getLastPurchase(it)
-
             }.collect { purchaseWithItems ->
                 _uiState.update {
                     it.copy(

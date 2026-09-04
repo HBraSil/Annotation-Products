@@ -31,7 +31,6 @@ class PurchaseHistoryViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(PurchaseHistoryUiState())
     val uiState = _uiState.asStateFlow()
 
-    @OptIn(ExperimentalCoroutinesApi::class)
     private val customerUuid = savedStateHandle
         .getStateFlow<String?>("customerId", null)
         .filterNotNull()

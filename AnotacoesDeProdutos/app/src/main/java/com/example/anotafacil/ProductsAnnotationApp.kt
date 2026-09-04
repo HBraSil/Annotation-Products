@@ -13,6 +13,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.anotafacil.presentation.LastScreenViewModel
+import com.example.anotafacil.presentation.auth.InitialScreen
 import com.example.anotafacil.presentation.customer_detail.CustomerDetailScreen
 import com.example.anotafacil.presentation.customers.CustomersScreen
 import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
@@ -24,6 +25,7 @@ import kotlinx.serialization.Serializable
 import kotlin.uuid.ExperimentalUuidApi
 
 enum class Screens(val route: String) {
+    INITIAL("initial"),
     HOME("home"),
     SALES_OVERVIEW("sales_overview"),
     CUSTOMER_DETAIL("customer_detail"),
@@ -39,8 +41,11 @@ fun ProductsAnnotationApp(startDestination: String) {
 
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = Screens.INITIAL.route
     ) {
+        composable(route = Screens.INITIAL.route) {
+            InitialScreen()
+        }
         composable(route = Screens.HOME.route) {
             HomeScreen(
                 onCityClick = {
