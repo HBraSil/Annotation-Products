@@ -13,17 +13,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="MainActivity">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-07-31T14:32:13.465492100Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Windows\.android\avd\old_device.avd" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="androidTest">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-07-31T14:32:13.465492100Z">
@@ -57,31 +46,53 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="SalesChartPreview">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-08-20T19:09:26.983953700Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=0077004562" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
-      <SelectionState runConfigName="SalesChartPreview (1)">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-08-27T14:51:10.811993400Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="PhysicalDevice" identifier="serial=0077004562" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="SalesOverviewScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-08-20T19:09:26.983953700Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=0077004562" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="InitialScreenPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-09-02T05:53:16.604841800Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=0077004562" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="SignUpScreenPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-09-02T05:53:16.604841800Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=0077004562" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="VerificationCodeScreenPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-09-02T05:53:16.604841800Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=0077004562" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="CodeVerificationScreenPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-09-02T05:53:16.604841800Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="PhysicalDevice" identifier="serial=0077004562" />
