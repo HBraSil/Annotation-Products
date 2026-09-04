@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavType
@@ -13,7 +14,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.anotafacil.presentation.LastScreenViewModel
+import com.example.anotafacil.presentation.auth.CodeVerificationScreen
 import com.example.anotafacil.presentation.auth.InitialScreen
+import com.example.anotafacil.presentation.auth.LoginScreen
+import com.example.anotafacil.presentation.auth.SignUpScreen
 import com.example.anotafacil.presentation.customer_detail.CustomerDetailScreen
 import com.example.anotafacil.presentation.customers.CustomersScreen
 import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
@@ -26,6 +30,9 @@ import kotlin.uuid.ExperimentalUuidApi
 
 enum class Screens(val route: String) {
     INITIAL("initial"),
+    LOGIN("login"),
+    SIGN_UP("sign_up"),
+    CODE_VERIFICATION("code_verification"),
     HOME("home"),
     SALES_OVERVIEW("sales_overview"),
     CUSTOMER_DETAIL("customer_detail"),
@@ -41,12 +48,51 @@ fun ProductsAnnotationApp(startDestination: String) {
 
     NavHost(
         navController = navController,
-        startDestination = Screens.INITIAL.route
+        startDestination = startDestination
     ) {
         composable(route = Screens.INITIAL.route) {
-            InitialScreen()
+            val lastScreenViewModel: LastScreenViewModel = hiltViewModel()
+
+            lastScreenViewModel.lastRoute(Screens.INITIAL.route)
+            InitialScreen {
+                when (it) {
+                    0 -> navController.navigate(Screens.LOGIN.route)
+                    1 -> navController.navigate(Screens.CODE_VERIFICATION.route)
+                }
+            }
         }
-        composable(route = Screens.HOME.route) {
+
+        composable(route = Screens.LOGIN.route) {
+            LoginScreen(
+                onLoginClick = { email, password ->
+                    navController.navigate(Screens.HOME.route)
+                },
+                onSignUpClick = {
+                    navController.navigate(Screens.SIGN_UP.route)
+                }
+            )
+        }
+
+        composable(route = Screens.SIGN_UP.route) {
+            SignUpScreen()
+        }
+
+        composable(route = Screens.CODE_VERIFICATION.route) {
+            CodeVerificationScreen(
+                onContinue = {
+                    navController.navigate(Screens.HOME.route)
+                },
+                onBack = {
+                    navController.navigateUp()
+                },
+            )
+        }
+
+        composable(route = Screens.HOME.route) { navBackStack ->
+            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
+            LaunchedEffect(Unit) {
+                lastScreenViewModel.lastRoute(Screens.HOME.route)
+            }
             HomeScreen(
                 onCityClick = {
                     navController.navigate("${Screens.CUSTOMERS.route}/${it.id}")
@@ -71,16 +117,20 @@ fun ProductsAnnotationApp(startDestination: String) {
             arguments = listOf(navArgument("cityId") { type = NavType.StringType }),
             popExitTransition = { ExitTransition.None }
         ) { navBackStackEntry ->
+            val currentCity = navBackStackEntry.arguments?.getString("cityId")
             val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStackEntry)
 
+            LaunchedEffect(Unit){
+                currentCity?.let {
+                    lastScreenViewModel.lastRoute("${Screens.CUSTOMERS.route}/${currentCity}")
+                }
+            }
+
             CustomersScreen(
-                lastScreenViewModel = lastScreenViewModel,
                 onBackClick = {
-                    lastScreenViewModel.lastRoute(Screens.HOME.route)
                     navController.navigateUp()
                 },
                 goToHomeScreen = {
-                    lastScreenViewModel.lastRoute(Screens.HOME.route)
                     navController.navigate(Screens.HOME.route) {
                         popUpTo(Screens.HOME.route) { inclusive = false }
                         launchSingleTop = true

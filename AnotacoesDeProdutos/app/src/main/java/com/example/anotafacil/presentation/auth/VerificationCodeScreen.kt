@@ -34,6 +34,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,12 +56,13 @@ data class CodeVerificationUiState(
 
 @Composable
 fun CodeVerificationScreen(
-    state: CodeVerificationUiState,
-    onCodeChange: (String) -> Unit,
-    onContinue: () -> Unit,
-    onResendCode: () -> Unit,
-    onBack: () -> Unit
+    state: CodeVerificationUiState = CodeVerificationUiState(),
+    onContinue: () -> Unit = {},
+    onResendCode: () -> Unit = {},
+    onBack: () -> Unit = {}
 ) {
+    var code by remember { mutableStateOf("") }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -97,15 +102,15 @@ fun CodeVerificationScreen(
             Spacer(Modifier.height(34.dp))
 
             CodeInputCard(
-                code = state.code,
+                code = code,
                 remainingSeconds = state.remainingSeconds,
-                onCodeChange = onCodeChange,
+                onCodeChange = { code = it },
                 onResendCode = onResendCode
             )
         }
 
         BottomButtons(
-            canContinue = state.code.length == 6,
+            canContinue = code.length == 6,
             isLoading = state.isLoading,
             onBack = onBack,
             onContinue = onContinue
@@ -418,7 +423,6 @@ fun CodeVerificationScreenPreview() {
             remainingSeconds = 300,
             isLoading = false
         ),
-        onCodeChange = {},
         onContinue = {},
         onResendCode = {},
         onBack = {}

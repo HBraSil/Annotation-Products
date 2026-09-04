@@ -79,14 +79,14 @@ dependencies {
     implementation(libs.androidx.material.icons)
 
 
-    //ROOM
+    // ROOM
     implementation(libs.room.runtime)
     implementation(libs.room.ktx)
     ksp(libs.room.compiler)
 
     implementation(libs.gson)
 
-    //SPLASH SCREEN
+    // SPLASH SCREEN
     implementation(libs.androidx.core.splashscreen)
 
     // HILT
@@ -97,4 +97,7 @@ dependencies {
     // VICO
     implementation(libs.vico.compose)
     implementation(libs.vico.compose.m3)
+
+    // Bottom Navigation
+    implementation(libs.animated.navigation.bar)
 }

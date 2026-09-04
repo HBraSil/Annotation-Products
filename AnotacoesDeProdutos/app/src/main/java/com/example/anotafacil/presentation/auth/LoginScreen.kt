@@ -36,8 +36,6 @@ import androidx.compose.ui.unit.sp
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
-    onBackClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onLoginClick: (String, String) -> Unit = { _, _ -> },
     onGoogleLoginClick: () -> Unit = {},
@@ -101,7 +99,7 @@ fun LoginScreen(
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surface
+                    containerColor = MaterialTheme.colorScheme.onPrimary
                 ),
                 elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
                 modifier = Modifier.fillMaxWidth()

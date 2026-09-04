@@ -1,4 +1,4 @@
-package com.example.anotafacil
+package com.hilquias.anotafacil
 
 import android.graphics.Color
 import android.os.Bundle
@@ -10,6 +10,7 @@ import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import com.example.anotafacil.ProductsAnnotationApp
 import com.example.anotafacil.presentation.LastScreenViewModel
 import com.example.anotafacil.ui.theme.AnotacoesDeProdutosTheme
 import dagger.hilt.android.AndroidEntryPoint

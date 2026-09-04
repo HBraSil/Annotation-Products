@@ -53,7 +53,6 @@ import kotlin.uuid.Uuid
 @Composable
 fun CustomersScreen(
     customersViewModel: CustomersViewModel = hiltViewModel(),
-    lastScreenViewModel: LastScreenViewModel,
     goToHomeScreen: () -> Unit = {},
     onBackClick: () -> Unit = {},
     goToCustomerDetailScreen: (Uuid?) -> Unit = {},
@@ -61,19 +60,12 @@ fun CustomersScreen(
 
     val customerUiState by customersViewModel.customerUiState.collectAsState()
 
-    val currentCity = customerUiState.currentCity
-    LaunchedEffect(currentCity?.id) {
-        if (currentCity?.id != null) {
-            lastScreenViewModel.lastRoute("${Screens.CUSTOMERS.route}/${currentCity.id}")
-        }
-    }
-
     BackHandler {
         goToHomeScreen()
     }
 
     ClientManagementContent(
-        currentCity = currentCity ?: City(),
+        currentCity = customerUiState.currentCity ?: City(),
         customerUiState = customerUiState,
         onBackClick = onBackClick,
         goToCustomerDetailScreen = goToCustomerDetailScreen,

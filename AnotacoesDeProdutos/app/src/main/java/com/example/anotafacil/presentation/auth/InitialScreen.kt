@@ -43,11 +43,25 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.presentation.LastScreenViewModel
 import com.hilquias.anotafacil.R
 
 
 @Composable
-fun InitialScreen(onChoiceClick: () -> Unit = {}) {
+fun InitialScreen(
+    onChoiceClick: (Int) -> Unit = {}
+) {
+
+    InitialContent(
+        onChoiceClick = onChoiceClick
+    )
+}
+
+@Composable
+fun InitialContent(
+    onChoiceClick: (Int) -> Unit = {}
+) {
     val verticalScrollState = rememberScrollState()
     var selectedProfileIndex by remember { mutableStateOf<Int?>(null) }
 
@@ -94,7 +108,7 @@ fun InitialScreen(onChoiceClick: () -> Unit = {}) {
                 Spacer(modifier = Modifier.height(80.dp))
 
                 ElevatedButton(
-                    onClick = onChoiceClick,
+                    onClick = { selectedProfileIndex?.let { onChoiceClick(it) } },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 40.dp)
