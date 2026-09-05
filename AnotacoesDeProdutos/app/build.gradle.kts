@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.room)
     alias(libs.plugins.hilt.plugin)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -100,4 +101,10 @@ dependencies {
 
     // Bottom Navigation
     implementation(libs.animated.navigation.bar)
+
+    // FIREBASE
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.analytics)
+    implementation(libs.google.firebase.auth)
 }

@@ -18,6 +18,10 @@ navigation = "2.8.4"
 dataStore = "1.1.4"
 vico = "3.3.0"
 animatedNavigationBar = "1.0.0"
+firebaseFirestore = "26.6.0"
+firebaseAuthVersion = "24.2.0"
+firebaseBom = "34.18.0"
+googleServicesVersion = "4.5.0"
 
 
 [libraries]
@@ -43,6 +47,11 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 animated-navigation-bar = { module = "com.exyte:animated-navigation-bar", version.ref = "animatedNavigationBar" }
 
+firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
+firebase-firestore = { module = "com.google.firebase:firebase-firestore", version.ref = "firebaseFirestore" }
+google-firebase-auth = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuthVersion" }
+
 
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hiltVersion" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hiltVersion" }
@@ -62,4 +71,5 @@ room = { id = "androidx.room", version.ref = "room" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt-plugin = { id = "com.google.dagger.hilt.android", version.ref = "hiltVersion" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServicesVersion" }
 

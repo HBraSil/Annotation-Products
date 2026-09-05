@@ -13,6 +13,9 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.anotafacil.ProductsAnnotationApp
 import com.example.anotafacil.presentation.LastScreenViewModel
 import com.example.anotafacil.ui.theme.AnotacoesDeProdutosTheme
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -27,6 +30,7 @@ class MainActivity : ComponentActivity() {
                 sessionViewModel.lastActiveProfile.value == null
             }
         }
+
 
         enableEdgeToEdge(
             statusBarStyle = SystemBarStyle.light(
