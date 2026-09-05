@@ -19,16 +19,19 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShortNavigationBarItem
 import androidx.compose.material3.ShortNavigationBarItemDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.anotafacil.Screens
+import com.example.anotafacil.ui.theme.Surface
 import com.exyte.animatednavbar.AnimatedNavigationBar
 import com.exyte.animatednavbar.animation.balltrajectory.Parabolic
 import com.exyte.animatednavbar.animation.indendshape.Height
@@ -73,49 +76,56 @@ fun BottomAnimatedBar(
         val index = bottomNavigationItems.indexOfFirst { it.router == currentRoute }
         if (index != -1) index else 0
     }
-
-    AnimatedNavigationBar(
+    Box(
         modifier = Modifier
             .padding(horizontal = 40.dp)
             .padding(bottom = 40.dp)
+            .shadow(
+                elevation = 8.dp,
+                shape = CircleShape,
+                clip = false
+            )
             .background(
                 color = Color.White,
-                shape = CircleShape,
-            ),
-        selectedIndex = selectedIndex,
-        barColor = MaterialTheme.colorScheme.onPrimary,
-        ballColor = MaterialTheme.colorScheme.primary,
-        cornerRadius = ShapeCornerRadius(180f, 180f, 180f, 180f),
-        ballAnimation = Parabolic(tween()),
-        indentAnimation = Height(tween())
-    ) {
-        bottomNavigationItems.forEachIndexed { index, item ->
-            val isSelected = selectedIndex == index
-            ShortNavigationBarItem(
-                selected = isSelected,
-                onClick = {
-                    if (currentRoute != item.router) onItemClick(item.router)
-                },
-                icon = {
-                    Box(
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = if (isSelected) item.iconSelected else item.iconUnselected,
-                            contentDescription = null,
-                            tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-                },
-                label = {
-                    Text(
-                        item.label
-                    )
-                },
-                colors = ShortNavigationBarItemDefaults.colors(
-                    selectedIndicatorColor = Color.Transparent
-                )
+                shape = CircleShape
             )
+    ) {
+        AnimatedNavigationBar(
+            selectedIndex = selectedIndex,
+            barColor = MaterialTheme.colorScheme.onPrimary,
+            ballColor = MaterialTheme.colorScheme.primary,
+            cornerRadius = ShapeCornerRadius(180f, 180f, 180f, 180f),
+            ballAnimation = Parabolic(tween()),
+            indentAnimation = Height(tween())
+        ) {
+            bottomNavigationItems.forEachIndexed { index, item ->
+                val isSelected = selectedIndex == index
+                ShortNavigationBarItem(
+                    selected = isSelected,
+                    onClick = {
+                        if (currentRoute != item.router) onItemClick(item.router)
+                    },
+                    icon = {
+                        Box(
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = if (isSelected) item.iconSelected else item.iconUnselected,
+                                contentDescription = null,
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    },
+                    label = {
+                        Text(
+                            item.label
+                        )
+                    },
+                    colors = ShortNavigationBarItemDefaults.colors(
+                        selectedIndicatorColor = Color.Transparent
+                    )
+                )
+            }
         }
     }
 }
