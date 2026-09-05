@@ -17,6 +17,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,11 +45,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -72,20 +70,19 @@ import com.example.anotafacil.presentation.components.AnnotationProductsSuccessD
 
 @Composable
 fun HomeScreen(
+    innerPadding: PaddingValues = PaddingValues(),
     homeViewModel: HomeViewModel = hiltViewModel(),
     onCityClick: (City) -> Unit,
-    onFabClick: (String) -> Unit = {},
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
 
     HomeContent(
         homeUiState = homeUiState,
+        innerPadding = innerPadding,
         onSearchChange = homeViewModel::updateSearchQuery,
         addCity = homeViewModel::addCity,
-        showAddCityModal = homeViewModel::showAddCityModal,
         closeSuccessDialog = homeViewModel::closeDialogs,
         onCityClick = onCityClick,
-        onFabClick = onFabClick,
     )
 }
 
@@ -95,99 +92,69 @@ fun HomeScreen(
 @Composable
 fun HomeContent(
     homeUiState: HomeState,
+    innerPadding: PaddingValues = PaddingValues(),
     onSearchChange: (String) -> Unit = {},
     addCity: (String) -> Unit = {},
-    showAddCityModal: () -> Unit = {},
     closeSuccessDialog: () -> Unit = {},
     onCityClick: (City) -> Unit = {},
-    onFabClick: (String) -> Unit = {},
 ) {
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .padding(innerPadding)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 20.dp)
+    ) {
+        AnnotationProductsSearchBar(
+            text = homeUiState.searchQuery,
+            placeholder = "Pesquisar cidade",
+            onSearchQueryChange = onSearchChange
+        )
+
+        LazyColumn(
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(30.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+
                     Text(
-                        text = "Tela Inicial",
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
+                        text = "Cidades",
+                        fontSize = 22.sp,
+                        fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.onPrimary
-                )
-            )
-        },
-        floatingActionButton = {
-            Column(
-                modifier = Modifier.padding(bottom = 16.dp, end = 8.dp),
-            ) {
-                MultiFloatingButtons {
-                    if (it != null) onFabClick(it.route)
-                    else showAddCityModal()
+
+                    Text(
+                        text = "${homeUiState.cities.size} resultados",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
 
+                Spacer(modifier = Modifier.height(16.dp))
             }
-        }
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .statusBarsPadding()
-                .background(MaterialTheme.colorScheme.background)
-                .padding(it)
-                .padding(horizontal = 20.dp)
-        ) {
-            AnnotationProductsSearchBar(
-                text = homeUiState.searchQuery,
-                placeholder = "Pesquisar cidade",
-                onSearchQueryChange = onSearchChange
-            )
 
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                item {
-                    Spacer(modifier = Modifier.height(30.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-
-                        Text(
-                            text = "Cidades",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
+            item {
+                if (homeUiState.cities.isEmpty()) {
+                    AnnotationProductsNothingToShow(
+                        text = "Nenhum cidade encontrada",
+                        modifier = Modifier.padding(vertical = 20.dp)
+                    )
+                } else {
+                    homeUiState.cities.forEach { city ->
+                        Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
+                        CityCard(
+                            city = city,
+                            onClick = { onCityClick(city) },
+                            modifier = Modifier.padding(vertical = 8.dp)
                         )
-
-                        Text(
-                            text = "${homeUiState.cities.size} resultados",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                item {
-                    if (homeUiState.cities.isEmpty()) {
-                        AnnotationProductsNothingToShow(
-                            text = "Nenhum cidade encontrada",
-                            modifier = Modifier.padding(vertical = 20.dp)
-                        )
-                    } else {
-                        homeUiState.cities.forEach { city ->
-                            Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
-                            CityCard(
-                                city = city,
-                                onClick = { onCityClick(city) },
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
                     }
                 }
             }
@@ -292,60 +259,6 @@ private fun CityCard(
         }
     }
 }
-
-
-@Composable
-fun MultiFloatingButtons(onClick: (Screens?) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    val minFabList = listOf(
-        MinFabItem(Icons.Outlined.PriceChange, "Atualizar Preços", Screens.PRICE_DEFINITION),
-        MinFabItem(Icons.Outlined.InsertChart, "Ver Relatório", Screens.SALES_OVERVIEW),
-        MinFabItem(Icons.Outlined.LocationCity, "Adicionar Cidade")
-    )
-
-    Column(
-        horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.Center
-    ) {
-        AnimatedVisibility(
-            visible = expanded,
-            enter = fadeIn() + slideInVertically(initialOffsetY = { it }) + expandVertically(),
-            exit = fadeOut() + slideOutVertically(targetOffsetY = { it }) + shrinkVertically(),
-        ) {
-            Column(
-                horizontalAlignment = Alignment.End
-            ) {
-                minFabList.forEach { item ->
-                    MinFab(item) {
-                        onClick(item.route)
-                    }
-                }
-            }
-        }
-
-
-        val transition = updateTransition(targetState = expanded, label = "transition")
-        val rotate by transition.animateFloat(label = "rotate") {
-            if (it) 90f else 0f
-        }
-
-        ElevatedCard(
-            onClick = { expanded = !expanded },
-            shape = CircleShape,
-            colors = CardDefaults.cardColors(
-                containerColor = MaterialTheme.colorScheme.onPrimary,
-                contentColor = MaterialTheme.colorScheme.onBackground
-            )
-        ) {
-            Icon(
-                imageVector = if (expanded) Icons.Default.Close else Icons.Default.MoreVert,
-                contentDescription = null,
-                modifier = Modifier.rotate(rotate).padding(18.dp)
-            )
-        }
-    }
-}
-
 
 
 @Composable

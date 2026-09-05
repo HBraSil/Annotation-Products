@@ -4,13 +4,17 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.anotafacil.presentation.LastScreenViewModel
@@ -18,15 +22,15 @@ import com.example.anotafacil.presentation.auth.CodeVerificationScreen
 import com.example.anotafacil.presentation.auth.InitialScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
+import com.example.anotafacil.presentation.components.BottomAnimatedBar
 import com.example.anotafacil.presentation.customer_detail.CustomerDetailScreen
 import com.example.anotafacil.presentation.customers.CustomersScreen
 import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
 import com.example.anotafacil.presentation.home.HomeScreen
 import com.example.anotafacil.presentation.new_purchase.NewPurchaseScreen
 import com.example.anotafacil.presentation.price_definition.PriceDefinitionScreen
+import com.example.anotafacil.presentation.profile.ProfileScreen
 import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
-import kotlinx.serialization.Serializable
-import kotlin.uuid.ExperimentalUuidApi
 
 enum class Screens(val route: String) {
     INITIAL("initial"),
@@ -39,17 +43,68 @@ enum class Screens(val route: String) {
     CUSTOMERS("customers"),
     NEW_PURCHASE("new_purchase"),
     PRICE_DEFINITION("price_definition"),
-    PURCHASE_HISTORY("purchase_history")
+    PURCHASE_HISTORY("purchase_history"),
+    PROFILE("profile")
 }
+
 
 @Composable
 fun ProductsAnnotationApp(startDestination: String) {
     val navController = rememberNavController()
 
+    val backStackEntry = navController.currentBackStackEntryAsState()
+    val backStackRoute = backStackEntry.value?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+                if (
+                    backStackRoute == Screens.HOME.route ||
+                    backStackRoute == Screens.SALES_OVERVIEW.route ||
+                    backStackRoute == Screens.PROFILE.route ||
+                    backStackRoute == Screens.PRICE_DEFINITION.route
+                ) {
+                    BottomAnimatedBar(
+                        currentRoute = backStackRoute,
+                        onItemClick = { route ->
+                            navController.navigate(route) {
+                                popUpTo(Screens.HOME.route) { inclusive = false }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        }
+                    )
+            }
+        }
+    ) { innerPadding ->
+        ProductsAnnotationApp(
+            startDestination = startDestination,
+            navController = navController,
+            innerPadding = innerPadding
+        )
+    }
+}
+
+@Composable
+fun ProductsAnnotationApp(startDestination: String, navController: NavHostController, innerPadding: PaddingValues = PaddingValues()) {
     NavHost(
         navController = navController,
-        startDestination = startDestination
+        startDestination = startDestination,
     ) {
+
+        composable(route = Screens.HOME.route) { navBackStack ->
+            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
+            LaunchedEffect(Unit) {
+                lastScreenViewModel.lastRoute(Screens.HOME.route)
+            }
+            HomeScreen(
+                innerPadding = innerPadding,
+                onCityClick = {
+                    navController.navigate("${Screens.CUSTOMERS.route}/${it.id}")
+                },
+
+                )
+        }
+
         composable(route = Screens.INITIAL.route) {
             val lastScreenViewModel: LastScreenViewModel = hiltViewModel()
 
@@ -85,24 +140,6 @@ fun ProductsAnnotationApp(startDestination: String) {
                 onBack = {
                     navController.navigateUp()
                 },
-            )
-        }
-
-        composable(route = Screens.HOME.route) { navBackStack ->
-            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
-            LaunchedEffect(Unit) {
-                lastScreenViewModel.lastRoute(Screens.HOME.route)
-            }
-            HomeScreen(
-                onCityClick = {
-                    navController.navigate("${Screens.CUSTOMERS.route}/${it.id}")
-                },
-                onFabClick = {
-                    when (it) {
-                        Screens.PRICE_DEFINITION.route -> navController.navigate(Screens.PRICE_DEFINITION.route)
-                        Screens.SALES_OVERVIEW.route -> navController.navigate(Screens.SALES_OVERVIEW.route)
-                    }
-                }
             )
         }
 
@@ -203,6 +240,10 @@ fun ProductsAnnotationApp(startDestination: String) {
             arguments = listOf(navArgument("customerId") { type = NavType.StringType })
         ) {
             PurchaseHistoryScreen(onBackClick = { navController.navigateUp() })
+        }
+
+        composable(route = Screens.PROFILE.route) {
+            ProfileScreen()
         }
     }
 }
