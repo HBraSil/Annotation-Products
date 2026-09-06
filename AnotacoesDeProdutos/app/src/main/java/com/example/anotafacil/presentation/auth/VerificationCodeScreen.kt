@@ -28,9 +28,12 @@ import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Numbers
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -178,38 +181,47 @@ private fun CodeInputCard(
                 vertical = 20.dp
             )
         ) {
+            Text(
+                text = "NOME DO VENDEDOR",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF111111)
+            )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
+            Spacer(Modifier.height(8.dp))
 
-                Text(
-                    text = "CÓDIGO DE 6 DÍGITOS",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color(0xFF687386)
-                )
-
-                Spacer(Modifier.weight(1f))
-
-                Surface(
-                    shape = RoundedCornerShape(6.dp),
-                    color = Color(0xFFEFF2FF)
-                ) {
+            OutlinedTextField(
+                value = "",
+                onValueChange = {},
+                label = {
                     Text(
-                        text = "Expira em ${formatTime(remainingSeconds)}",
-                        modifier = Modifier.padding(
-                            horizontal = 9.dp,
-                            vertical = 5.dp
-                        ),
-                        fontSize = 12.sp,
-                        color = Color(0xFF2145E8)
+                        text = "Digite seu nome",
+                        color = MaterialTheme.colorScheme.secondary
                     )
-                }
-            }
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Person,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                },
+                shape = RoundedCornerShape(20.dp),
+                modifier = Modifier.fillMaxWidth(),
+                enabled = false,
+                readOnly = true
+            )
 
-            Spacer(Modifier.height(18.dp))
+            Spacer(modifier = Modifier.height(30.dp))
+
+            Text(
+                text = "CÓDIGO DE 6 DÍGITOS",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = Color(0xFF687386)
+            )
+
+            Spacer(Modifier.height(8.dp))
 
             CodeInput(
                 code = code,

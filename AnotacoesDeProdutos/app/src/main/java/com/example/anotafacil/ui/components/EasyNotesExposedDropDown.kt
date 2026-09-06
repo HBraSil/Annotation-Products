@@ -1,4 +1,4 @@
-package com.example.anotafacil.presentation.components
+package com.example.anotafacil.ui.components
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState

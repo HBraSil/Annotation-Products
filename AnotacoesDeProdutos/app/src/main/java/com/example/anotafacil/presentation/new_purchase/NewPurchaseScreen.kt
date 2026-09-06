@@ -33,9 +33,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.model.CartItem
 import com.example.anotafacil.domain.model.Product
-import com.example.anotafacil.presentation.components.AnnotationProductsSuccessDialog
-import com.example.anotafacil.presentation.components.EasyNotesExposedDropDown
-import com.example.anotafacil.presentation.formatter.currencyFormatter
+import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.components.EasyNotesExposedDropDown
+import com.example.anotafacil.ui.util.currencyFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable

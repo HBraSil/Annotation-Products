@@ -1,4 +1,4 @@
-package com.example.anotafacil.presentation.util
+package com.example.anotafacil.ui.util
 
 import android.os.Build
 import androidx.annotation.RequiresApi

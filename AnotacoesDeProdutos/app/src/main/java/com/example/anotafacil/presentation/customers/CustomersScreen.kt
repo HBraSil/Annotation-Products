@@ -21,10 +21,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotafacil.Screens
 import com.example.anotafacil.domain.model.City
-import com.example.anotafacil.presentation.LastScreenViewModel
-import com.example.anotafacil.presentation.components.AnnotationProductsSearchBar
+import com.example.anotafacil.ui.components.AnnotationProductsSearchBar
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -38,14 +36,14 @@ import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import com.example.anotafacil.presentation.components.AnnotationProductsConfirmationDialog
-import com.example.anotafacil.presentation.components.AnnotationProductsNothingToShow
+import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.anotafacil.domain.model.Customer
-import com.example.anotafacil.presentation.components.AnnotationProductsFab
-import com.example.anotafacil.presentation.formatter.currencyFormatter
+import com.example.anotafacil.ui.components.AnnotationProductsFab
+import com.example.anotafacil.ui.util.currencyFormatter
 import kotlin.uuid.Uuid
 
 

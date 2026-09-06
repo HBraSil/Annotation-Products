@@ -10,7 +10,7 @@ import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.domain.model.Payment
 import com.example.anotafacil.domain.model.Purchase
 import com.example.anotafacil.domain.repository.CustomerRepository
-import com.example.anotafacil.presentation.formatter.currencyFormatter
+import com.example.anotafacil.ui.util.currencyFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

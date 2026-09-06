@@ -34,12 +34,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotafacil.presentation.components.AnnotationProductsConfirmationDialog
-import com.example.anotafacil.presentation.components.AnnotationProductsFab
-import com.example.anotafacil.presentation.components.AnnotationProductsNothingToShow
-import com.example.anotafacil.presentation.components.AnnotationProductsSuccessDialog
-import com.example.anotafacil.presentation.formatter.currencyFormatter
-import com.example.anotafacil.presentation.formatter.toBrazilianDate
+import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.AnnotationProductsFab
+import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
+import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.util.currencyFormatter
+import com.example.anotafacil.ui.util.toBrazilianDate
 import kotlin.uuid.Uuid
 
 @Composable

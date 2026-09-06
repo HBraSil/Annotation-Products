@@ -23,9 +23,9 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.model.Payment
 import com.example.anotafacil.domain.model.PurchaseWithItemsDomain
-import com.example.anotafacil.presentation.components.AnnotationProductsNothingToShow
-import com.example.anotafacil.presentation.formatter.currencyFormatter
-import com.example.anotafacil.presentation.formatter.toBrazilianDate
+import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
+import com.example.anotafacil.ui.util.currencyFormatter
+import com.example.anotafacil.ui.util.toBrazilianDate
 
 
 @Composable

@@ -22,7 +22,7 @@ import com.example.anotafacil.presentation.auth.CodeVerificationScreen
 import com.example.anotafacil.presentation.auth.InitialScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
-import com.example.anotafacil.presentation.components.BottomAnimatedBar
+import com.example.anotafacil.ui.components.BottomAnimatedBar
 import com.example.anotafacil.presentation.customer_detail.CustomerDetailScreen
 import com.example.anotafacil.presentation.customers.CustomersScreen
 import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
@@ -90,7 +90,7 @@ fun ProductsAnnotationApp(startDestination: String) {
 fun ProductsAnnotationApp(startDestination: String, navController: NavHostController, innerPadding: PaddingValues = PaddingValues()) {
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = Screens.INITIAL.route,
     ) {
 
         composable(route = Screens.HOME.route) { navBackStack ->

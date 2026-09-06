@@ -37,9 +37,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.anotafacil.presentation.components.EasyNotesExposedDropDown
-import com.example.anotafacil.presentation.components.SalesChart
-import com.example.anotafacil.presentation.formatter.currencyFormatter
+import com.example.anotafacil.ui.components.EasyNotesExposedDropDown
+import com.example.anotafacil.ui.components.SalesChart
+import com.example.anotafacil.ui.util.currencyFormatter
 
 
 enum class SalesMetric {
