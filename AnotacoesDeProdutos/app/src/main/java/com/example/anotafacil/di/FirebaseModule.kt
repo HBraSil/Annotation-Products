@@ -1,5 +1,7 @@
 package com.example.anotafacil.di
 
+import com.example.anotafacil.data.repository.AuthRepositoryImpl
+import com.example.anotafacil.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
@@ -23,5 +25,11 @@ object FirebaseModule {
     @Singleton
     fun provideFirebaseFirestore(): FirebaseFirestore {
         return FirebaseFirestore.getInstance()
+    }
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(auth: FirebaseAuth, firestore: FirebaseFirestore): AuthRepository {
+        return AuthRepositoryImpl(auth, firestore)
     }
 }

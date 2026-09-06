@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -25,17 +26,43 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginScreen(
+    authViewModel: AuthViewModel = hiltViewModel(),
     onForgotPasswordClick: () -> Unit = {},
-    onLoginClick: (String, String) -> Unit = { _, _ -> },
+    onLoginClick: () -> Unit = {},
     onGoogleLoginClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+    val uiState by authViewModel.uiState.collectAsState()
+
+
+    if (uiState.success) {
+        onLoginClick()
+    }
+
+    LoginContent(
+        uiState = uiState,
+        onForgotPasswordClick = onForgotPasswordClick,
+        onGoogleLoginClick = onGoogleLoginClick,
+        onEmailChange = authViewModel::updateEmail,
+        onPasswordChange = authViewModel::updatePassword,
+        onLoginClick = authViewModel::loginWithEmailAndPassword,
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun LoginContent(
+    uiState: AuthUiState,
+    onEmailChange: (String) -> Unit = {},
+    onPasswordChange: (String) -> Unit = {},
+    onForgotPasswordClick: () -> Unit = {},
+    onLoginClick: () -> Unit,
+    onGoogleLoginClick: () -> Unit = {},
+) {
     var isPasswordVisible by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -108,11 +135,19 @@ fun LoginScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     CustomTextField(
-                        value = email,
-                        onValueChange = { email = it },
+                        value = uiState.email.field,
+                        onValueChange = { onEmailChange(it) },
                         placeholder = "seu.email@exemplo.com",
                         leadingIcon = Icons.Default.Mail,
-                        keyboardType = KeyboardType.Email
+                        keyboardType = KeyboardType.Email,
+                        supportingText = {
+                            if (uiState.email.fieldError != null) {
+                                Text(
+                                    text = uiState.email.fieldError,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -125,13 +160,22 @@ fun LoginScreen(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     CustomTextField(
-                        value = password,
-                        onValueChange = { password = it },
+                        value = uiState.password.field,
+                        onValueChange = { onPasswordChange(it) },
                         placeholder = "••••••••",
                         leadingIcon = Icons.Outlined.Lock,
                         isPassword = true,
                         isPasswordVisible = isPasswordVisible,
-                        onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible }
+                        onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
+                        keyboardType = KeyboardType.Password,
+                        supportingText = {
+                            if (uiState.password.fieldError != null) {
+                                Text(
+                                    text = uiState.password.fieldError,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
                     )
 
                     // Esqueceu a senha
@@ -155,11 +199,12 @@ fun LoginScreen(
 
                     // Botão Entrar
                     Button(
-                        onClick = { onLoginClick(email, password) },
+                        onClick = onLoginClick,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),
                         shape = RoundedCornerShape(26.dp),
+                        enabled = uiState.allFieldsValid,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
@@ -245,7 +290,7 @@ fun LoginScreen(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 TextButton(
-                    onClick = onSignUpClick,
+                    onClick = {  },
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(
@@ -267,11 +312,12 @@ private fun CustomTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
-    leadingIcon: androidx.compose.ui.graphics.vector.ImageVector,
+    leadingIcon: ImageVector,
     isPassword: Boolean = false,
     isPasswordVisible: Boolean = false,
     onTogglePasswordVisibility: () -> Unit = {},
-    keyboardType: KeyboardType = KeyboardType.Text
+    keyboardType: KeyboardType = KeyboardType.Text,
+    supportingText: @Composable (() -> Unit)?
 ) {
     TextField(
         value = value,
@@ -311,6 +357,7 @@ private fun CustomTextField(
             unfocusedIndicatorColor = Color.Transparent,
             disabledIndicatorColor = Color.Transparent
         ),
+        supportingText = supportingText,
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier.fillMaxWidth()
     )

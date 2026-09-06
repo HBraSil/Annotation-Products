@@ -37,4 +37,28 @@ class AuthRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun loginWithEmailAndPassword(
+        email: String,
+        password: String,
+    ): Result<User> {
+        return try {
+            val authResult = firebaseAuth.signInWithEmailAndPassword(email, password).await()
+            val firebaseUser = authResult.user
+            val uid = firebaseUser?.uid ?: return Result.failure(Exception("Erro ao fazer login"))
+            val userSnapshot = firestore.collection("users")
+                .document(uid)
+                .get()
+                .await()
+
+            if (!userSnapshot.exists()) {
+                return Result.failure(Exception("Usuário não encontrado"))
+            }
+            val user = userSnapshot.toObject(User::class.java)
+                ?: return Result.failure(Exception("Erro ao converter usuário"))
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

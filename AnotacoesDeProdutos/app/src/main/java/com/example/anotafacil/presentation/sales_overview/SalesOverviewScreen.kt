@@ -322,7 +322,6 @@ private fun SummaryCard(
     selectedMetric: SalesMetric,
     total: Double,
     months: List<MonthSales>,
-    modifier: Modifier = Modifier
 ) {
     val average = when (selectedMetric) {
         SalesMetric.RECEIVED ->

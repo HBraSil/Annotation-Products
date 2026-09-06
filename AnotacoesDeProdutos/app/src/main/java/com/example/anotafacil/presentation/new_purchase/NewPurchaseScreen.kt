@@ -2,9 +2,6 @@ package com.example.anotafacil.presentation.new_purchase
 
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.foundation.background
@@ -12,7 +9,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
@@ -20,10 +16,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -31,7 +25,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotafacil.domain.model.CartItem
 import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
 import com.example.anotafacil.ui.components.EasyNotesExposedDropDown
@@ -350,114 +343,6 @@ fun NewPurchaseContent(
 }
 
 
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ProductDropdown(
-    products: List<Product>,
-    selectedProduct: CartItem?,
-    onProductSelected: (Product) -> Unit,
-) {
-
-
-    var expanded by rememberSaveable { mutableStateOf(false) }
-
-    val bottomRadius by animateDpAsState(
-        targetValue = if (expanded) 0.dp else 16.dp,
-        animationSpec = tween(250),
-        label = ""
-    )
-
-    val arrowRotation by animateFloatAsState(
-        targetValue = if (expanded) 180f else 0f,
-        animationSpec = tween(250),
-        label = "arrowRotation"
-    )
-
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
-    ) {
-        Surface(
-            modifier = Modifier
-                .menuAnchor(ExposedDropdownMenuAnchorType.PrimaryNotEditable)
-                .fillMaxWidth(),
-            shape = RoundedCornerShape(
-                topStart = 16.dp,
-                topEnd = 16.dp,
-                bottomStart = bottomRadius,
-                bottomEnd = bottomRadius
-            ),
-            color = Color.White
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    imageVector = Icons.Default.ShoppingCart,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-
-                Spacer(modifier = Modifier.width(12.dp))
-
-                Text(
-                    text = selectedProduct?.product?.name ?: "Selecione um produto",
-                    modifier = Modifier.weight(1f),
-                    color = MaterialTheme.colorScheme.secondary,
-                    fontSize = 14.sp
-                )
-
-                Icon(
-                    imageVector = Icons.Default.KeyboardArrowDown,
-                    contentDescription = "opened or closed ExposedDropDown icon",
-                    tint = MaterialTheme.colorScheme.secondary,
-                    modifier = Modifier.rotate(arrowRotation)
-                )
-            }
-        }
-
-        ExposedDropdownMenu(
-            expanded = expanded,
-            onDismissRequest = {
-                expanded = false
-            },
-            modifier = Modifier.background(Color.White),
-            shape = RoundedCornerShape(bottomStart = 16.dp, bottomEnd = 16.dp),
-            shadowElevation = 0.dp,
-        ) {
-            if (products.isEmpty()) {
-                DropdownMenuItem(
-                    text = { Text("Nenhum produto com o preço definido") },
-                    onClick = { expanded = false }
-                )
-            } else {
-                products.forEach { product ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(product.name)
-                        },
-                        trailingIcon = {
-                            Text(
-                                text = currencyFormatter.format(product.price.toDouble()),
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                        },
-                        onClick = {
-                            onProductSelected(product)
-                            expanded = false
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
 
 // 4. Preview da Interface para Validação Real-Time
 @Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")

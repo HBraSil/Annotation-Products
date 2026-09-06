@@ -121,7 +121,7 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
 
         composable(route = Screens.LOGIN.route) {
             LoginScreen(
-                onLoginClick = { email, password ->
+                onLoginClick = {
                     navController.navigate(Screens.HOME.route)
                 },
                 onSignUpClick = {
