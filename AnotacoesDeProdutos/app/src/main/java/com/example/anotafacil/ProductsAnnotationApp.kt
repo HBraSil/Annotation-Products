@@ -29,6 +29,7 @@ import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
 import com.example.anotafacil.presentation.home.HomeScreen
 import com.example.anotafacil.presentation.new_purchase.NewPurchaseScreen
 import com.example.anotafacil.presentation.price_definition.PriceDefinitionScreen
+import com.example.anotafacil.presentation.profile.ManageSellers
 import com.example.anotafacil.presentation.profile.ProfileScreen
 import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
 
@@ -44,7 +45,8 @@ enum class Screens(val route: String) {
     NEW_PURCHASE("new_purchase"),
     PRICE_DEFINITION("price_definition"),
     PURCHASE_HISTORY("purchase_history"),
-    PROFILE("profile")
+    PROFILE("profile"),
+    MANAGE_SELLERS("manage_sellers"),
 }
 
 
@@ -243,7 +245,20 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         }
 
         composable(route = Screens.PROFILE.route) {
-            ProfileScreen()
+            ProfileScreen(
+                onEditProfileClick = {},
+                onPriceTableClick = { navController.navigate(Screens.PRICE_DEFINITION.route) },
+                onManageSellersClick = { navController.navigate(Screens.MANAGE_SELLERS.route) },
+                onSyncCloudClick = {},
+            )
+        }
+
+        composable(route = Screens.MANAGE_SELLERS.route) {
+            ManageSellers(
+                onBackClick = {
+                    navController.navigateUp()
+                }
+            )
         }
     }
 }

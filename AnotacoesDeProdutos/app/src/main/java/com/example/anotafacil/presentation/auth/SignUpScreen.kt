@@ -74,14 +74,14 @@ fun SignUpScreen(
             Box {
                 Surface(
                     shape = CircleShape,
-                    color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onPrimary,
                     modifier = Modifier.size(64.dp)
                 ) {
                     Box(contentAlignment = Alignment.Center) {
                         Icon(
                             imageVector = Icons.Default.PersonAdd,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.primaryContainer,
                             modifier = Modifier.size(28.dp)
                         )
                     }
@@ -89,7 +89,7 @@ fun SignUpScreen(
                 Icon(
                     imageVector = Icons.Outlined.AutoAwesome,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
+                    tint = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier
                         .size(18.dp)
                         .align(Alignment.TopEnd)
