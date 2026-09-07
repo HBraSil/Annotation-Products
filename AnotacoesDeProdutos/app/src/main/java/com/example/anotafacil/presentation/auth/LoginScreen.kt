@@ -33,7 +33,6 @@ fun LoginScreen(
     authViewModel: AuthViewModel = hiltViewModel(),
     onForgotPasswordClick: () -> Unit = {},
     onLoginClick: () -> Unit = {},
-    onGoogleLoginClick: () -> Unit = {},
     onSignUpClick: () -> Unit = {}
 ) {
     val uiState by authViewModel.uiState.collectAsState()
@@ -46,7 +45,7 @@ fun LoginScreen(
     LoginContent(
         uiState = uiState,
         onForgotPasswordClick = onForgotPasswordClick,
-        onGoogleLoginClick = onGoogleLoginClick,
+        onGoogleLoginClick = authViewModel::loginWithGoogle,
         onEmailChange = authViewModel::updateEmail,
         onPasswordChange = authViewModel::updatePassword,
         onLoginClick = authViewModel::loginWithEmailAndPassword,
@@ -278,7 +277,6 @@ fun LoginContent(
 
             Spacer(modifier = Modifier.height(30.dp))
 
-            // Rodapé - Cadastro
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -335,8 +333,8 @@ private fun CustomTextField(
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         },
-        trailingIcon = if (isPassword) {
-            {
+        trailingIcon = {
+            if (isPassword) {
                 IconButton(onClick = onTogglePasswordVisibility) {
                     Icon(
                         imageVector = if (isPasswordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
@@ -345,7 +343,7 @@ private fun CustomTextField(
                     )
                 }
             }
-        } else null,
+        },
         visualTransformation = if (isPassword && !isPasswordVisible) PasswordVisualTransformation() else VisualTransformation.None,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         singleLine = true,

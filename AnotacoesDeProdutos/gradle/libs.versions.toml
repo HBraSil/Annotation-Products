@@ -22,6 +22,8 @@ firebaseFirestore = "26.6.0"
 firebaseAuthVersion = "24.2.0"
 firebaseBom = "34.18.0"
 googleServicesVersion = "4.5.0"
+credentials = "1.6.0"
+googleid = "1.2.0"
 
 
 [libraries]
@@ -47,6 +49,12 @@ room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
 gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
 animated-navigation-bar = { module = "com.exyte:animated-navigation-bar", version.ref = "animatedNavigationBar" }
 
+#CREDENTIALS
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+androidx-credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+androidx-credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+
+#FIREBASE
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebaseBom" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore", version.ref = "firebaseFirestore" }

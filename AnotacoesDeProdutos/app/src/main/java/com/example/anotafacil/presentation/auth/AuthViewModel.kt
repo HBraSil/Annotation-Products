@@ -1,5 +1,6 @@
 package com.example.anotafacil.presentation.auth
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.repository.AuthRepository
@@ -80,6 +81,20 @@ class AuthViewModel @Inject constructor(
                     _uiState.update { it.copy(error = it.error) }
                 }
 
+        }
+    }
+
+    fun loginWithGoogle() {
+        _uiState.update { it.copy(isLoading = true) }
+        viewModelScope.launch {
+            authRepository.loginWithGoogle()
+                .onSuccess { user ->
+                    Log.d("AuthViewModel", "Login com Google bem-sucedido: ${user.id}")
+                    _uiState.update { it.copy(success = true) }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(error = it.error) }
+                }
         }
     }
 }

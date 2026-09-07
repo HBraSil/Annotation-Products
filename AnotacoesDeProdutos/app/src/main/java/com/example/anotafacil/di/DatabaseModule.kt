@@ -64,20 +64,4 @@ object DatabaseModule {
 
     @Provides
     fun provideCustomerDao(database: AppDatabase) = database.customerDao()
-
-    @Provides
-    fun provideCityRepository(cityDao: CityDao): CityRepository =
-        CityRepositoryImpl(cityDao)
-
-    @Provides
-    fun provideCustomerRepository(customerDao: CustomerDao, purchaseDao: PurchaseDao, appDatabase: AppDatabase): CustomerRepository =
-        CustomerRepositoryImpl(customerDao, purchaseDao, appDatabase)
-
-    @Provides
-    fun provideProductRepository(productDao: ProductDao): ProductRepository =
-        ProductRepositoryImpl(productDao)
-
-    @Provides
-    fun provideSalesOverviewRepository(purchaseDao: PurchaseDao): SalesOverviewRepository =
-        SalesOverviewRepositoryImpl(purchaseDao)
 }
