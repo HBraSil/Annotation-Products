@@ -38,31 +38,36 @@ fun LoginScreen(
     val uiState by authViewModel.uiState.collectAsState()
 
 
-    if (uiState.success) {
-        onLoginClick()
+    LaunchedEffect(uiState.success) {
+        if (uiState.success) {
+            onLoginClick()
+        }
     }
 
     LoginContent(
-        uiState = uiState,
+        loginState = uiState,
         onForgotPasswordClick = onForgotPasswordClick,
         onGoogleLoginClick = authViewModel::loginWithGoogle,
         onEmailChange = authViewModel::updateEmail,
         onPasswordChange = authViewModel::updatePassword,
-        onLoginClick = authViewModel::loginWithEmailAndPassword,
+        onLoginWithEmailAndPassword = authViewModel::loginWithEmailAndPassword,
+        goToSignUpScreen = onSignUpClick
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginContent(
-    uiState: AuthUiState,
+    loginState: AuthUiState,
     onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
-    onLoginClick: () -> Unit,
+    onLoginWithEmailAndPassword: () -> Unit,
     onGoogleLoginClick: () -> Unit = {},
+    goToSignUpScreen: () -> Unit = {}
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
+
 
     Scaffold(
         topBar = {
@@ -134,15 +139,15 @@ fun LoginContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     CustomTextField(
-                        value = uiState.email.field,
+                        value = loginState.email.field,
                         onValueChange = { onEmailChange(it) },
                         placeholder = "seu.email@exemplo.com",
                         leadingIcon = Icons.Default.Mail,
                         keyboardType = KeyboardType.Email,
                         supportingText = {
-                            if (uiState.email.fieldError != null) {
+                            if (loginState.email.fieldError != null) {
                                 Text(
-                                    text = uiState.email.fieldError,
+                                    text = loginState.email.fieldError,
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -159,7 +164,7 @@ fun LoginContent(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     CustomTextField(
-                        value = uiState.password.field,
+                        value = loginState.password.field,
                         onValueChange = { onPasswordChange(it) },
                         placeholder = "••••••••",
                         leadingIcon = Icons.Outlined.Lock,
@@ -168,9 +173,9 @@ fun LoginContent(
                         onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
                         keyboardType = KeyboardType.Password,
                         supportingText = {
-                            if (uiState.password.fieldError != null) {
+                            if (loginState.password.fieldError != null) {
                                 Text(
-                                    text = uiState.password.fieldError,
+                                    text = loginState.password.fieldError,
                                     color = MaterialTheme.colorScheme.error
                                 )
                             }
@@ -196,22 +201,16 @@ fun LoginContent(
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Botão Entrar
                     Button(
-                        onClick = onLoginClick,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
+                        onClick = onLoginWithEmailAndPassword,
+                        modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(26.dp),
-                        enabled = uiState.allFieldsValid,
+                        enabled = loginState.loginFieldsValid && !loginState.isLoading,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary
                         )
                     ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.Center
-                        ) {
+                        Box {
                             Text(
                                 text = "Entrar",
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
@@ -222,6 +221,14 @@ fun LoginContent(
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
+
+                            if (loginState.isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    strokeWidth = 2.dp
+                                )
+                            }
                         }
                     }
 
@@ -288,7 +295,7 @@ fun LoginContent(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 TextButton(
-                    onClick = {  },
+                    onClick = goToSignUpScreen,
                     contentPadding = PaddingValues(0.dp)
                 ) {
                     Text(

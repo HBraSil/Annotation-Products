@@ -5,6 +5,7 @@ import com.example.anotafacil.data.util.GoogleSignInUtils
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -19,7 +20,6 @@ class AuthRepositoryImpl @Inject constructor(
             return googleSignInUtils.doGoogleSingIn().fold(
                 onSuccess = {
 
-                    Log.d("AuthRepositoryImpl", "Login com Google bem-sucedido: ${it.provider}")
                     val authResult = firebaseAuth.signInWithCredential(it).await()
                     val firebaseUser = authResult.user
                     val uid = firebaseUser?.uid ?: return Result.failure(Exception("Erro ao fazer login"))
@@ -50,24 +50,44 @@ class AuthRepositoryImpl @Inject constructor(
     override suspend fun loginWithEmailAndPassword(
         email: String,
         password: String,
-    ): Result<User> {
+    ): Result<Boolean> {
         return try {
             val authResult = firebaseAuth.signInWithEmailAndPassword(email, password).await()
+
+            if (authResult.user?.uid == null) {
+                return Result.failure(Exception("Erro ao fazer login"))
+            }
+                Log.d("AuthRepositoryImpl", "Uuid do usuário: ${authResult.user?.uid}")
+
+            Result.success(true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun signUpWithEmailAndPassword(
+        name: String,
+        email: String,
+        password: String,
+    ): Result<Boolean> {
+        return try {
+            val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
+
             val firebaseUser = authResult.user
-            val uid = firebaseUser?.uid ?: return Result.failure(Exception("Erro ao fazer login"))
-            val userSnapshot = firestore.collection("users")
-                .document(uid)
-                .get()
+                ?: return Result.failure(Exception("Erro ao criar usuário"))
+
+            firestore.collection("users")
+                .document(firebaseUser.uid)
+                .set(
+                    User(name = name, email = email)
+                )
                 .await()
 
-
-            if (!userSnapshot.exists()) {
-                return Result.failure(Exception("Usuário não encontrado"))
-            }
-            val user = userSnapshot.toObject(User::class.java)
-                ?: return Result.failure(Exception("Erro ao converter usuário"))
-            Result.success(user)
-        } catch (e: Exception) {
+            Result.success(true)
+        } catch (e: FirebaseAuthUserCollisionException) {
+            Result.failure(Exception("E-mail já cadastrado"))
+        }
+        catch (e: Exception) {
             Result.failure(e)
         }
     }

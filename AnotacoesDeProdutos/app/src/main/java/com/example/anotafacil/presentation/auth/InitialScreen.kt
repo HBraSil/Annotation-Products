@@ -27,8 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -43,8 +41,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotafacil.presentation.LastScreenViewModel
 import com.hilquias.anotafacil.R
 
 
@@ -62,7 +58,6 @@ fun InitialScreen(
 fun InitialContent(
     onChoiceClick: (Int) -> Unit = {}
 ) {
-    val verticalScrollState = rememberScrollState()
     var selectedProfileIndex by remember { mutableStateOf<Int?>(null) }
 
     Surface(
@@ -87,12 +82,12 @@ fun InitialContent(
                         color = MaterialTheme.colorScheme.onPrimary.copy(0.95f),
                         shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
                     )
-                    .verticalScroll(verticalScrollState)
+                    .systemBarsPadding()
             ) {
                 Text(
                     text = "Bem Vindo",
                     modifier = Modifier
-                        .padding(top = 40.dp, start = 20.dp),
+                        .padding(start = 20.dp),
                     fontSize = 30.sp,
                     color = MaterialTheme.colorScheme.primaryContainer,
                     fontFamily = FontFamily(
@@ -105,7 +100,7 @@ fun InitialContent(
                     selectedProfileIndex = selectedProfileIndex,
                     onSelectProfileIndex = { index -> selectedProfileIndex = index }
                 )
-                Spacer(modifier = Modifier.height(80.dp))
+                Spacer(modifier = Modifier.height(30.dp))
 
                 ElevatedButton(
                     onClick = { selectedProfileIndex?.let { onChoiceClick(it) } },

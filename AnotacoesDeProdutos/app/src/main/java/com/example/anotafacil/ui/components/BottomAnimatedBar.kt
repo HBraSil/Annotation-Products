@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -45,7 +46,7 @@ data class BottomBarItem(
 
 
 @Composable
-fun BottomAnimatedBar(
+fun AnimatedBottomBar(
     currentRoute: String? = "",
     onItemClick: (String) -> Unit = {},
 ) {
@@ -74,10 +75,12 @@ fun BottomAnimatedBar(
         val index = bottomNavigationItems.indexOfFirst { it.router == currentRoute }
         if (index != -1) index else 0
     }
+
     Box(
         modifier = Modifier
+            .navigationBarsPadding()
             .padding(horizontal = 40.dp)
-            .padding(bottom = 40.dp)
+            .padding(bottom = 20.dp)
             .shadow(
                 elevation = 8.dp,
                 shape = CircleShape,
@@ -87,6 +90,7 @@ fun BottomAnimatedBar(
                 color = Color.White,
                 shape = CircleShape
             )
+
     ) {
         AnimatedNavigationBar(
             selectedIndex = selectedIndex,
@@ -131,11 +135,11 @@ fun BottomAnimatedBar(
 
 @Preview(showBackground = true)
 @Composable
-fun BottomAnimatedBarPreview() {
+fun AnimatedBottomBarPreview() {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Bottom,
     ) {
-        BottomAnimatedBar()
+        AnimatedBottomBar()
     }
 }

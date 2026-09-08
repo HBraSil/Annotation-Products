@@ -1,4 +1,4 @@
-package com.example.anotafacil.validation
+package com.example.anotafacil.ui.validation
 
 import android.util.Patterns
 

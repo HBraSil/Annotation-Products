@@ -22,7 +22,7 @@ import com.example.anotafacil.presentation.auth.CodeVerificationScreen
 import com.example.anotafacil.presentation.auth.InitialScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
-import com.example.anotafacil.ui.components.BottomAnimatedBar
+import com.example.anotafacil.ui.components.AnimatedBottomBar
 import com.example.anotafacil.presentation.customer_detail.CustomerDetailScreen
 import com.example.anotafacil.presentation.customers.CustomersScreen
 import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
@@ -59,22 +59,22 @@ fun ProductsAnnotationApp(startDestination: String) {
 
     Scaffold(
         bottomBar = {
-                if (
-                    backStackRoute == Screens.HOME.route ||
-                    backStackRoute == Screens.SALES_OVERVIEW.route ||
-                    backStackRoute == Screens.PROFILE.route ||
-                    backStackRoute == Screens.PRICE_DEFINITION.route
-                ) {
-                    BottomAnimatedBar(
-                        currentRoute = backStackRoute,
-                        onItemClick = { route ->
-                            navController.navigate(route) {
-                                popUpTo(Screens.HOME.route) { inclusive = false }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+            if (
+                backStackRoute == Screens.HOME.route ||
+                backStackRoute == Screens.SALES_OVERVIEW.route ||
+                backStackRoute == Screens.PROFILE.route ||
+                backStackRoute == Screens.PRICE_DEFINITION.route
+            ) {
+                AnimatedBottomBar(
+                    currentRoute = backStackRoute,
+                    onItemClick = { route ->
+                        navController.navigate(route) {
+                            popUpTo(Screens.HOME.route) { inclusive = false }
+                            launchSingleTop = true
+                            restoreState = true
                         }
-                    )
+                    }
+                )
             }
         }
     ) { innerPadding ->
@@ -92,21 +92,6 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         navController = navController,
         startDestination = Screens.INITIAL.route,
     ) {
-
-        composable(route = Screens.HOME.route) { navBackStack ->
-            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
-            LaunchedEffect(Unit) {
-                lastScreenViewModel.lastRoute(Screens.HOME.route)
-            }
-            HomeScreen(
-                innerPadding = innerPadding,
-                onCityClick = {
-                    navController.navigate("${Screens.CUSTOMERS.route}/${it.id}")
-                },
-
-                )
-        }
-
         composable(route = Screens.INITIAL.route) {
             val lastScreenViewModel: LastScreenViewModel = hiltViewModel()
 
@@ -122,7 +107,11 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         composable(route = Screens.LOGIN.route) {
             LoginScreen(
                 onLoginClick = {
-                    navController.navigate(Screens.HOME.route)
+                    navController.navigate(Screens.HOME.route) {
+                        popUpTo(Screens.INITIAL.route) { inclusive = false }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 },
                 onSignUpClick = {
                     navController.navigate(Screens.SIGN_UP.route)
@@ -131,17 +120,41 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         }
 
         composable(route = Screens.SIGN_UP.route) {
-            SignUpScreen()
+            SignUpScreen(
+                onBackClick = {
+                    navController.navigateUp()
+                }
+            )
         }
 
         composable(route = Screens.CODE_VERIFICATION.route) {
             CodeVerificationScreen(
                 onContinue = {
-                    navController.navigate(Screens.HOME.route)
+                    navController.navigate(Screens.HOME.route) {
+                        popUpTo(Screens.INITIAL.route) { inclusive = false }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 },
                 onBack = {
                     navController.navigateUp()
                 },
+            )
+        }
+
+
+
+        composable(route = Screens.HOME.route) { navBackStack ->
+            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
+            LaunchedEffect(Unit) {
+                lastScreenViewModel.lastRoute(Screens.HOME.route)
+            }
+
+            HomeScreen(
+                innerPadding = innerPadding,
+                onCityClick = {
+                    navController.navigate("${Screens.CUSTOMERS.route}/${it.id}")
+                }
             )
         }
 

@@ -1,9 +1,12 @@
 package com.example.anotafacil.presentation.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.model.City
+import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.CityRepository
+import com.example.anotafacil.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
@@ -17,17 +20,36 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
+    private val userRepository: UserRepository,
     private val cityRepository: CityRepository
 ): ViewModel() {
     private val _homeUiState = MutableStateFlow(HomeState())
     val uiState = _homeUiState.asStateFlow()
 
     init {
+        getUserData()
         searchCity()
     }
 
+
+    private fun getUserData() {
+        viewModelScope.launch {
+            userRepository.getUser().fold(
+                onSuccess = {
+                    _homeUiState.update { state ->
+                        state.copy(user = it ?: User())
+                    }
+                },
+                onFailure = {
+                    Log.d("HomeViewModel", "ERRO: ${it.message}")
+                }
+            )
+        }
+    }
+
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    fun searchCity() {
+    private fun searchCity() {
         viewModelScope.launch {
             _homeUiState
                 .map { it.searchQuery }
@@ -43,20 +65,6 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    fun showAddCityModal() {
-        _homeUiState.update {
-            it.copy(showDialog = true)
-        }
-    }
-
-    fun closeDialogs() {
-        _homeUiState.update {
-            it.copy(
-                success = false,
-                showDialog = false
-            )
-        }
-    }
 
     fun updateSearchQuery(query: String) {
         _homeUiState.update { it.copy(searchQuery = query) }
@@ -83,9 +91,9 @@ class HomeViewModel @Inject constructor(
 
 
 data class HomeState(
+    val user: User = User(),
     val searchQuery: String = "",
     val cities: List<City> = emptyList(),
-    val showDialog: Boolean = false,
     val success: Boolean = false,
     val error: String? = null
 )

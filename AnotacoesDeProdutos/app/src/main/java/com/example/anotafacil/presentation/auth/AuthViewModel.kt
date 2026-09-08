@@ -1,18 +1,20 @@
 package com.example.anotafacil.presentation.auth
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.repository.AuthRepository
-import com.example.anotafacil.validation.EmailValidator
-import com.example.anotafacil.validation.PasswordValidator
+import com.example.anotafacil.ui.validation.EmailValidator
+import com.example.anotafacil.ui.validation.NameValidator
+import com.example.anotafacil.ui.validation.PasswordValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 
 @HiltViewModel
@@ -23,6 +25,23 @@ class AuthViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
 
+
+    fun updateName(name: String) {
+        val isNameValid = NameValidator.isNameValid(name)
+
+
+        _uiState.update {
+            it.copy(
+                name = FieldState(
+                    field = name,
+                    fieldError = isNameValid,
+                    isValid = isNameValid == null,
+                )
+            )
+        }
+
+        updateLoginButton()
+    }
 
     fun updateEmail(email: String) {
         val isEmailValid = EmailValidator.validate(email)
@@ -56,15 +75,18 @@ class AuthViewModel @Inject constructor(
         updateLoginButton()
     }
 
+
     fun updateLoginButton() {
         with(_uiState.value) {
             _uiState.update {
                 it.copy(
-                    allFieldsValid = email.isValid && password.isValid
+                    loginFieldsValid = email.isValid && password.isValid,
+                    signUpFieldsValid = email.isValid && password.isValid && name.isValid
                 )
             }
         }
     }
+
 
     fun loginWithEmailAndPassword() {
         _uiState.update { it.copy(isLoading = true) }
@@ -77,8 +99,8 @@ class AuthViewModel @Inject constructor(
                 .onSuccess {
                     _uiState.update { it.copy(success = true) }
                 }
-                .onFailure {
-                    _uiState.update { it.copy(error = it.error) }
+                .onFailure { throwable ->
+                    _uiState.update { it.copy(error = throwable.message) }
                 }
 
         }
@@ -88,24 +110,46 @@ class AuthViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             authRepository.loginWithGoogle()
-                .onSuccess { user ->
-                    Log.d("AuthViewModel", "Login com Google bem-sucedido: ${user.id}")
+                .onSuccess {
                     _uiState.update { it.copy(success = true) }
                 }
-                .onFailure {
-                    _uiState.update { it.copy(error = it.error) }
+                .onFailure { throwable ->
+                    _uiState.update { it.copy(error = throwable.message) }
                 }
+        }
+    }
+
+    fun signUpWithEmailAndPassword() {
+        _uiState.update { it.copy(isLoading = true) }
+
+        viewModelScope.launch {
+            val email = _uiState.value.email.field
+            val password = _uiState.value.password.field
+            val name = _uiState.value.name.field
+
+            authRepository.signUpWithEmailAndPassword(name, email, password)
+                .onSuccess { result ->
+                    _uiState.update { it.copy(success = result) }
+                }
+                .onFailure { throwable ->
+                    _uiState.update { it.copy(error = throwable.message) }
+                }
+
+            delay(500.milliseconds)
+            _uiState.update { it.copy(error = null, isLoading = false) }
         }
     }
 }
 
 data class AuthUiState(
+    val email: FieldState = FieldState(),
+    val password: FieldState = FieldState(),
+    val name: FieldState = FieldState(),
     val isLoading: Boolean = false,
     val error: String? = null,
     val success: Boolean = false,
-    val email: FieldState = FieldState(),
-    val password: FieldState = FieldState(),
-    val allFieldsValid: Boolean = false,
+    val loginFieldsValid: Boolean = false,
+    val signUpFieldsValid: Boolean = false,
 )
 
 data class FieldState(

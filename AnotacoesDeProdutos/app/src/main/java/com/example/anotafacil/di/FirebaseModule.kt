@@ -1,15 +1,10 @@
 package com.example.anotafacil.di
 
-import android.content.Context
-import com.example.anotafacil.data.repository.AuthRepositoryImpl
-import com.example.anotafacil.data.util.GoogleSignInUtils
-import com.example.anotafacil.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
