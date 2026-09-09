@@ -12,7 +12,12 @@
           "package_name": "com.hilquias.anotafacil"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "542774326330-2hsbavgc7dh9dpenhok7c2nqspvg69q4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCRpMKo6SOOGbW-BatAboKSMPj5lpIoZwM"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "542774326330-2hsbavgc7dh9dpenhok7c2nqspvg69q4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

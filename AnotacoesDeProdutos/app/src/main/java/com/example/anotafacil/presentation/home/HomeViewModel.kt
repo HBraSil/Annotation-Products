@@ -87,6 +87,13 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+
+    fun closeSuccessDialog() {
+        _homeUiState.update {
+            it.copy(success = false)
+        }
+    }
 }
 
 

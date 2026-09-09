@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -61,6 +62,7 @@ fun HomeScreen(
         onSearchChange = homeViewModel::updateSearchQuery,
         addCity = homeViewModel::addCity,
         onCityClick = onCityClick,
+        closeSuccessDialog = homeViewModel::closeSuccessDialog,
     )
 }
 
@@ -74,6 +76,7 @@ fun HomeContent(
     onSearchChange: (String) -> Unit = {},
     addCity: (String) -> Unit = {},
     onCityClick: (City) -> Unit = {},
+    closeSuccessDialog: () -> Unit = {},
 ) {
     var showAddCityDialog by rememberSaveable { mutableStateOf(false) }
 
@@ -86,13 +89,17 @@ fun HomeContent(
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = homeState.user.name,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 4.dp),
+                maxLines = 1,
                 style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
+                overflow = TextOverflow.Ellipsis,
             )
 
             TextButton(
@@ -177,10 +184,15 @@ fun HomeContent(
         )
     }
 
-    if (homeState.success) AnnotationProductsSuccessDialog(
-        text = "Cidade adicionada com sucesso!",
-        onDismiss = { showAddCityDialog = false }
-    )
+    if (homeState.success) {
+        AnnotationProductsSuccessDialog(
+            text = "Cidade adicionada com sucesso!",
+            onDismiss = {
+                showAddCityDialog = false
+                closeSuccessDialog()
+            }
+        )
+    }
 }
 
 
@@ -278,9 +290,6 @@ private fun HomeScreenPreview() {
             homeState = HomeState(
                 user = User(name = "João"),
             ),
-            onSearchChange = {},
-            addCity = {},
-            onCityClick = {},
         )
     }
 }

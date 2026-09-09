@@ -71,8 +71,10 @@ fun SignUpContent(
     val context = LocalContext.current
 
 
-    uiState.error?.let {
-        Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
+        }
     }
 
     Scaffold(

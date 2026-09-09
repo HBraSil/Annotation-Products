@@ -1,7 +1,7 @@
 package com.example.anotafacil.data.repository
 
-import android.util.Log
 import com.example.anotafacil.data.util.GoogleSignInUtils
+import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -13,14 +13,19 @@ import javax.inject.Inject
 class AuthRepositoryImpl @Inject constructor(
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
-    private val googleSignInUtils: GoogleSignInUtils
+    private val googleSignInUtils: GoogleSignInUtils,
+    private val networkChecker: NetworkChecker
 ): AuthRepository {
-    override suspend fun loginWithGoogle(): Result<User> {
-        return try {
-            return googleSignInUtils.doGoogleSingIn().fold(
-                onSuccess = {
+    override suspend fun loginWithGoogle(): Result<Boolean> {
+        if (!networkChecker.hasInternetConnection()) {
+            return Result.failure(Exception("Sem conexão com a internet"))
+        }
 
+        return try {
+            googleSignInUtils.doGoogleSingIn().fold(
+                onSuccess = {
                     val authResult = firebaseAuth.signInWithCredential(it).await()
+
                     val firebaseUser = authResult.user
                     val uid = firebaseUser?.uid ?: return Result.failure(Exception("Erro ao fazer login"))
 
@@ -30,13 +35,18 @@ class AuthRepositoryImpl @Inject constructor(
                         .await()
 
                     if (!userSnapshot.exists()) {
-                        return Result.failure(Exception("Usuário não encontrado"))
+                        val newUser = User(
+                            name = firebaseUser.displayName ?: "",
+                            email = firebaseUser.email ?: "",
+                        )
+
+                        firestore.collection("users")
+                            .document(uid)
+                            .set(newUser)
+                            .await()
                     }
 
-                    val user = userSnapshot.toObject(User::class.java)
-                        ?: return Result.failure(Exception("Erro ao converter usuário"))
-
-                    Result.success(user)
+                    Result.success(true)
                 },
                 onFailure = {
                     Result.failure(Exception("Falha ao fazer login com Google"))
@@ -51,13 +61,15 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String,
     ): Result<Boolean> {
+        if (!networkChecker.hasInternetConnection()) {
+            return Result.failure(Exception("Sem conexão com a internet"))
+        }
+
         return try {
             val authResult = firebaseAuth.signInWithEmailAndPassword(email, password).await()
 
-            if (authResult.user?.uid == null) {
+            if (authResult.user?.uid == null)
                 return Result.failure(Exception("Erro ao fazer login"))
-            }
-                Log.d("AuthRepositoryImpl", "Uuid do usuário: ${authResult.user?.uid}")
 
             Result.success(true)
         } catch (e: Exception) {
@@ -70,6 +82,10 @@ class AuthRepositoryImpl @Inject constructor(
         email: String,
         password: String,
     ): Result<Boolean> {
+        if (!networkChecker.hasInternetConnection()) {
+            return Result.failure(Exception("Sem conexão com a internet"))
+        }
+
         return try {
             val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
 

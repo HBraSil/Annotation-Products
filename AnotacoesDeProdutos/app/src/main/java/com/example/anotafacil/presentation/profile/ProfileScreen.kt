@@ -1,5 +1,6 @@
 package com.example.anotafacil.presentation.profile
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -16,6 +17,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
@@ -32,17 +36,31 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalTextStyle
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -152,6 +170,36 @@ private fun UserHeaderCard(
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    var name by remember {
+        mutableStateOf(
+            TextFieldValue(
+                text = "HILquias",
+                selection = TextRange("HILquias".length)
+            )
+        )
+    }
+
+    var isEditing by rememberSaveable {
+        mutableStateOf(false)
+    }
+
+
+    val focusRequester = remember {
+        FocusRequester()
+    }
+
+    // Quando entra no modo edição, coloca o cursor no nome
+    LaunchedEffect(isEditing) {
+        if (isEditing) {
+            name = name.copy(
+                selection = TextRange(name.text.length)
+            )
+
+            focusRequester.requestFocus()
+        }
+    }
+
+
     Card(
         modifier = modifier
             .fillMaxWidth()
@@ -167,58 +215,68 @@ private fun UserHeaderCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                Surface(
+                    color = Color(0xFFEEF2FF),
+                    shape = RoundedCornerShape(8.dp)
                 ) {
-                    Surface(
-                        color = Color(0xFFEEF2FF),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = role,
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Color(0xFF4F46E5),
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                        )
-                    }
-
-                    if (isOnline) {
-                        Surface(
-                            color = Color(0xFFECFDF5),
-                            shape = RoundedCornerShape(12.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(4.dp)
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(6.dp)
-                                        .clip(CircleShape)
-                                        .background(Color(0xFF10B981))
-                                )
-                                Text(
-                                    text = "Online",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = Color(0xFF10B981)
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        text = role,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF4F46E5),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                Text(
-                    text = name,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF0F172A)
-                )
+                val style = LocalTextStyle.current
+                AnimatedContent(
+                    targetState = isEditing,
+                    label = "name_edit_animation"
+                ) { editing ->
+
+                    if (editing) {
+
+                        BasicTextField(
+                            value = name,
+                            onValueChange = {
+                                name = it
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .focusRequester(focusRequester),
+                            singleLine = true,
+                            textStyle = style.copy(
+                                fontSize = 20.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color.Black
+                            ),
+                            keyboardOptions = KeyboardOptions(
+                                imeAction = ImeAction.Done
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onDone = {
+                                    //onNameSaved(name)
+                                    //originalName = name
+                                    isEditing = false
+                                }
+                            ),
+                            cursorBrush = SolidColor(
+                                MaterialTheme.colorScheme.primary
+                            )
+                        )
+
+                    } else {
+
+                        Text(
+                            text = name.text,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color.Black
+                        )
+                    }
+                }
 
                 Text(
                     text = email,
@@ -228,7 +286,22 @@ private fun UserHeaderCard(
             }
 
             IconButton(
-                onClick = onEditClick,
+                onClick = {
+
+                    if (isEditing) {
+
+                        // SALVAR
+                        //onNameSaved(name)
+                        //originalName = name
+                        isEditing = false
+
+                    } else {
+
+                        // EDITAR
+                        //originalName = name
+                        isEditing = true
+                    }
+                },
                 modifier = Modifier
                     .size(44.dp)
                     .background(Color(0xFFF8FAFC), CircleShape)
@@ -260,15 +333,15 @@ private fun ManagementOptionCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(16.dp))
-            .clickable { onClick() },
+            .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(16.dp)),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .clickable { onClick() },
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {

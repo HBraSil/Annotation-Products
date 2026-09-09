@@ -109,6 +109,7 @@ class AuthViewModel @Inject constructor(
     fun loginWithGoogle() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
+            println("CAIUS AQUI NO LOGINWITH GOOGLE")
             authRepository.loginWithGoogle()
                 .onSuccess {
                     _uiState.update { it.copy(success = true) }
@@ -116,6 +117,9 @@ class AuthViewModel @Inject constructor(
                 .onFailure { throwable ->
                     _uiState.update { it.copy(error = throwable.message) }
                 }
+
+            delay(500.milliseconds)
+            _uiState.update { it.copy(error = null, isLoading = false) }
         }
     }
 
