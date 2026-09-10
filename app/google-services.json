@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "542774326330",
+    "project_id": "anota-facil-1e253",
+    "storage_bucket": "anota-facil-1e253.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:542774326330:android:4fe747e7af736838d0f103",
+        "android_client_info": {
+          "package_name": "com.hilquias.anotafacil"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "542774326330-2hsbavgc7dh9dpenhok7c2nqspvg69q4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRpMKo6SOOGbW-BatAboKSMPj5lpIoZwM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "542774326330-2hsbavgc7dh9dpenhok7c2nqspvg69q4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
