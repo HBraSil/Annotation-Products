@@ -1,0 +1,453 @@
+package com.example.anotafacil.presentation.customer_detail
+
+import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.AnnotationProductsFab
+import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
+import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.util.currencyFormatter
+import com.example.anotafacil.ui.util.toBrazilianDate
+import kotlin.uuid.Uuid
+
+@Composable
+fun CustomerDetailScreen(
+    customerDetailViewModel: CustomerDetailViewModel = hiltViewModel(),
+    onBackClick: () -> Unit = {},
+    onHistoryClick: (Uuid?) -> Unit = {},
+    goToNewPurchaseScreen: (Uuid?) -> Unit = {},
+) {
+    val uiState by customerDetailViewModel.uiState.collectAsState()
+
+    CustomerDetailContent(
+        uiState = uiState,
+        onPartialPaymentChange = customerDetailViewModel::updatePartialPayment,
+        onBackClick = onBackClick,
+        onHistoryClick = onHistoryClick,
+        goToNewPurchaseScreen = goToNewPurchaseScreen,
+        onPartialPaymentConfirm = customerDetailViewModel::confirmSelectedOnDialog,
+        onDismiss = customerDetailViewModel::onDismiss,
+        showConfirmationDialog = customerDetailViewModel::showConfirmationDialog,
+        onDismissToast = customerDetailViewModel::onDismissToast
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CustomerDetailContent(
+    uiState: CustomerDetailUiState = CustomerDetailUiState(),
+    onPartialPaymentChange: (String) -> Unit = {},
+    onBackClick: () -> Unit = {},
+    onHistoryClick: (Uuid?) -> Unit = {},
+    goToNewPurchaseScreen: (Uuid?) -> Unit = {},
+    onPartialPaymentConfirm: () -> Unit = {},
+    onDismiss: () -> Unit = {},
+    showConfirmationDialog: (ConfirmationAction) -> Unit = {},
+    onDismissToast: () -> Unit = {},
+) {
+    val context = LocalContext.current
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Detalhes do Cliente") },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBackIosNew, contentDescription = "Voltar")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { onHistoryClick(uiState.customer.id) }) {
+                        Icon(
+                            imageVector = Icons.Default.History,
+                            contentDescription = "Histórico",
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.onPrimary
+                )
+            )
+        },
+        floatingActionButton = {
+            AnnotationProductsFab(
+                onClick = {
+                    uiState.customer.id?.let {
+                        if (it.toString().isNotEmpty()) {
+                            goToNewPurchaseScreen(uiState.customer.id)
+                        }
+                    }
+                },
+                text = "Nova Compra",
+                icon = Icons.Default.ArrowUpward
+            )
+        },
+        containerColor = MaterialTheme.colorScheme.onPrimary,
+        modifier = Modifier.fillMaxSize().imePadding()
+    ) { paddingValues ->
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = 20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+        ) {
+            item {
+                Column(
+                    modifier = Modifier.padding(top = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = uiState.customer.name,
+                            fontSize = 26.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primaryContainer
+                        )
+                        /*Icon(
+                            Icons.Default.Edit,
+                            contentDescription = "Editar cliente",
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(20.dp)
+                        )*/
+                    }
+                    uiState.customer.extraInfo?.let {
+                        Text(
+                            text = it,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                    }
+
+                }
+            }
+
+            // Seção 2: Cabeçalho da Listagem Mensal
+            item {
+                Row {
+                    Text(
+                        "Última Compra",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    if (uiState.purchase.purchaseDate > 0L) {
+                        Text(
+                            text = " - ${uiState.purchase.purchaseDate.toBrazilianDate()}",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
+                }
+
+
+                if (uiState.purchaseItems.isEmpty()) {
+                    AnnotationProductsNothingToShow(
+                        modifier = Modifier.padding(vertical = 40.dp),
+                        text = "Nenhuma compra feita",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+            }
+
+            // Seção 3: Itens Comprados no Último Mês (Histórico Meio da Tela)
+            items(uiState.purchaseItems, key = { it.id }) { item ->
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            // Pequeno marcador redondo para simular o bullet point elegante do app
+                            Box(modifier = Modifier.size(6.dp).background(MaterialTheme.colorScheme.primary, CircleShape))
+                            Column {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        item.product.name,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.SemiBold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    HorizontalDivider(color = Color(0xFFB8B7B7), thickness = 1.dp, modifier = Modifier.width(10.dp))
+                                    Text("unit: R$ ${item.product.price}", fontSize = 8.sp, color = Color.Gray)
+                                }
+                                Text("Quantidade: ${item.quantity}x", fontSize = 12.sp, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                        Column(horizontalAlignment = Alignment.End) {
+                            Text("TOTAL", fontSize = 10.sp, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
+                            Text(text = currencyFormatter.format(item.subtotal()), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                        }
+                    }
+                }
+            }
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(
+                            color = MaterialTheme.colorScheme.secondary.copy(0.4f),
+                            shape = RoundedCornerShape(14.dp)
+                        )
+                        .padding(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "VALOR DESSA COMPRA:",
+                        style = MaterialTheme.typography.labelMedium,
+                        modifier = Modifier.weight(2f)
+                    )
+                    Text(
+                        text = currencyFormatter.format(uiState.purchase.totalAmount),
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
+            }
+
+            item {HorizontalDivider(color = Color(0xFFEEEEEE), thickness = 2.dp)
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(10.dp))
+                DebtAndPartialPayment(
+                    uiState = uiState,
+                    showConfirmationDialog = showConfirmationDialog,
+                    onPartialPaymentChange = onPartialPaymentChange,
+                )
+                Spacer(modifier = Modifier.height(80.dp))
+            }
+        }
+    }
+
+    if (uiState.showConfirmationDialog && uiState.buttonConfirmationType != null) {
+        AnnotationProductsConfirmationDialog(
+            title = if(uiState.buttonConfirmationType == ConfirmationAction.PARTIAL_PAYMENT) "Quitar parte da dívida?" else "Quitar a dívida total?",
+            onDismissRequest = onDismiss,
+            onConfirmClick = onPartialPaymentConfirm,
+        )
+    }
+
+    if (uiState.showSuccessDialog) {
+        AnnotationProductsSuccessDialog(
+            text = "Pagamento realizado com sucesso!",
+            onDismiss = onDismiss
+        )
+    }
+
+    if (uiState.errorPartialPayment) {
+        Toast.makeText(context, "Valor inválido", Toast.LENGTH_SHORT).show()
+        onDismissToast()
+
+    }
+
+}
+
+
+@Composable
+fun DebtAndPartialPayment(
+    uiState: CustomerDetailUiState = CustomerDetailUiState(),
+    showConfirmationDialog: (ConfirmationAction) -> Unit = {},
+    onPartialPaymentChange: (String) -> Unit = {},
+) {
+    var partialPaymentExpanded by rememberSaveable { mutableStateOf(false) }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.Transparent) // Gerenciado internamente pelas seções
+    ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.onBackground)
+                    .padding(vertical = 24.dp, horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    "DÍVIDA TOTAL DO CLIENTE",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = currencyFormatter.format(uiState.customer.owes ?: 0.0),
+                    fontSize = 32.sp,
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    fontWeight = FontWeight.Black
+                )
+
+                // Botão Quitar Total
+                uiState.customer.owes?.let {
+                    Button(
+                        onClick = {
+                            showConfirmationDialog(ConfirmationAction.TOTAL_PAYMENT)
+                        },
+                        modifier = Modifier.fillMaxWidth().height(50.dp),
+                        enabled = it > 0,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onPrimary,
+                            contentColor = MaterialTheme.colorScheme.surface,
+                            disabledContainerColor = MaterialTheme.colorScheme.secondary.copy(
+                                alpha = 0.5f
+                            ),
+                            disabledContentColor = MaterialTheme.colorScheme.surface.copy(
+                                alpha = 0.5f
+                            )
+                        ),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CheckCircle,
+                                contentDescription = "Icon Check",
+                            )
+                            Text(
+                                text = "Quitar Total",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+                }
+            }
+
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.secondary.copy(0.4f))
+            ) {
+                // Cabeçalho clicável que dispara a expansão
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable {
+                            partialPaymentExpanded = !partialPaymentExpanded
+                        }
+                        .padding(vertical = 16.dp, horizontal = 20.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "PAGAMENTO PARCIAL",
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Icon(
+                        imageVector = if (partialPaymentExpanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+                        contentDescription = if (partialPaymentExpanded) "Recolher" else "Expandir",
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                }
+
+                // COMPONENTE ANIMADO: Desce suavemente ao clicar
+                AnimatedVisibility(
+                    visible = partialPaymentExpanded,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 20.dp, end = 20.dp, bottom = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        OutlinedTextField(
+                            value = uiState.partialPaymentComponent,
+                            onValueChange = {
+                                onPartialPaymentChange(it.text)
+                            },
+                            placeholder = {
+                                Text(
+                                    "R$ 0,00",
+                                    color = MaterialTheme.colorScheme.secondary
+                                )
+                            },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(10.dp),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.primary,
+                                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        )
+                        Button(
+                            onClick = {
+                                showConfirmationDialog(ConfirmationAction.PARTIAL_PAYMENT)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            enabled = (uiState.customer.owes ?: 0.0) > 0,
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.height(54.dp)
+                        ) {
+                            Text("Confirmar", fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+@Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")
+@Composable
+fun CustomerDetailScreenPreview() {
+    MaterialTheme {
+        CustomerDetailContent()
+    }
+}

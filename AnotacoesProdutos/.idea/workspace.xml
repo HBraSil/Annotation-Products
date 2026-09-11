@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="NONE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="984ef5ef-6ddf-49a2-8860-54dd8e5e74e0" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/.gitignore" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/build.gradle.kts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/androidTest/java/com/example/anotacoesdeprodutos/ExampleInstrumentedTest.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/java/com/example/anotacoesdeprodutos/MainActivity.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/java/com/example/anotacoesdeprodutos/ui/theme/Color.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/java/com/example/anotacoesdeprodutos/ui/theme/Theme.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/java/com/example/anotacoesdeprodutos/ui/theme/Type.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/java/com/example/anotacoesdeprodutos/view/CustomerDetailScreen.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/java/com/example/anotacoesdeprodutos/view/CustomerScreen.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/java/com/example/anotacoesdeprodutos/view/HomeScreen.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/java/com/example/anotacoesdeprodutos/view/NewPurchaseScreen.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/keepRules/rules.keep" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/drawable/ic_launcher_background.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/drawable/ic_launcher_foreground.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-hdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-hdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-mdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-mdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-xhdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-xhdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-xxhdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.webp" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/values/colors.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/values/themes.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/xml/backup_rules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/main/res/xml/data_extraction_rules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/app/src/test/java/com/example/anotacoesdeprodutos/ExampleUnitTest.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/build.gradle.kts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/gradle.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/gradle/libs.versions.toml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/gradlew" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/gradlew.bat" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../AnotacoesDeProdutos/settings.gradle.kts" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyTestApplication/app/src/main/res/drawable/img.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../MyTestApplication/app/src/main/res/drawable/sabao_lava_roupa.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/../ProdutosAnotaes/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/.idea/deploymentTargetSelector.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/.idea/kotlinc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/.idea/kotlinc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/.idea/vcs.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/ProdutosDeLimpezaApp.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/Screens.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/about/AboutScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/choice/ChoiceScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/component/NewButton.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/component/NewTxtField.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/home/HomeScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/initial/InitialScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/login/LoginScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/main/MainScreenNavigation.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/main/NavigationItem.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/product/ProductScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/profile/ProfileScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/search/SearchScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/search/SearchScreenDataStore.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/seller/SellerLoginScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/seller/SellerScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/signup/SignupCodeScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/compose/signup/SignupScreen.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/ui/theme/Color.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/ui/theme/Theme.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/ui/theme/Type.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/java/com/example/produtosdelimpeza/viewmodels/SearchScreenViewModel.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/res/drawable/clean_products.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/res/drawable/limp_on_logo.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/res/values/themes.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/app/src/main/res/values/themes.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/gradle/libs.versions.toml" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/gradle/libs.versions.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../ProdutosdeLimpeza/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/../ProdutosdeLimpeza/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="ClangdSettings">
+    <option name="formatViaClangd" value="false" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_C:/Users/Windows/AndroidStudioProjects/AnotacoesProdutos" value="3F0pbTlIB7m7T45BFPad3x1OXiY" />
+    </persistenceIdMap>
+  </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[LocalEmulator::path=C:\Users\Windows\.android\avd\old_device.avd]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="Anotacoes Produtos" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
+  </component>
+  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="C:\Users\Windows\.gradle\wrapper\dists\gradle-8.13-bin\5xuhj0ry160q40clulazy9h7d\gradle-8.13" javaHome="C:\Program Files\Android\Android Studio2\jbr" gradleVersion="8.13" />
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="3F0pbTlIB7m7T45BFPad3x1OXiY" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Android App.app.executor&quot;: &quot;Run&quot;,
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.readMode.enableVisualFormatting&quot;: &quot;true&quot;,
+    &quot;cf.first.check.clang-format&quot;: &quot;false&quot;,
+    &quot;cidr.known.project.marker&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;AndroidSdkUpdater&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
+      <module name="Anotacoes_Produtos.app" />
+      <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="ALLOW_ASSUME_VERIFIED" value="false" />
+      <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="RESTORE_ENABLED" value="false" />
+      <option name="RESTORE_FILE" value="" />
+      <option name="RESTORE_FRESH_INSTALL_ONLY" value="false" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="DEBUGGER_TYPE" value="Java" />
+      <Java>
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+      </Java>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Java/Kotlin Method Sample (legacy)" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="984ef5ef-6ddf-49a2-8860-54dd8e5e74e0" name="Changes" comment="" />
+      <created>1781221912736</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1781221912736</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
+  </component>
+</project>
