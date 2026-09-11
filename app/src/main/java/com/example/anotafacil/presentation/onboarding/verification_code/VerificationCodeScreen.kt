@@ -1,11 +1,11 @@
-package com.example.anotafacil.presentation.auth
+package com.example.anotafacil.presentation.onboarding.verification_code
 
+import android.widget.Toast
 import androidx.compose.ui.tooling.preview.Preview
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +20,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
@@ -31,51 +33,82 @@ import androidx.compose.material.icons.outlined.Numbers
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.presentation.auth.FieldState
 
-data class CodeVerificationUiState(
-    val code: String = "",
-    val remainingSeconds: Int = 300,
-    val isLoading: Boolean = false
-)
 
 @Composable
-fun CodeVerificationScreen(
-    state: CodeVerificationUiState = CodeVerificationUiState(),
+fun VerificationCodeScreen(
+    verificationCodeViewModel: VerificationCodeViewModel = hiltViewModel(),
     onContinue: () -> Unit = {},
-    onResendCode: () -> Unit = {},
     onBack: () -> Unit = {}
 ) {
-    var code by remember { mutableStateOf("") }
+
+    val uiState by verificationCodeViewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState.success) {
+        if (uiState.success) {
+            onContinue()
+        }
+    }
+
+
+    VerificationCodeContent(
+        uiState = uiState,
+        onVerifyCode = verificationCodeViewModel::verifyCode,
+        onBack = onBack,
+        onNameChange = verificationCodeViewModel::updateSellerName,
+        onCodeChange = verificationCodeViewModel::updateCode
+    )
+}
+
+@Composable
+fun VerificationCodeContent(
+    uiState: VerificationCodeUiState = VerificationCodeUiState(),
+    onVerifyCode: () -> Unit = {},
+    onBack: () -> Unit = {},
+    onNameChange: (String) -> Unit = {},
+    onCodeChange: (String) -> Unit = {}
+) {
+
+    val context = LocalContext.current
+    LaunchedEffect(uiState.errorMessage) {
+        if (uiState.errorMessage != null) {
+            Toast.makeText(context, uiState.errorMessage, Toast.LENGTH_LONG).show()
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFFF8F9FF))
-            .imePadding()
     ) {
         Column(
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .imePadding()
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
@@ -105,18 +138,17 @@ fun CodeVerificationScreen(
             Spacer(Modifier.height(34.dp))
 
             CodeInputCard(
-                code = code,
-                remainingSeconds = state.remainingSeconds,
-                onCodeChange = { code = it },
-                onResendCode = onResendCode
+                name = uiState.sellerName,
+                code = uiState.code,
+                onCodeChange = onCodeChange,
+                onNameChange = onNameChange
             )
         }
 
         BottomButtons(
-            canContinue = code.length == 6,
-            isLoading = state.isLoading,
+            uiState = uiState,
             onBack = onBack,
-            onContinue = onContinue
+            onVerifyCode = onVerifyCode
         )
     }
 }
@@ -158,10 +190,10 @@ private fun VerificationIcon() {
 
 @Composable
 private fun CodeInputCard(
+    name: FieldState,
     code: String,
-    remainingSeconds: Int,
+    onNameChange: (String) -> Unit,
     onCodeChange: (String) -> Unit,
-    onResendCode: () -> Unit
 ) {
     Surface(
         modifier = Modifier
@@ -176,10 +208,7 @@ private fun CodeInputCard(
         shadowElevation = 2.dp
     ) {
         Column(
-            modifier = Modifier.padding(
-                horizontal = 20.dp,
-                vertical = 20.dp
-            )
+            modifier = Modifier.padding(20.dp)
         ) {
             Text(
                 text = "NOME DO VENDEDOR",
@@ -191,8 +220,8 @@ private fun CodeInputCard(
             Spacer(Modifier.height(8.dp))
 
             OutlinedTextField(
-                value = "",
-                onValueChange = {},
+                value = name.field,
+                onValueChange = onNameChange,
                 label = {
                     Text(
                         text = "Digite seu nome",
@@ -206,12 +235,19 @@ private fun CodeInputCard(
                         modifier = Modifier.size(16.dp)
                     )
                 },
+                supportingText = {
+                    name.fieldError?.let {
+                        Text(
+                            text = it,
+                            color = MaterialTheme.colorScheme.error
+                        )
+                    }
+                },
                 shape = RoundedCornerShape(20.dp),
                 modifier = Modifier.fillMaxWidth(),
-                enabled = false,
-                readOnly = true
             )
 
+            //
             Spacer(modifier = Modifier.height(30.dp))
 
             Text(
@@ -227,45 +263,6 @@ private fun CodeInputCard(
                 code = code,
                 onCodeChange = onCodeChange
             )
-
-            Spacer(Modifier.height(20.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(Color(0xFFE9EBF0))
-            )
-
-            Spacer(Modifier.height(11.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Text(
-                    text = "Não recebeu o código?",
-                    fontSize = 12.sp,
-                    color = Color(0xFF8A93A3)
-                )
-
-                Spacer(Modifier.weight(1f))
-
-                Text(
-                    text = "Reenviar código",
-                    modifier = Modifier.clickable(
-                        enabled = remainingSeconds == 0,
-                        onClick = onResendCode
-                    ),
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = if (remainingSeconds == 0)
-                        Color(0xFF2145E8)
-                    else
-                        Color(0xFF9AA2B1)
-                )
-            }
         }
     }
 }
@@ -309,7 +306,7 @@ private fun CodeInput(
                             .border(
                                 width = if (isActive) 2.dp else 1.dp,
                                 color = if (isActive)
-                                    Color(0xFF2145E8)
+                                    MaterialTheme.colorScheme.primary
                                 else
                                     Color(0xFFD8DEE9),
                                 shape = RoundedCornerShape(16.dp)
@@ -340,12 +337,13 @@ private fun CodeInput(
 }
 
 
+
+
 @Composable
 private fun BottomButtons(
-    canContinue: Boolean,
-    isLoading: Boolean,
+    uiState: VerificationCodeUiState,
     onBack: () -> Unit,
-    onContinue: () -> Unit
+    onVerifyCode: () -> Unit,
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -390,11 +388,9 @@ private fun BottomButtons(
             }
 
             Button(
-                onClick = onContinue,
-                enabled = canContinue && !isLoading,
-                modifier = Modifier
-                    .weight(1.2f)
-                    .height(56.dp),
+                onClick = onVerifyCode,
+                enabled = uiState.sellerName.isValid && uiState.code.length <= 6 && !uiState.isLoading,
+                modifier = Modifier.weight(1.2f).height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF2947E8),
@@ -402,17 +398,23 @@ private fun BottomButtons(
                 )
             ) {
                 Text(
-                    text = if (isLoading) "Validando..." else "Prosseguir",
+                    text = if (uiState.isLoading) "Validando..." else "Prosseguir",
                     fontWeight = FontWeight.Bold
                 )
 
                 Spacer(Modifier.width(8.dp))
 
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
-                    contentDescription = null,
-                    modifier = Modifier.size(19.dp)
-                )
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(19.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(19.dp)
+                    )
+                }
             }
         }
     }
@@ -421,15 +423,18 @@ private fun BottomButtons(
 
 @Preview
 @Composable
-fun CodeVerificationScreenPreview() {
-    CodeVerificationScreen(
-        state = CodeVerificationUiState(
+fun VerificationCodeScreenPreview() {
+    VerificationCodeContent(
+        uiState = VerificationCodeUiState(
             code = "123456",
-            remainingSeconds = 300,
-            isLoading = false
+            sellerName = FieldState(
+                field = "João da Silva",
+                fieldError = null,
+                isValid = true
+            ),
+            isLoading = false,
+            errorMessage = null,
+            success = true
         ),
-        onContinue = {},
-        onResendCode = {},
-        onBack = {}
     )
 }

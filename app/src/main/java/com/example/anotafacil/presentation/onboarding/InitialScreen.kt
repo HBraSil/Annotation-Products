@@ -1,4 +1,4 @@
-package com.example.anotafacil.presentation.auth
+package com.example.anotafacil.presentation.onboarding
 
 
 import androidx.compose.foundation.Image
@@ -60,81 +60,79 @@ fun InitialContent(
 ) {
     var selectedProfileIndex by remember { mutableStateOf<Int?>(null) }
 
-    Surface(
+    Box(
         modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.BottomCenter,
     ) {
-        Box(
+        Image(
+            painter = painterResource(R.drawable.background_image_initial_screen),
+            contentDescription = null,
             modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.BottomCenter,
+            contentScale = ContentScale.Crop
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(
+                    color = MaterialTheme.colorScheme.secondary.copy(0.9f),
+                )
+                .systemBarsPadding(),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Image(
-                painter = painterResource(R.drawable.background_image_initial_screen),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+            Spacer(modifier = Modifier.weight(1f))
+
+            Text(
+                text = "Bem Vindo",
+                modifier = Modifier
+                    .padding(start = 20.dp),
+                fontSize = 30.sp,
+                color = MaterialTheme.colorScheme.onPrimary,
+                fontFamily = FontFamily(
+                    Font(R.font.montserrat_extrabold_italic)
+                )
             )
 
-            Column(
+            Spacer(modifier = Modifier.weight(1f))
+            ProfileSelectionSection(
+                selectedProfileIndex = selectedProfileIndex,
+                onSelectProfileIndex = { index -> selectedProfileIndex = index }
+            )
+            Spacer(modifier = Modifier.weight(1f))
+
+            ElevatedButton(
+                onClick = { selectedProfileIndex?.let { onChoiceClick(it) } },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .background(
-                        color = MaterialTheme.colorScheme.onPrimary.copy(0.95f),
-                        shape = RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp)
-                    )
-                    .systemBarsPadding()
+                    .padding(horizontal = 40.dp)
+                    .height(50.dp),
+                shape = RoundedCornerShape(16.dp),
+                enabled = selectedProfileIndex != null,
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = MaterialTheme.colorScheme.primaryContainer,
+                )
             ) {
-                Text(
-                    text = "Bem Vindo",
-                    modifier = Modifier
-                        .padding(start = 20.dp),
-                    fontSize = 30.sp,
-                    color = MaterialTheme.colorScheme.primaryContainer,
-                    fontFamily = FontFamily(
-                        Font(R.font.montserrat_extrabold_italic)
-                    )
-                )
-
-                Spacer(modifier = Modifier.height(20.dp))
-                ProfileSelectionSection(
-                    selectedProfileIndex = selectedProfileIndex,
-                    onSelectProfileIndex = { index -> selectedProfileIndex = index }
-                )
-                Spacer(modifier = Modifier.height(30.dp))
-
-                ElevatedButton(
-                    onClick = { selectedProfileIndex?.let { onChoiceClick(it) } },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 40.dp)
-                        .height(50.dp),
-                    shape = RoundedCornerShape(16.dp),
-                    enabled = selectedProfileIndex != null,
-                    colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = MaterialTheme.colorScheme.onPrimary,
-                        contentColor = MaterialTheme.colorScheme.primaryContainer,
-                    )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.Bottom
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Continuar",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = "prosseguir para escolha",
-                        )
-                    }
+                    Text(
+                        text = "Continuar",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = "prosseguir para escolha",
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(30.dp))
             }
+
+            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }
@@ -151,8 +149,8 @@ fun ProfileSelectionSection(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         ProfileOptionCard(
-            badgeText = "Gestão Completa",
-            title = "Proprietário do Negócio",
+            badgeText = "Gerencie seu negócio",
+            title = "Proprietário",
             icon = Icons.Default.Storefront,
             isSelected = selectedProfileIndex == 0,
             onClick = { onSelectProfileIndex(0) }
@@ -193,7 +191,9 @@ fun ProfileOptionCard(
                 spotColor = Color.Black.copy(alpha = 0.1f)
             )
             .background(
-                color = if (isSelected) Color.White else MaterialTheme.colorScheme.secondary.copy(0.1f),
+                color = if (isSelected)
+                    MaterialTheme.colorScheme.onPrimary
+                else MaterialTheme.colorScheme.onPrimary.copy(0.5f),
                 shape = RoundedCornerShape(16.dp))
             .border(
                 width = 1.dp,

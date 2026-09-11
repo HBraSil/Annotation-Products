@@ -26,6 +26,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -224,7 +225,7 @@ fun SignUpContent(
                                     .height(4.dp),
                                 color = MaterialTheme.colorScheme.primary,
                                 trackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                                strokeCap = androidx.compose.ui.graphics.StrokeCap.Round
+                                strokeCap = StrokeCap.Round
                             )
                             Spacer(modifier = Modifier.width(12.dp))
                             Text(

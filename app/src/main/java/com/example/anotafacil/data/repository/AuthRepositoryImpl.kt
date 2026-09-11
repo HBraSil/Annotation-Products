@@ -29,7 +29,7 @@ class AuthRepositoryImpl @Inject constructor(
                     val firebaseUser = authResult.user
                     val uid = firebaseUser?.uid ?: return Result.failure(Exception("Erro ao fazer login"))
 
-                    val userSnapshot = firestore.collection("users")
+                    val userSnapshot = firestore.collection("sellers")
                         .document(uid)
                         .get()
                         .await()
@@ -40,7 +40,7 @@ class AuthRepositoryImpl @Inject constructor(
                             email = firebaseUser.email ?: "",
                         )
 
-                        firestore.collection("users")
+                        firestore.collection("sellers")
                             .document(uid)
                             .set(newUser)
                             .await()
@@ -89,11 +89,11 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
 
-            val firebaseUser = authResult.user
+            val firebaseUserUid = authResult.user?.uid
                 ?: return Result.failure(Exception("Erro ao criar usuário"))
 
-            firestore.collection("users")
-                .document(firebaseUser.uid)
+            firestore.collection("sellers")
+                .document(firebaseUserUid)
                 .set(
                     User(name = name, email = email)
                 )

@@ -18,7 +18,7 @@ class UserRepositoryImpl @Inject constructor(
 
             Log.d("UserRepository", "Buscando usuário com UID: ${firebaseUser.uid}")
             val document = firestore
-                .collection("users")
+                .collection("owners")
                 .document(firebaseUser.uid)
                 .get()
                 .await()

@@ -18,8 +18,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.anotafacil.presentation.LastScreenViewModel
-import com.example.anotafacil.presentation.auth.CodeVerificationScreen
-import com.example.anotafacil.presentation.auth.InitialScreen
+import com.example.anotafacil.presentation.onboarding.verification_code.VerificationCodeScreen
+import com.example.anotafacil.presentation.onboarding.InitialScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
 import com.example.anotafacil.ui.components.AnimatedBottomBar
@@ -90,7 +90,7 @@ fun ProductsAnnotationApp(startDestination: String) {
 fun ProductsAnnotationApp(startDestination: String, navController: NavHostController, innerPadding: PaddingValues = PaddingValues()) {
     NavHost(
         navController = navController,
-        startDestination = Screens.INITIAL.route,
+        startDestination = Screens.LOGIN.route,
     ) {
         composable(route = Screens.INITIAL.route) {
             val lastScreenViewModel: LastScreenViewModel = hiltViewModel()
@@ -98,7 +98,7 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
             lastScreenViewModel.lastRoute(Screens.INITIAL.route)
             InitialScreen {
                 when (it) {
-                    0 -> navController.navigate(Screens.LOGIN.route)
+                    0 -> navController.navigate(Screens.HOME.route)
                     1 -> navController.navigate(Screens.CODE_VERIFICATION.route)
                 }
             }
@@ -107,7 +107,7 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         composable(route = Screens.LOGIN.route) {
             LoginScreen(
                 onLoginClick = {
-                    navController.navigate(Screens.HOME.route) {
+                    navController.navigate(Screens.INITIAL.route) {
                         popUpTo(Screens.INITIAL.route) { inclusive = false }
                         launchSingleTop = true
                         restoreState = true
@@ -128,10 +128,10 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         }
 
         composable(route = Screens.CODE_VERIFICATION.route) {
-            CodeVerificationScreen(
+            VerificationCodeScreen(
                 onContinue = {
                     navController.navigate(Screens.HOME.route) {
-                        popUpTo(Screens.INITIAL.route) { inclusive = false }
+                        popUpTo(Screens.CODE_VERIFICATION.route) { inclusive = false }
                         launchSingleTop = true
                         restoreState = true
                     }
