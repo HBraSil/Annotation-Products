@@ -29,7 +29,7 @@ import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
 import com.example.anotafacil.presentation.home.HomeScreen
 import com.example.anotafacil.presentation.new_purchase.NewPurchaseScreen
 import com.example.anotafacil.presentation.price_definition.PriceDefinitionScreen
-import com.example.anotafacil.presentation.profile.ManageSellers
+import com.example.anotafacil.presentation.profile.manage_sellers.ManageSellersScreen
 import com.example.anotafacil.presentation.profile.ProfileScreen
 import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
 
@@ -267,7 +267,7 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         }
 
         composable(route = Screens.MANAGE_SELLERS.route) {
-            ManageSellers(
+            ManageSellersScreen(
                 onBackClick = {
                     navController.navigateUp()
                 }

@@ -64,7 +64,7 @@ fun AddNewCustomerScreen(
                 )
             },
             containerColor = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize().imePadding()
         ) { paddingValues ->
             Box(
                 modifier = Modifier

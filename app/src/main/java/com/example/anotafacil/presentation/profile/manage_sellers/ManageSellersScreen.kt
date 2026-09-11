@@ -1,5 +1,7 @@
-package com.example.anotafacil.presentation.profile
+package com.example.anotafacil.presentation.profile.manage_sellers
 
+import android.content.ClipData
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -22,12 +24,12 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -38,29 +40,83 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.domain.model.OwnerCode
+import kotlinx.coroutines.launch
 
 @Composable
-fun ManageSellers(
-    pinCode: String = "738092",
-    expirationTime: String = "23h 48m",
+fun ManageSellersScreen(
+    manageSellersViewModel: ManageSellersViewModel = hiltViewModel(),
+    onBackClick: () -> Unit = {},
+    onDisconnectSellerClick: (String) -> Unit = {},
+) {
+
+    val uiState by manageSellersViewModel.uiState.collectAsState()
+
+    ManageSellersContent(
+        uiState = uiState,
+        onBackClick = onBackClick,
+        onGenerateNewCodeClick = { manageSellersViewModel.generateOwnerCode() },
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ManageSellersContent(
+    uiState: ManageSellersUiState,
     activeSellersCount: Int = 3,
     sellers: List<String> = listOf("Rafael Lima", "Lucas Santana"),
     onBackClick: () -> Unit = {},
-    onCopyCodeClick: () -> Unit = {},
-    onGenerateNewCodeClick: () -> Unit = {},
-    onDisconnectSellerClick: (String) -> Unit = {},
+    onGenerateNewCodeClick: () -> Unit = {}
 ) {
+
+    val scope = rememberCoroutineScope()
+    val clipboard = LocalClipboard.current
+    val context = LocalContext.current
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+        }
+    }
+
     Scaffold(
         topBar = {
-            SellersTopBar(onBackClick = onBackClick)
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "CÓDIGOS E VENDEDORES",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0F172A)
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(
+                            imageVector = Icons.Default.ArrowBackIosNew,
+                            contentDescription = "Voltar",
+                            tint = Color(0xFF0F172A)
+                        )
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFF8FAFC))
+            )
         },
         containerColor = Color(0xFFF8FAFC)
     ) { paddingValues ->
@@ -75,16 +131,29 @@ fun ManageSellers(
             AccessExplanationCard()
 
             PinCodeCard(
-                pinCode = pinCode,
-                expirationTime = expirationTime,
-                onCopyCodeClick = onCopyCodeClick,
+                uiState = uiState,
+                onCopyCodeClick = {
+                    scope.launch {
+                        clipboard.setClipEntry(
+                            ClipEntry(
+                                ClipData.newPlainText(
+                                    "Código",
+                                    uiState.ownerCode.code
+                                )
+                            )
+                        )
+                    }
+
+                    Toast.makeText(context, "Código copiado", Toast.LENGTH_SHORT).show()
+                },
                 onGenerateNewCodeClick = onGenerateNewCodeClick
             )
+
 
             ConnectedSellersSection(
                 activeSellersCount = activeSellersCount,
                 sellers = sellers,
-                onDisconnectSellerClick = onDisconnectSellerClick
+                onDisconnectSellerClick = {}
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -92,30 +161,7 @@ fun ManageSellers(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun SellersTopBar(onBackClick: () -> Unit) {
-    TopAppBar(
-        title = {
-            Text(
-                text = "CÓDIGOS E VENDEDORES",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF0F172A)
-            )
-        },
-        navigationIcon = {
-            IconButton(onClick = onBackClick) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = "Voltar",
-                    tint = Color(0xFF0F172A)
-                )
-            }
-        },
-        colors = TopAppBarDefaults.topAppBarColors(containerColor = Color(0xFFF8FAFC))
-    )
-}
+
 
 @Composable
 private fun AccessExplanationCard() {
@@ -167,8 +213,7 @@ private fun AccessExplanationCard() {
 
 @Composable
 private fun PinCodeCard(
-    pinCode: String,
-    expirationTime: String,
+    uiState: ManageSellersUiState,
     onCopyCodeClick: () -> Unit,
     onGenerateNewCodeClick: () -> Unit
 ) {
@@ -225,49 +270,28 @@ private fun PinCodeCard(
                         modifier = Modifier.size(14.dp)
                     )
                     Text(
-                        text = "Expira em $expirationTime",
+                        text = if (uiState.isCodeExpired) "Código expirado" else "Expira em ${uiState.remainingTime}",
                         fontSize = 12.sp,
-                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
+                        color = if(uiState.isCodeExpired) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
                 }
             }
 
-            // Exibição dos Dígitos do PIN
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 8.dp)
-            ) {
-                Spacer(modifier = Modifier.weight(1f))
-
-                pinCode.forEachIndexed { index, char ->
-                    if (index == 3) {
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.5f))
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                    }
-
-                    Box(
-                        modifier = Modifier
-                            .size(height = 48.dp, width = 38.dp)
-                            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = char.toString(),
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onPrimary
-                        )
+            if (uiState.isLoading) {
+                CircularProgressIndicator(
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            } else {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                ) {
+                    uiState.ownerCode.code.forEach { char ->
+                        BoxNumericCode(char)
                     }
                 }
-                Spacer(modifier = Modifier.weight(1f))
-
             }
 
             // Botões de Ação do PIN
@@ -334,6 +358,25 @@ private fun PinCodeCard(
         }
     }
 }
+
+
+@Composable
+fun BoxNumericCode(char: Char) {
+    Box(
+        modifier = Modifier
+            .size(height = 48.dp, width = 38.dp)
+            .background(MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.25f), RoundedCornerShape(10.dp)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = char.toString(),
+            fontSize = 22.sp,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onPrimary
+        )
+    }
+}
+
 
 @Composable
 private fun ConnectedSellersSection(
@@ -409,8 +452,13 @@ private fun SellerItemCard(
                 text = sellerName,
                 fontSize = 15.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = Color(0xFF0F172A)
+                overflow = TextOverflow.Ellipsis,
+                maxLines = 2,
+                modifier = Modifier.weight(1f),
+                color = MaterialTheme.colorScheme.onSurface
             )
+
+            Spacer(modifier = Modifier.width(6.dp))
 
             Button(
                 onClick = onDisconnectClick,
@@ -420,23 +468,12 @@ private fun SellerItemCard(
                     contentColor = Color(0xFFEF4444)
                 ),
                 elevation = null,
-                modifier = Modifier.height(36.dp)
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.LinkOff,
-                        contentDescription = null,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = "Desconectar conta",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                }
+                Text(
+                    text = "Desconectar conta",
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
             }
         }
     }
@@ -446,6 +483,17 @@ private fun SellerItemCard(
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable
-fun ManageSellersPreview() {
-    ManageSellers()
+fun ManageSellersScreenPreview() {
+    ManageSellersContent(
+        uiState = ManageSellersUiState(
+            ownerCode = OwnerCode(
+                ownerId = "123456789",
+                code = "123456",
+                createdAt = 39453094,
+                expiresAt = 3945309457567546456
+            )
+        ),
+        onBackClick = {},
+        onGenerateNewCodeClick = {}
+    )
 }

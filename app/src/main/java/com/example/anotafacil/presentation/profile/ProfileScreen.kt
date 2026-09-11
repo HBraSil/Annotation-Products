@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -64,22 +65,40 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    name: String = "Carlos Henrique",
-    email: String = "carlos.vendas@email.com",
-    role: String = "PROPRIETÁRIO",
-    isOnline: Boolean = true,
+    profileViewModel: ProfileViewModel = hiltViewModel(),
     syncStatusText: String = "Dados sincronizados há 5 min",
     appVersion: String = "v2.4",
     onEditProfileClick: () -> Unit = {},
     onPriceTableClick: () -> Unit = {},
     onManageSellersClick: () -> Unit = {},
     onSyncCloudClick: () -> Unit = {},
-    onLogoutClick: () -> Unit = {},
 ) {
+    val uiState by profileViewModel.uiState.collectAsState()
+    ProfileContent(
+        uiState = uiState,
+        onEditProfileClick = onEditProfileClick,
+        onPriceTableClick = onPriceTableClick,
+        onManageSellersClick = onManageSellersClick,
+        onSyncCloudClick = onSyncCloudClick,
+        onSignOutClick = { profileViewModel.signOut() }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ProfileContent(
+    uiState: ProfileUiState,
+    onEditProfileClick: () -> Unit,
+    onPriceTableClick: () -> Unit,
+    onManageSellersClick: () -> Unit,
+    onSyncCloudClick: () -> Unit,
+    onSignOutClick: () -> Unit
+) {
+
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
@@ -106,10 +125,9 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(4.dp))
 
             UserHeaderCard(
-                name = name,
-                email = email,
-                role = role,
-                isOnline = isOnline,
+                name = uiState.user?.name ?: "",
+                email = uiState.user?.email ?: "",
+                role = uiState.user?.role?.name ?: "",
                 onEditClick = onEditProfileClick
             )
 
@@ -141,19 +159,19 @@ fun ProfileScreen(
 
             ManagementOptionCard(
                 title = "Sincronização & Nuvem",
-                subtitle = syncStatusText,
+                subtitle = "syncStatusText",
                 statusDotColor = Color(0xFF10B981),
                 icon = Icons.Default.Cloud,
                 iconContainerColor = Color(0xFFF1F5F9),
                 iconTintColor = Color(0xFF475569),
-                badgeText = appVersion,
+                badgeText = "appVersion",
                 onClick = onSyncCloudClick
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
             LogoutButton(
-                onLogoutClick = onLogoutClick,
+                onLogoutClick = onSignOutClick,
             )
         }
     }
@@ -166,7 +184,6 @@ private fun UserHeaderCard(
     name: String,
     email: String,
     role: String,
-    isOnline: Boolean,
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -333,15 +350,14 @@ private fun ManagementOptionCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(16.dp)),
+            .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
                 .padding(16.dp)
-                .fillMaxWidth()
-                .clickable { onClick() },
+                .fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {

@@ -5,7 +5,7 @@ data class User(
     val name: String = "",
     val email: String = "",
     val role: UserRole = UserRole.SELLER,
-    val ownerId: Long? = null
+    val ownerId: String? = null
 )
 
 enum class UserRole {

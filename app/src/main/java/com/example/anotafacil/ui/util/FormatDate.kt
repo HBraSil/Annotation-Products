@@ -5,7 +5,7 @@ import androidx.annotation.RequiresApi
 import java.time.YearMonth
 import java.time.ZoneId
 
-object MonthStartAndEnd {
+object FormatDate {
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun currentMonth(): DateRange {

@@ -25,7 +25,7 @@ class UserRepositoryImpl @Inject constructor(
 
             if (!document.exists()) {
                 Log.d("UserRepository", "Usuário não encontrado no Firestore")
-                return Result.success(null)
+                return Result.failure(Exception("Usuário não encontrado"))
             }
 
             val user = document.toObject(User::class.java)
@@ -36,6 +36,18 @@ class UserRepositoryImpl @Inject constructor(
 
         } catch (e: Exception) {
             Log.e("UserRepository", "Erro ao buscar usuário", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun signOut(): Result<Boolean> {
+        return try {
+            if (auth.currentUser == null) Result.failure<Exception>(Exception("Usuário não está logado"))
+
+            auth.signOut()
+            Result.success(true)
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Erro ao sair da conta", e)
             Result.failure(e)
         }
     }

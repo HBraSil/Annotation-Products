@@ -32,7 +32,7 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (String) -> Unit) {
         onDismissRequest = onBackClick,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
-        modifier = Modifier.statusBarsPadding()
+        modifier = Modifier.statusBarsPadding().imePadding()
     ) {
         Scaffold(
             topBar = {

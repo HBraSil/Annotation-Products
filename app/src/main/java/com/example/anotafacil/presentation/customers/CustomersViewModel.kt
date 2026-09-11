@@ -9,7 +9,7 @@ import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.CustomerRepository
-import com.example.anotafacil.ui.util.MonthStartAndEnd
+import com.example.anotafacil.ui.util.FormatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
@@ -114,8 +114,8 @@ class CustomersViewModel @Inject constructor(
                 .flatMapLatest { cityId ->
                     cityRepository.getMonthlySalesSummary(
                         cityId = cityId,
-                        startMonth = MonthStartAndEnd.currentMonth().start,
-                        endMonth = MonthStartAndEnd.currentMonth().end
+                        startMonth = FormatDate.currentMonth().start,
+                        endMonth = FormatDate.currentMonth().end
                     )
                 }
                 .collect { monthlySalesSummary ->
