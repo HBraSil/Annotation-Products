@@ -2,6 +2,7 @@ package com.example.anotafacil.data.repository
 
 import android.util.Log
 import com.example.anotafacil.domain.model.User
+import com.example.anotafacil.domain.model.UserRole
 import com.example.anotafacil.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,16 +17,38 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             val firebaseUser = auth.currentUser ?: return Result.success(null)
 
+
             Log.d("UserRepository", "Buscando usuário com UID: ${firebaseUser.uid}")
-            val document = firestore
-                .collection("owners")
+            var document = firestore
+                .collection("sellers")
                 .document(firebaseUser.uid)
                 .get()
                 .await()
 
-            if (!document.exists()) {
-                Log.d("UserRepository", "Usuário não encontrado no Firestore")
-                return Result.failure(Exception("Usuário não encontrado"))
+
+            if (document.exists()) {
+                Log.d("UserRepository", "Usuário encontrado em sellers")
+                document.data?.let {
+                    val ownerData = it.toMutableMap().apply {
+                        this["role"] = UserRole.OWNER
+                    }
+                    firestore.collection("owners")
+                        .document(firebaseUser.uid)
+                        .set(ownerData)
+                }
+                    ?.await()
+
+                firestore.collection("sellers")
+                    .document(firebaseUser.uid)
+                    .delete()
+                    .await()
+            } else {
+                Log.d("UserRepository", "Usuário não encontrado em sellers, buscando em owners")
+                document = firestore
+                    .collection("owners")
+                    .document(firebaseUser.uid)
+                    .get()
+                    .await()
             }
 
             val user = document.toObject(User::class.java)

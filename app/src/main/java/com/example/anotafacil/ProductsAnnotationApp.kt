@@ -1,5 +1,6 @@
 package com.example.anotafacil
 
+import MyProfileScreen
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -17,6 +18,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.anotafacil.presentation.AccountTestScreen
 import com.example.anotafacil.presentation.LastScreenViewModel
 import com.example.anotafacil.presentation.onboarding.verification_code.VerificationCodeScreen
 import com.example.anotafacil.presentation.onboarding.InitialScreen
@@ -47,6 +49,8 @@ enum class Screens(val route: String) {
     PURCHASE_HISTORY("purchase_history"),
     PROFILE("profile"),
     MANAGE_SELLERS("manage_sellers"),
+    ACCOUNT_TEST("account_test"),
+    MY_PROFILE("my_profile")
 }
 
 
@@ -90,7 +94,7 @@ fun ProductsAnnotationApp(startDestination: String) {
 fun ProductsAnnotationApp(startDestination: String, navController: NavHostController, innerPadding: PaddingValues = PaddingValues()) {
     NavHost(
         navController = navController,
-        startDestination = Screens.LOGIN.route,
+        startDestination = Screens.HOME.route,
     ) {
         composable(route = Screens.INITIAL.route) {
             val lastScreenViewModel: LastScreenViewModel = hiltViewModel()
@@ -118,6 +122,8 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
                 }
             )
         }
+
+        composable(route = Screens.ACCOUNT_TEST.route) { AccountTestScreen() }
 
         composable(route = Screens.SIGN_UP.route) {
             SignUpScreen(
@@ -259,10 +265,18 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
 
         composable(route = Screens.PROFILE.route) {
             ProfileScreen(
-                onEditProfileClick = {},
+                goToMyProfile = {
+                    navController.navigate(Screens.MY_PROFILE.route)
+                },
                 onPriceTableClick = { navController.navigate(Screens.PRICE_DEFINITION.route) },
                 onManageSellersClick = { navController.navigate(Screens.MANAGE_SELLERS.route) },
                 onSyncCloudClick = {},
+            )
+        }
+
+        composable(route = Screens.MY_PROFILE.route) {
+            MyProfileScreen(
+                onBackClick = { navController.navigateUp() },
             )
         }
 

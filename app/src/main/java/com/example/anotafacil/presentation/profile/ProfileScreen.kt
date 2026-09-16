@@ -1,6 +1,5 @@
 package com.example.anotafacil.presentation.profile
 
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -17,14 +16,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Logout
@@ -35,33 +30,20 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -72,7 +54,7 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
     syncStatusText: String = "Dados sincronizados há 5 min",
     appVersion: String = "v2.4",
-    onEditProfileClick: () -> Unit = {},
+    goToMyProfile: () -> Unit = {},
     onPriceTableClick: () -> Unit = {},
     onManageSellersClick: () -> Unit = {},
     onSyncCloudClick: () -> Unit = {},
@@ -80,11 +62,11 @@ fun ProfileScreen(
     val uiState by profileViewModel.uiState.collectAsState()
     ProfileContent(
         uiState = uiState,
-        onEditProfileClick = onEditProfileClick,
         onPriceTableClick = onPriceTableClick,
         onManageSellersClick = onManageSellersClick,
         onSyncCloudClick = onSyncCloudClick,
-        onSignOutClick = { profileViewModel.signOut() }
+        onSignOutClick = { profileViewModel.signOut() },
+        goToMyProfile = goToMyProfile
     )
 }
 
@@ -92,11 +74,11 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     uiState: ProfileUiState,
-    onEditProfileClick: () -> Unit,
     onPriceTableClick: () -> Unit,
     onManageSellersClick: () -> Unit,
     onSyncCloudClick: () -> Unit,
-    onSignOutClick: () -> Unit
+    onSignOutClick: () -> Unit,
+    goToMyProfile: () -> Unit = {}
 ) {
 
     Scaffold(
@@ -125,10 +107,10 @@ fun ProfileContent(
             Spacer(modifier = Modifier.height(4.dp))
 
             UserHeaderCard(
-                name = uiState.user?.name ?: "",
-                email = uiState.user?.email ?: "",
-                role = uiState.user?.role?.name ?: "",
-                onEditClick = onEditProfileClick
+                name = uiState.user?.name ?: "Sem nome",
+                email = uiState.user?.email ?: "email@gmail.com",
+                role = uiState.user?.role?.name ?: "No",
+                goToMyProfile = { /*TODO*/ }
             )
 
             Text(
@@ -184,45 +166,18 @@ private fun UserHeaderCard(
     name: String,
     email: String,
     role: String,
-    onEditClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    goToMyProfile: () -> Unit
 ) {
-    var name by remember {
-        mutableStateOf(
-            TextFieldValue(
-                text = "HILquias",
-                selection = TextRange("HILquias".length)
-            )
-        )
-    }
-
-    var isEditing by rememberSaveable {
-        mutableStateOf(false)
-    }
-
-
-    val focusRequester = remember {
-        FocusRequester()
-    }
-
-    // Quando entra no modo edição, coloca o cursor no nome
-    LaunchedEffect(isEditing) {
-        if (isEditing) {
-            name = name.copy(
-                selection = TextRange(name.text.length)
-            )
-
-            focusRequester.requestFocus()
-        }
-    }
-
-
     Card(
+        onClick = goToMyProfile,
         modifier = modifier
             .fillMaxWidth()
             .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.secondary.copy(0.4f)
+        )
     ) {
         Row(
             modifier = Modifier
@@ -231,7 +186,7 @@ private fun UserHeaderCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
+            Column {
                 Surface(
                     color = Color(0xFFEEF2FF),
                     shape = RoundedCornerShape(8.dp)
@@ -247,88 +202,17 @@ private fun UserHeaderCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val style = LocalTextStyle.current
-                AnimatedContent(
-                    targetState = isEditing,
-                    label = "name_edit_animation"
-                ) { editing ->
-
-                    if (editing) {
-
-                        BasicTextField(
-                            value = name,
-                            onValueChange = {
-                                name = it
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .focusRequester(focusRequester),
-                            singleLine = true,
-                            textStyle = style.copy(
-                                fontSize = 20.sp,
-                                fontWeight = FontWeight.SemiBold,
-                                color = Color.Black
-                            ),
-                            keyboardOptions = KeyboardOptions(
-                                imeAction = ImeAction.Done
-                            ),
-                            keyboardActions = KeyboardActions(
-                                onDone = {
-                                    //onNameSaved(name)
-                                    //originalName = name
-                                    isEditing = false
-                                }
-                            ),
-                            cursorBrush = SolidColor(
-                                MaterialTheme.colorScheme.primary
-                            )
-                        )
-
-                    } else {
-
-                        Text(
-                            text = name.text,
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = Color.Black
-                        )
-                    }
-                }
+                Text(
+                    text = name,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Color.Black
+                )
 
                 Text(
                     text = email,
                     fontSize = 14.sp,
                     color = Color(0xFF64748B)
-                )
-            }
-
-            IconButton(
-                onClick = {
-
-                    if (isEditing) {
-
-                        // SALVAR
-                        //onNameSaved(name)
-                        //originalName = name
-                        isEditing = false
-
-                    } else {
-
-                        // EDITAR
-                        //originalName = name
-                        isEditing = true
-                    }
-                },
-                modifier = Modifier
-                    .size(44.dp)
-                    .background(Color(0xFFF8FAFC), CircleShape)
-                    .border(1.dp, Color(0xFFE2E8F0), CircleShape)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Editar Perfil",
-                    tint = Color(0xFF334155),
-                    modifier = Modifier.size(18.dp)
                 )
             }
         }
@@ -469,8 +353,16 @@ private fun LogoutButton(
     }
 }
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun Preview() {
-    ProfileScreen()
+    MaterialTheme {
+        ProfileContent(
+            uiState = ProfileUiState(),
+            onPriceTableClick = {},
+            onManageSellersClick = {},
+            onSyncCloudClick = {},
+            onSignOutClick = {}
+        )
+    }
 }

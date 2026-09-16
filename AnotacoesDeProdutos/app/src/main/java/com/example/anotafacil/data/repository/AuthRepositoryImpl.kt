@@ -18,7 +18,7 @@ class AuthRepositoryImpl @Inject constructor(
 ): AuthRepository {
     override suspend fun loginWithGoogle(): Result<Boolean> {
         if (!networkChecker.hasInternetConnection()) {
-            return Result.failure(Exception("Sem conexão com a internet"))
+            return Result.failure(Exception("Sem conexão com internet"))
         }
 
         return try {

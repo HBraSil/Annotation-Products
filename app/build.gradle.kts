@@ -107,9 +107,14 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.analytics)
     implementation(libs.google.firebase.auth)
+    implementation(libs.firebase.functions)
 
     // CREDENCIAIS
     implementation(libs.googleid)
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
+
+    // BILLING
+
+    implementation(libs.billing.ktx)
 }
