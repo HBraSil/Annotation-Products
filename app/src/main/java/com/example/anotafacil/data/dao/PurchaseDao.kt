@@ -8,6 +8,7 @@ import androidx.room.Update
 import com.example.anotafacil.data.entity.PurchaseEntity
 import com.example.anotafacil.domain.model.MonthlySalesData
 import com.example.anotafacil.domain.model.PurchaseWithItemsData
+import com.example.anotafacil.domain.model.SyncStatus
 import kotlinx.coroutines.flow.Flow
 import kotlin.uuid.Uuid
 
@@ -65,4 +66,24 @@ interface PurchaseDao {
         startDate: Long,
         endDate: Long
     ): Flow<List<MonthlySalesData>>
+
+    @Query("""
+    UPDATE purchase
+    SET syncStatus = :status
+    WHERE id = :purchaseId
+""")
+    suspend fun updateSyncStatus(
+        purchaseId: Uuid,
+        status: SyncStatus
+    ): Int
+
+    @Transaction
+    @Query("""
+    SELECT * FROM purchase
+    WHERE syncStatus = :status
+    ORDER BY purchaseDate ASC
+""")
+    suspend fun getPurchasesBySyncStatus(
+        status: SyncStatus
+    ): List<PurchaseWithItemsData>
 }

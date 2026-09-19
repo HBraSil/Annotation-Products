@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.PrimaryKey
 import com.example.anotafacil.domain.model.Customer
+import com.example.anotafacil.domain.model.SyncStatus
 import kotlin.uuid.Uuid
 
 @Entity(
@@ -24,7 +25,8 @@ data class CustomerEntity(
     val lastPurchaseDate: String?,
     val owes: Double?,
     val extraInfo: String?,
-    val cityId: Uuid
+    val cityId: Uuid,
+    val syncStatus: SyncStatus = SyncStatus.PENDING
 )
 
 fun CustomerEntity.toDomain() = Customer(

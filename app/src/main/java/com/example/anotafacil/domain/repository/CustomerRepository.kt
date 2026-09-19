@@ -13,7 +13,7 @@ interface CustomerRepository {
     fun getAllCustomers(cityId: Uuid?): Flow<Result<List<Customer>>>
     suspend fun addCustomer(customer: Customer): Result<Boolean>
 
-    suspend fun newPurchase(purchase: Purchase): Result<Boolean>
+    suspend fun newPurchase(purchase: Purchase): Result<Unit>
 
     suspend fun updateCustomer(customer: Customer): Int
     suspend fun payOffTotalDebt(customer: Customer, payment: Payment): Pair<Int, Long>

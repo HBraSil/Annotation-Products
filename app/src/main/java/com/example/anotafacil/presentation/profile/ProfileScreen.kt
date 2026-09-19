@@ -1,5 +1,6 @@
 package com.example.anotafacil.presentation.profile
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -36,6 +37,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -43,6 +45,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -57,14 +60,13 @@ fun ProfileScreen(
     goToMyProfile: () -> Unit = {},
     onPriceTableClick: () -> Unit = {},
     onManageSellersClick: () -> Unit = {},
-    onSyncCloudClick: () -> Unit = {},
 ) {
     val uiState by profileViewModel.uiState.collectAsState()
     ProfileContent(
         uiState = uiState,
         onPriceTableClick = onPriceTableClick,
         onManageSellersClick = onManageSellersClick,
-        onSyncCloudClick = onSyncCloudClick,
+        onSyncCloudClick = profileViewModel::onSyncCloudClick,
         onSignOutClick = { profileViewModel.signOut() },
         goToMyProfile = goToMyProfile
     )
@@ -80,6 +82,17 @@ fun ProfileContent(
     onSignOutClick: () -> Unit,
     goToMyProfile: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+
+    LaunchedEffect(uiState.success) {
+        if (uiState.success) {
+            Toast.makeText(
+                context,
+                "Dados sincronizados com sucesso!",
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -121,12 +134,22 @@ fun ProfileContent(
                 modifier = Modifier.padding(top = 8.dp, start = 4.dp)
             )
 
+            Button(
+                onClick = {},
+                enabled = uiState.isSyncing,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp),
+            ){
+                Text(text = if (uiState.isSyncing) "Sincronizando..." else "Sincronizado")
+            }
+
             ManagementOptionCard(
                 title = "Tabela de Preços",
                 subtitle = "Ajustar valores de sabão, desinfetante, etc.",
                 icon = Icons.Default.LocalOffer,
-                iconContainerColor = Color(0xFFFEF3C7),
-                iconTintColor = Color(0xFFD97706),
+                iconContainerColor = MaterialTheme.colorScheme.surface.copy(0.2f),
+                iconTintColor = MaterialTheme.colorScheme.primaryContainer.copy(0.8f),
                 onClick = onPriceTableClick
             )
 
@@ -134,19 +157,19 @@ fun ProfileContent(
                 title = "Equipe & Códigos de Acesso",
                 subtitle = "Gerenciar PINs, autorizações e equipe",
                 icon = Icons.Default.Group,
-                iconContainerColor = Color(0xFFEEF2FF),
-                iconTintColor = Color(0xFF4F46E5),
+                iconContainerColor = MaterialTheme.colorScheme.secondary.copy(0.2f),
+                iconTintColor = MaterialTheme.colorScheme.onSecondary,
                 onClick = onManageSellersClick
             )
 
             ManagementOptionCard(
-                title = "Sincronização & Nuvem",
-                subtitle = "syncStatusText",
+                title = "Sincronizar Dados",
+                subtitle = "Conexão com internet",
                 statusDotColor = Color(0xFF10B981),
                 icon = Icons.Default.Cloud,
-                iconContainerColor = Color(0xFFF1F5F9),
-                iconTintColor = Color(0xFF475569),
-                badgeText = "appVersion",
+                iconContainerColor = MaterialTheme.colorScheme.onSecondary.copy(0.2f, blue = 0.8f),
+                iconTintColor = MaterialTheme.colorScheme.primary,
+                showTrailingIcon = false,
                 onClick = onSyncCloudClick
             )
 
@@ -219,6 +242,7 @@ private fun UserHeaderCard(
     }
 }
 
+
 @Composable
 private fun ManagementOptionCard(
     title: String,
@@ -226,13 +250,12 @@ private fun ManagementOptionCard(
     icon: ImageVector,
     iconContainerColor: Color,
     iconTintColor: Color,
+    showTrailingIcon: Boolean = true,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    badgeText: String? = null,
     statusDotColor: Color? = null
 ) {
     Card(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .clickable { onClick() },
         shape = RoundedCornerShape(16.dp),
@@ -288,20 +311,7 @@ private fun ManagementOptionCard(
                 }
             }
 
-            if (badgeText != null) {
-                Surface(
-                    color = Color(0xFFF1F5F9),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = badgeText,
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Color(0xFF64748B),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-            } else {
+            if (showTrailingIcon) {
                 Icon(
                     imageVector = Icons.Default.ChevronRight,
                     contentDescription = null,
@@ -311,6 +321,7 @@ private fun ManagementOptionCard(
         }
     }
 }
+
 
 @Composable
 private fun LogoutButton(

@@ -27,7 +27,7 @@ import kotlin.uuid.Uuid
 @HiltViewModel
 class CustomerDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    private val customerRepository: CustomerRepository,
+    private val customerRepository: CustomerRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(CustomerDetailUiState())
     val uiState = _uiState.asStateFlow()

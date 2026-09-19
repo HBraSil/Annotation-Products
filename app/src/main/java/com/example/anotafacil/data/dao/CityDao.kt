@@ -24,10 +24,11 @@ interface CityDao {
         SELECT
             city.id,
             city.name,
+            city.syncStatus,
             COUNT(customer.id) AS customerCount
         FROM city
         LEFT JOIN customer ON customer.cityId = city.id
-        GROUP BY city.id
+        GROUP BY city.id, city.name, city.syncStatus
         ORDER BY city.name
     """)
     fun getCities(): Flow<List<CityEntity>>
@@ -36,12 +37,13 @@ interface CityDao {
     SELECT
         city.id,
         city.name,
+        city.syncStatus,
         COUNT(customer.id) AS customerCount
     FROM city
     LEFT JOIN customer
         ON customer.cityId = city.id
     WHERE city.name LIKE '%' || :query || '%'
-    GROUP BY city.id, city.name
+    GROUP BY city.id, city.name, city.syncStatus
     ORDER BY city.name
 """)
     fun searchCities(query: String): Flow<List<CityEntity>>

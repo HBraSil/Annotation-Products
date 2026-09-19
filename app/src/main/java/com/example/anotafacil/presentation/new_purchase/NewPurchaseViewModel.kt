@@ -10,8 +10,10 @@ import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.domain.model.Purchase
 import com.example.anotafacil.domain.repository.CustomerRepository
 import com.example.anotafacil.domain.repository.ProductRepository
+import com.example.anotafacil.domain.usecase.NewPurchaseUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -24,13 +26,15 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlin.let
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 
 @HiltViewModel
 class NewPurchaseViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val productRepository: ProductRepository,
-    private val customerRepository: CustomerRepository
+    private val customerRepository: CustomerRepository,
+    private val newPurchaseUseCase: NewPurchaseUseCase
 ) : ViewModel()  {
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -153,16 +157,18 @@ class NewPurchaseViewModel @Inject constructor(
                 totalAmount = uiState.value.selectedProductsSubtotal.toDouble()
             )
 
-            customer.value?.let {
-                customerRepository.updateCustomer(
-                    it.copy(
-                        id = customer.value?.id,
-                        owes = uiState.value.totalPrice
-                    )
-                )
-            }
-            customerRepository.newPurchase(purchase = purchase)
+
+            newPurchaseUseCase(purchase = purchase)
                 .onSuccess {
+                    customer.value?.let {
+                        customerRepository.updateCustomer(
+                            it.copy(
+                                id = customer.value?.id,
+                                owes = uiState.value.totalPrice
+                            )
+                        )
+                    }
+
                     val cartItems = _uiState.value.selectedProducts.map {
                         it.copy(
                             purchaseId = purchase.id,
@@ -176,10 +182,12 @@ class NewPurchaseViewModel @Inject constructor(
                         _uiState.update { it.copy(success = true) }
                     }
                 }
-                .onFailure {
-                    _uiState.update { it.copy(error = true, errorMessage = it.errorMessage) }
+                .onFailure { throwable ->
+                    _uiState.update { it.copy(error = true, errorMessage = throwable.message) }
                 }
 
+            delay(500.milliseconds)
+            _uiState.update { it.copy(error = false, errorMessage = null) }
         }
     }
 }
@@ -189,7 +197,7 @@ data class NewPurchaseUiState(
     val isLoading: Boolean = false,
     val success: Boolean = false,
     val error: Boolean = false,
-    val errorMessage: String = "",
+    val errorMessage: String? = null,
     val pendingDebt: Double = 0.0, // DEPOIS REMOVER ESSA PROPRIEDADE
     val allProducts: List<Product> = emptyList(),
     val selectedProducts: List<CartItem> = mutableListOf(),

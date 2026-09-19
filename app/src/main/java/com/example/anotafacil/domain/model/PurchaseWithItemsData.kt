@@ -10,7 +10,8 @@ import com.example.anotafacil.data.entity.toDomain
 import com.example.anotafacil.data.entity.toProductDomain
 
 /**
- * Representa uma compra completa, incluindo seus itens e os respectivos produtos.
+ * Representa uma compra completa, incluindo seus itens e os respectivos produtos. Quando uma compra
+ * é consultada ela devolverá os itens e para cada item um produto virá junto.
  * O Room utiliza as anotações @Embedded e @Relation para resolver automaticamente o mapeamento
  * aninhado entre as tabelas de compra, itens de carrinho e produtos.
  *

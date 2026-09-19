@@ -270,7 +270,6 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
                 },
                 onPriceTableClick = { navController.navigate(Screens.PRICE_DEFINITION.route) },
                 onManageSellersClick = { navController.navigate(Screens.MANAGE_SELLERS.route) },
-                onSyncCloudClick = {},
             )
         }
 

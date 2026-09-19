@@ -23,9 +23,9 @@ import javax.inject.Inject
 import kotlin.uuid.Uuid
 
 class CustomerRepositoryImpl @Inject constructor(
+    private val appDatabase: AppDatabase,
     private val customerDao: CustomerDao,
     private val purchaseDao: PurchaseDao,
-    val appDatabase: AppDatabase
 ) : CustomerRepository {
     override fun getCustomer(id: Uuid?): Flow<Customer?> {
         return customerDao.getCustomer(id).map {
@@ -56,10 +56,10 @@ class CustomerRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun newPurchase(purchase: Purchase): Result<Boolean> {
+    override suspend fun newPurchase(purchase: Purchase): Result<Unit> {
         return try {
             purchaseDao.addPurchase(purchase.toEntity())
-            Result.success(true)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(Exception("Error ao adicionar compra"))
         }

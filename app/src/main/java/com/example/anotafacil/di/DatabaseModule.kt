@@ -2,20 +2,9 @@ package com.example.anotafacil.di
 
 import android.content.Context
 import androidx.room.Room
-import com.example.anotafacil.data.dao.CityDao
-import com.example.anotafacil.data.dao.CustomerDao
 import com.example.anotafacil.data.dao.ProductDao
-import com.example.anotafacil.data.dao.PurchaseDao
 import com.example.anotafacil.data.network.AppDatabase
 import com.example.anotafacil.data.network.DatabaseCallback
-import com.example.anotafacil.data.repository.CityRepositoryImpl
-import com.example.anotafacil.data.repository.CustomerRepositoryImpl
-import com.example.anotafacil.data.repository.ProductRepositoryImpl
-import com.example.anotafacil.data.repository.SalesOverviewRepositoryImpl
-import com.example.anotafacil.domain.repository.CityRepository
-import com.example.anotafacil.domain.repository.CustomerRepository
-import com.example.anotafacil.domain.repository.ProductRepository
-import com.example.anotafacil.domain.repository.SalesOverviewRepository
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -52,6 +41,9 @@ object DatabaseModule {
             )
             .fallbackToDestructiveMigration(false)
         .build()
+
+    @Provides
+    fun provideUserDao(database: AppDatabase) = database.userDao()
 
     @Provides
     fun provideCityDao(database: AppDatabase) = database.cityDao()
