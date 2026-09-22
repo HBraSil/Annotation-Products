@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.anotafacil.data.entity.ProductEntity
+import com.example.anotafacil.domain.model.SyncStatus
 import kotlin.uuid.Uuid
 
 
@@ -13,6 +14,25 @@ import kotlin.uuid.Uuid
 interface ProductDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(product: List<ProductEntity>): List<Long>
+
+    @Query("""
+    SELECT *
+    FROM product
+    WHERE syncStatus = :status
+""")
+    suspend fun getProductsBySyncStatus(
+        status: SyncStatus
+    ): List<ProductEntity>
+
+    @Query("""
+    UPDATE product
+    SET syncStatus = :status
+    WHERE id = :productId
+""")
+    suspend fun updateSyncStatus(
+        productId: Uuid,
+        status: SyncStatus
+    ): Int
 
     @Query("SELECT * FROM product")
     suspend fun getAllProducts(): List<ProductEntity>

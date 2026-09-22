@@ -7,6 +7,7 @@ import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.UserRepository
+import com.example.anotafacil.domain.usecase.RefreshHomeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import javax.inject.Inject
@@ -21,31 +22,62 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val cityRepository: CityRepository
+    private val cityRepository: CityRepository,
+    private val refreshHomeUseCase: RefreshHomeUseCase
 ): ViewModel() {
     private val _homeUiState = MutableStateFlow(HomeState())
     val uiState = _homeUiState.asStateFlow()
 
-    init {
-        getUserData()
-        searchCity()
-    }
+
+    init { searchCity() }
 
 
-    private fun getUserData() {
+    fun loadOwnerUser() {
         viewModelScope.launch {
-            userRepository.getUser().fold(
-                onSuccess = {
-                    _homeUiState.update { state ->
-                        state.copy(user = it ?: User())
+            userRepository.getOwnerUser().fold(
+                onSuccess = { user ->
+                    _homeUiState.update {
+                        it.copy(user = user ?: User())
                     }
                 },
-                onFailure = {
-                    Log.d("HomeViewModel", "ERRO: ${it.message}")
+                onFailure = { error ->
+                    Log.d(
+                        "HomeViewModel",
+                        "Erro ao buscar owner: ${error.message}"
+                    )
+                    _homeUiState.update {
+                        it.copy(error = error.message)
+                    }
                 }
             )
         }
     }
+
+    fun loadSellerUser() {
+        viewModelScope.launch {
+            userRepository.getSellerUser().fold(
+                onSuccess = { user ->
+                    Log.d(
+                        "HomeViewModel",
+                        "Seller: $user"
+                    )
+                    _homeUiState.update {
+                        it.copy(user = user ?: User())
+                    }
+                },
+                onFailure = { error ->
+                    Log.d(
+                        "HomeViewModel",
+                        "Erro ao buscar seller: ${error.message}"
+                    )
+                    _homeUiState.update {
+                        it.copy(error = error.message)
+                    }
+                }
+            )
+        }
+    }
+
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -64,11 +96,28 @@ class HomeViewModel @Inject constructor(
                 }
         }
     }
+    fun refreshHome() {
+        viewModelScope.launch {
+            val result = refreshHomeUseCase()
+            Log.d("HomeViewModel", "refreshHome: $result")
+
+            if(result) {
+                searchCity()
+            } else {
+                _homeUiState.update {
+                    it.copy(error = "Erro ao atualizar dados")
+                }
+            }
+        }
+    }
 
 
     fun updateSearchQuery(query: String) {
         _homeUiState.update { it.copy(searchQuery = query) }
     }
+
+
+
 
     fun addCity(cityName: String) {
         viewModelScope.launch {

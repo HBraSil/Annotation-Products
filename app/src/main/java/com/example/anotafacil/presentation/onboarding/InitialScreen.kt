@@ -31,7 +31,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,17 +44,17 @@ import com.hilquias.anotafacil.R
 
 
 @Composable
-fun InitialScreen(
+fun RoleSectionScreen(
     onChoiceClick: (Int) -> Unit = {}
 ) {
 
-    InitialContent(
+    RoleSectionContent(
         onChoiceClick = onChoiceClick
     )
 }
 
 @Composable
-fun InitialContent(
+fun RoleSectionContent(
     onChoiceClick: (Int) -> Unit = {}
 ) {
     var selectedProfileIndex by remember { mutableStateOf<Int?>(null) }
@@ -263,6 +262,6 @@ fun ProfileOptionCard(
 
 @Preview(showBackground = true)
 @Composable
-fun InitialScreenPreview() {
-    InitialScreen()
+fun RoleSectionScreenPreview() {
+    RoleSectionScreen()
 }

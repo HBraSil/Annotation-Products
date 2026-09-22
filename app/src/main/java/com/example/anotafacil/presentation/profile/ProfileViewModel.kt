@@ -5,7 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.UserRepository
-import com.example.anotafacil.domain.usecase.SyncUseCase
+import com.example.anotafacil.domain.usecase.UploadDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,7 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val syncUseCase: SyncUseCase
+    private val uploadDataUseCase: UploadDataUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -30,7 +30,7 @@ class ProfileViewModel @Inject constructor(
 
     private fun getUser() {
         viewModelScope.launch {
-            userRepository.getUser()
+            userRepository.getOwnerUser()
                 .onSuccess { user ->
 
                     _uiState.update { it.copy(user = user) }
@@ -49,7 +49,7 @@ class ProfileViewModel @Inject constructor(
         _uiState.update { it.copy(isSyncing = true) }
 
         viewModelScope.launch {
-            val result = syncUseCase()
+            val result = uploadDataUseCase()
             Log.d("ProfileViewModel", "Resultado da sincronização: $result")
             _uiState.update {
                 it.copy(

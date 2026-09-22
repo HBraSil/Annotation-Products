@@ -1,5 +1,6 @@
 package com.example.anotafacil.data.repository
 
+import android.util.Log
 import com.example.anotafacil.data.util.GoogleSignInUtils
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.User
@@ -29,12 +30,18 @@ class AuthRepositoryImpl @Inject constructor(
                     val firebaseUser = authResult.user
                     val uid = firebaseUser?.uid ?: return Result.failure(Exception("Erro ao fazer login"))
 
-                    val userSnapshot = firestore.collection("sellers")
+                    val sellerUser = firestore.collection("sellers")
                         .document(uid)
                         .get()
                         .await()
 
-                    if (!userSnapshot.exists()) {
+                    val ownerUser = firestore.collection("owners")
+                        .document(uid)
+                        .get()
+                        .await()
+
+                    if (!sellerUser.exists() && !ownerUser.exists()) {
+                        Log.d("AuthRepository", "Usuário não existe no Firestore, criando...: ${firebaseUser.displayName}, ${firebaseUser.email}")
                         val newUser = User(
                             name = firebaseUser.displayName ?: "",
                             email = firebaseUser.email ?: "",
@@ -57,6 +64,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+
     override suspend fun loginWithEmailAndPassword(
         email: String,
         password: String,
@@ -76,6 +84,7 @@ class AuthRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
 
     override suspend fun signUpWithEmailAndPassword(
         name: String,

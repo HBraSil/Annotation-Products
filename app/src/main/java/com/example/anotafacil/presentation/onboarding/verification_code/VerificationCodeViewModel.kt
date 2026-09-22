@@ -1,11 +1,8 @@
 package com.example.anotafacil.presentation.onboarding.verification_code
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.repository.OwnerCodeRepository
-import com.example.anotafacil.presentation.auth.FieldState
-import com.example.anotafacil.ui.validation.NameValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.delay
@@ -25,18 +22,6 @@ class VerificationCodeViewModel @Inject constructor(
     val uiState: StateFlow<VerificationCodeUiState> = _uiState.asStateFlow()
 
 
-    fun updateSellerName(name: String) {
-        val isNameValid = NameValidator.isNameValid(name)
-
-        _uiState.update {
-            it.copy(sellerName = FieldState(
-                field = name,
-                fieldError = isNameValid,
-                isValid = isNameValid == null
-            ))
-        }
-    }
-
     fun updateCode(code: String) {
         _uiState.update { it.copy(code = code) }
     }
@@ -46,19 +31,18 @@ class VerificationCodeViewModel @Inject constructor(
 
         viewModelScope.launch {
             val code = _uiState.value.code
-            val name = _uiState.value.sellerName.field
 
 
-            ownerCodeRepository.verifyCode(code, name)
+            ownerCodeRepository.verifyCode(code)
                 .onSuccess { result ->
-                    Log.d("VerificationCodeViewModel", "Code verified successfully: $result")
-                    if (!result) {
-                        _uiState.update { it.copy(errorMessage = "Usuário já é proprietário. Não é possível entrar como vendedor") }
-                    } else {
+                    if (!result)
+                        _uiState.update {
+                            it.copy(errorMessage = "Você já é proprietário. Não é possível entrar como vendedor")
+                        }
+                    else
                         _uiState.update { it.copy(success = true) }
-                    }
+
                 }.onFailure { throwable ->
-                    Log.e("VerificationCodeViewModel", "Error verifying code: ${throwable.message}")
                     _uiState.update { it.copy(errorMessage = throwable.message) }
                 }
 
@@ -70,7 +54,6 @@ class VerificationCodeViewModel @Inject constructor(
 
 data class VerificationCodeUiState(
     val code: String = "",
-    val sellerName: FieldState = FieldState(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val success: Boolean = false,

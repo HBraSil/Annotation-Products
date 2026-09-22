@@ -30,6 +30,7 @@ data class PurchaseWithItemsData(
     val items: List<CartItemWithProductData> = emptyList(),
 )
 
+
 data class CartItemWithProductData(
     @Embedded val cartItem: CartItemEntity,
 
@@ -39,6 +40,7 @@ data class CartItemWithProductData(
     )
     val product: ProductEntity,
 )
+
 
 fun PurchaseWithItemsData.toDomain() = PurchaseWithItemsDomain(
     purchase = purchase.toDomain(),

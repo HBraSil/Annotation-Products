@@ -3,8 +3,6 @@ package com.example.anotafacil.data.repository
 import android.util.Log
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.OwnerCode
-import com.example.anotafacil.domain.model.User
-import com.example.anotafacil.domain.model.UserRole
 import com.example.anotafacil.domain.repository.OwnerCodeRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -95,33 +93,16 @@ class OwnerCodeRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun verifyCode(code: String, name: String): Result<Boolean> {
+    override suspend fun verifyCode(code: String): Result<Boolean> {
         return try {
             isOwner()
                     .onSuccess { isOwner ->
                         if (!isOwner) {
-                            val document = firestore
-                                .collection("ownerCodes")
-                                .document(code)
-                                .get()
-                                .await()
-
-                            if (!document.exists()) {
-                                return Result.failure(Exception("Código não encontrado"))
+                            val ownerCode = isCodeWorking(code).getOrElse {
+                                return Result.failure(it)
                             }
 
-                            val ownerCode = document.toObject(OwnerCode::class.java)
-                                ?: return Result.failure(Exception("Código não encontrado"))
-
-
-                            if (System.currentTimeMillis() >= ownerCode.expiresAt) {
-                                Log.d("OwnerCodeRepository", "Code expired")
-                                return Result.failure(
-                                    Exception("Código expirado.")
-                                )
-                            }
-
-                            return linkSellerWithOwner(ownerCode, name)
+                            return linkSellerWithOwner(ownerCode)
                         }
 
                         return Result.success(false)
@@ -133,43 +114,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
-    private suspend fun linkSellerWithOwner(
-        ownerCode: OwnerCode,
-        name: String
-    ): Result<Boolean> {
 
-        Log.d("OwnerCodeRepository", "Linking seller with owner")
-        return try {
-            val sellerReference = firestore
-                .collection("owners")
-                .document(ownerCode.ownerId)
-                .get()
-                .await()
-
-            if (!sellerReference.exists()) {
-                Log.d("OwnerCodeRepository", "Seller not found")
-                return Result.failure(Exception("Código inválido."))
-            }
-
-            val seller = User(
-                name = name,
-                ownerId = ownerCode.ownerId,
-                role = UserRole.SELLER
-            )
-
-            firestore
-                .collection("sellers")
-                .document(ownerCode.ownerId)
-                .set(seller)
-                .await()
-
-            Log.d("OwnerCodeRepository", "SALVO COM SUCESSO")
-
-            Result.success(false)
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
     private suspend fun isOwner(): Result<Boolean> {
         return try {
@@ -185,6 +130,61 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 .await()
 
             Result.success(document.exists())
+
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun isCodeWorking(code: String): Result<OwnerCode> {
+        try {
+            val document = firestore
+                .collection("ownerCodes")
+                .document(code)
+                .get()
+                .await()
+
+            if (!document.exists())
+                return Result.failure(Exception("Código não encontrado"))
+
+
+            val ownerCode = document.toObject(OwnerCode::class.java)
+                ?: return Result.failure(Exception("Código não encontrado"))
+
+
+            if (System.currentTimeMillis() >= ownerCode.expiresAt)
+                return Result.failure(Exception("Código expirado."))
+
+            return Result.success(ownerCode)
+        } catch (e: Exception) {
+            return Result.failure(e)
+        }
+    }
+
+
+    private suspend fun linkSellerWithOwner(
+        ownerCode: OwnerCode,
+    ): Result<Boolean> {
+
+        return try {
+
+            val sellerUid = firebaseUserUid
+                ?: return Result.failure(
+                    Exception("Usuário não autenticado.")
+                )
+
+            firestore
+                .collection("sellers")
+                .document(sellerUid)
+                .update("ownerId", ownerCode.ownerId)
+                .await()
+
+            Log.d(
+                "OwnerCodeRepository",
+                "Seller vinculado ao owner: ${ownerCode.ownerId}"
+            )
+
+            Result.success(true)
 
         } catch (e: Exception) {
             Result.failure(e)

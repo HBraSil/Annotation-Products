@@ -21,29 +21,38 @@ import androidx.navigation.navArgument
 import com.example.anotafacil.presentation.AccountTestScreen
 import com.example.anotafacil.presentation.LastScreenViewModel
 import com.example.anotafacil.presentation.onboarding.verification_code.VerificationCodeScreen
-import com.example.anotafacil.presentation.onboarding.InitialScreen
+import com.example.anotafacil.presentation.onboarding.RoleSectionScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
 import com.example.anotafacil.ui.components.AnimatedBottomBar
 import com.example.anotafacil.presentation.customer_detail.CustomerDetailScreen
-import com.example.anotafacil.presentation.customers.CustomersScreen
+import com.example.anotafacil.presentation.customers.OwnerCustomersScreen
+import com.example.anotafacil.presentation.customers.SellerCustomersScreen
 import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
-import com.example.anotafacil.presentation.home.HomeScreen
+import com.example.anotafacil.presentation.home.OwnerHomeScreen
+import com.example.anotafacil.presentation.home.SellerHomeScreen
 import com.example.anotafacil.presentation.new_purchase.NewPurchaseScreen
+import com.example.anotafacil.presentation.onboarding.subscription.SubscriptionScreen
 import com.example.anotafacil.presentation.price_definition.PriceDefinitionScreen
 import com.example.anotafacil.presentation.profile.manage_sellers.ManageSellersScreen
 import com.example.anotafacil.presentation.profile.ProfileScreen
 import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
 
 enum class Screens(val route: String) {
-    INITIAL("initial"),
+    ROLE_SECTION("role_section"),
     LOGIN("login"),
     SIGN_UP("sign_up"),
+    SUBSCRIPTION("subscription"),
     CODE_VERIFICATION("code_verification"),
-    HOME("home"),
+
+    OWNER_HOME("owner_home"),
+    SELLER_HOME("seller_home"),
+
+    OWNER_CUSTOMERS("owner_customers"),
+    SELLER_CUSTOMERS("seller_customers"),
+
     SALES_OVERVIEW("sales_overview"),
     CUSTOMER_DETAIL("customer_detail"),
-    CUSTOMERS("customers"),
     NEW_PURCHASE("new_purchase"),
     PRICE_DEFINITION("price_definition"),
     PURCHASE_HISTORY("purchase_history"),
@@ -64,7 +73,7 @@ fun ProductsAnnotationApp(startDestination: String) {
     Scaffold(
         bottomBar = {
             if (
-                backStackRoute == Screens.HOME.route ||
+                backStackRoute == Screens.OWNER_HOME.route ||
                 backStackRoute == Screens.SALES_OVERVIEW.route ||
                 backStackRoute == Screens.PROFILE.route ||
                 backStackRoute == Screens.PRICE_DEFINITION.route
@@ -73,7 +82,7 @@ fun ProductsAnnotationApp(startDestination: String) {
                     currentRoute = backStackRoute,
                     onItemClick = { route ->
                         navController.navigate(route) {
-                            popUpTo(Screens.HOME.route) { inclusive = false }
+                            popUpTo(Screens.OWNER_HOME.route) { inclusive = false }
                             launchSingleTop = true
                             restoreState = true
                         }
@@ -94,25 +103,14 @@ fun ProductsAnnotationApp(startDestination: String) {
 fun ProductsAnnotationApp(startDestination: String, navController: NavHostController, innerPadding: PaddingValues = PaddingValues()) {
     NavHost(
         navController = navController,
-        startDestination = Screens.HOME.route,
+        startDestination = Screens.LOGIN.route,
     ) {
-        composable(route = Screens.INITIAL.route) {
-            val lastScreenViewModel: LastScreenViewModel = hiltViewModel()
-
-            lastScreenViewModel.lastRoute(Screens.INITIAL.route)
-            InitialScreen {
-                when (it) {
-                    0 -> navController.navigate(Screens.HOME.route)
-                    1 -> navController.navigate(Screens.CODE_VERIFICATION.route)
-                }
-            }
-        }
 
         composable(route = Screens.LOGIN.route) {
             LoginScreen(
                 onLoginClick = {
-                    navController.navigate(Screens.INITIAL.route) {
-                        popUpTo(Screens.INITIAL.route) { inclusive = false }
+                    navController.navigate(Screens.ROLE_SECTION.route) {
+                        popUpTo(Screens.ROLE_SECTION.route) { inclusive = false }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -133,10 +131,38 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
             )
         }
 
+        composable(route = Screens.ROLE_SECTION.route) {
+            val lastScreenViewModel: LastScreenViewModel = hiltViewModel()
+
+            lastScreenViewModel.lastRoute(Screens.ROLE_SECTION.route)
+            RoleSectionScreen {
+                when (it) {
+                    0 -> navController.navigate(Screens.SUBSCRIPTION.route)
+                    1 -> navController.navigate(Screens.CODE_VERIFICATION.route)
+                }
+            }
+        }
+
+        composable(route = Screens.SUBSCRIPTION.route) {
+            SubscriptionScreen(
+                onBackClick = {
+                    navController.navigateUp()
+                },
+                goToHome = {
+                    navController.navigate(Screens.OWNER_HOME.route) {
+                        popUpTo(Screens.OWNER_HOME.route) { inclusive = false }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+
         composable(route = Screens.CODE_VERIFICATION.route) {
             VerificationCodeScreen(
                 onContinue = {
-                    navController.navigate(Screens.HOME.route) {
+                    navController.navigate(Screens.SELLER_HOME.route) {
+
                         popUpTo(Screens.CODE_VERIFICATION.route) { inclusive = false }
                         launchSingleTop = true
                         restoreState = true
@@ -150,28 +176,39 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
 
 
 
-        composable(route = Screens.HOME.route) { navBackStack ->
+        composable(route = Screens.OWNER_HOME.route) { navBackStack ->
             val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
             LaunchedEffect(Unit) {
-                lastScreenViewModel.lastRoute(Screens.HOME.route)
+                lastScreenViewModel.lastRoute(Screens.OWNER_HOME.route)
             }
 
-            HomeScreen(
+            OwnerHomeScreen(
                 innerPadding = innerPadding,
                 onCityClick = {
-                    navController.navigate("${Screens.CUSTOMERS.route}/${it.id}")
+                    navController.navigate("${Screens.OWNER_CUSTOMERS.route}/${it.id}")
                 }
             )
         }
 
-        composable(route = Screens.SALES_OVERVIEW.route) {
-            SalesOverviewScreen(
-                onBackClick = {}
+
+        composable(route = Screens.SELLER_HOME.route) { navBackStack ->
+            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
+            LaunchedEffect(Unit) {
+                lastScreenViewModel.lastRoute(Screens.SELLER_HOME.route)
+            }
+
+            SellerHomeScreen(
+                innerPadding = innerPadding,
+                onCityClick = {
+                    navController.navigate("${Screens.SELLER_CUSTOMERS.route}/${it.id}")
+                }
             )
         }
 
+
+
         composable(
-            route = "${Screens.CUSTOMERS.route}/{cityId}",
+            route = "${Screens.OWNER_CUSTOMERS.route}/{cityId}",
             arguments = listOf(navArgument("cityId") { type = NavType.StringType }),
             popExitTransition = { ExitTransition.None }
         ) { navBackStackEntry ->
@@ -180,17 +217,17 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
 
             LaunchedEffect(Unit){
                 currentCity?.let {
-                    lastScreenViewModel.lastRoute("${Screens.CUSTOMERS.route}/${currentCity}")
+                    lastScreenViewModel.lastRoute("${Screens.OWNER_CUSTOMERS.route}/${currentCity}")
                 }
             }
 
-            CustomersScreen(
+            OwnerCustomersScreen(
                 onBackClick = {
                     navController.navigateUp()
                 },
                 goToHomeScreen = {
-                    navController.navigate(Screens.HOME.route) {
-                        popUpTo(Screens.HOME.route) { inclusive = false }
+                    navController.navigate(Screens.OWNER_HOME.route) {
+                        popUpTo(Screens.OWNER_HOME.route) { inclusive = false }
                         launchSingleTop = true
                     }
                 },
@@ -202,6 +239,41 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
                 }
             )
         }
+
+        composable(
+            route = "${Screens.SELLER_CUSTOMERS.route}/{cityId}",
+            arguments = listOf(navArgument("cityId") { type = NavType.StringType }),
+            popExitTransition = { ExitTransition.None }
+        ) { navBackStackEntry ->
+            val currentCity = navBackStackEntry.arguments?.getString("cityId")
+            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStackEntry)
+
+            LaunchedEffect(Unit){
+                currentCity?.let {
+                    lastScreenViewModel.lastRoute("${Screens.SELLER_CUSTOMERS.route}/${currentCity}")
+                }
+            }
+
+            SellerCustomersScreen(
+                onBackClick = {
+                    navController.navigateUp()
+                },
+                goToHomeScreen = {
+                    navController.navigate(Screens.SELLER_HOME.route) {
+                        popUpTo(Screens.SELLER_HOME.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
+                },
+                goToCustomerDetailScreen = { uuid ->
+                    uuid?.let {
+                        println("UUID: $it")
+                        navController.navigate("${Screens.CUSTOMER_DETAIL.route}/$it")
+                    }
+                }
+            )
+        }
+
+
 
         composable(
             route = "${Screens.CUSTOMER_DETAIL.route}/{customerId}",
@@ -262,6 +334,14 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         ) {
             PurchaseHistoryScreen(onBackClick = { navController.navigateUp() })
         }
+
+
+        composable(route = Screens.SALES_OVERVIEW.route) {
+            SalesOverviewScreen(
+                onBackClick = {}
+            )
+        }
+
 
         composable(route = Screens.PROFILE.route) {
             ProfileScreen(

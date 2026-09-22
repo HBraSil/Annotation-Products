@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.example.anotafacil.data.dao.CityDao
 import com.example.anotafacil.data.dao.CustomerDao
+import com.example.anotafacil.data.dao.PaymentDao
 import com.example.anotafacil.data.dao.ProductDao
 import com.example.anotafacil.data.dao.PurchaseDao
 import com.example.anotafacil.data.dao.UserDao
@@ -27,7 +28,7 @@ import com.example.anotafacil.data.util.Converters
         CartItemEntity::class,
         PaymentEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -37,4 +38,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun productDao(): ProductDao
     abstract fun customerDao(): CustomerDao
     abstract fun purchaseDao(): PurchaseDao
+    abstract fun paymentDao(): PaymentDao
 }

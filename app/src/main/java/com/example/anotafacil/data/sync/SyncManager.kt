@@ -1,96 +1,50 @@
 package com.example.anotafacil.data.sync
 
 import android.util.Log
-import com.example.anotafacil.data.dao.PurchaseDao
-import com.example.anotafacil.domain.model.PurchaseWithItemsData
-import com.example.anotafacil.domain.model.SyncStatus
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
+import com.example.anotafacil.domain.repository.UserRepository
 import javax.inject.Inject
+import kotlin.uuid.Uuid
+
+
 
 class SyncManager @Inject constructor(
-    private val purchaseDao: PurchaseDao,
-    private val firestore: FirebaseFirestore
+    private val userRepository: UserRepository,
+    private val syncUploader: SyncUploader,
+    private val syncDownloader: SyncDownloader
 ) {
 
-    suspend fun sync(): Boolean = syncPurchases()
-
-
-    private suspend fun syncPurchases(): Boolean {
-
-        Log.d("SyncManager", "Iniciando sincronização de compras")
-        val purchases = purchaseDao.getPurchasesBySyncStatus(SyncStatus.PENDING)
-        Log.d("SyncManager", "Depois de getPurchasesBySyncStatus")
-
-        for (purchaseData in purchases) {
-
-            try {
-                syncPurchaseInFirestore(purchaseData)
-                Log.d(
-                    "SyncManager",
-                    "Compra sincronizada: ${purchaseData.purchase.id}"
-                )
-
-                val result = purchaseDao.updateSyncStatus(
-                    purchaseData.purchase.id,
-                    SyncStatus.SYNCED
-                )
-
-                Log.d(
-                    "SyncManager",
-                    "Compra sincronizada: ${purchaseData.purchase.id}"
-
-                )
-                if (result <= 0) {
-                    Log.e(
-                        "SyncManager",
-                        "Erro ao atualizar status da compra: $result"
-                    )
-                    return false
-                }
-            } catch (e: Exception) {
-
-                Log.e(
-                    "SyncManager",
-                    "Erro ao sincronizar compra: ${purchaseData.purchase.id}",
-                    e
-                )
+    suspend fun upload(): Boolean {
+        val ownerId = userRepository
+            .getCurrentOwnerId()
+            .getOrElse {
                 return false
             }
-        }
 
-        return true
+        return syncUploader.upload(ownerId)
     }
 
-    private suspend fun syncPurchaseInFirestore(
-        purchaseData: PurchaseWithItemsData
-    ) {
+    suspend fun downloadAll(): Boolean {
+        val ownerId = userRepository
+            .getCurrentOwnerId()
+            .getOrElse {
+                return false
+            }
 
-        val purchase = purchaseData.purchase
+        Log.d("SyncManager", "Downloading all data for owner: $ownerId")
 
-        val items = purchaseData.items.map { itemData ->
+        return syncDownloader.downloadAll(ownerId)
+    }
 
-            mapOf(
-                "productId" to itemData.cartItem.productId.toString(),
-                "quantity" to itemData.cartItem.quantity,
-                "unitPrice" to itemData.cartItem.unitPrice,
-                "subtotal" to itemData.cartItem.subtotal
-            )
-        }
+    suspend fun downloadCity(cityId: Uuid): Boolean {
+        val ownerId = userRepository
+            .getCurrentOwnerId()
+            .getOrElse {
+                return false
+            }
 
-        val purchaseDataMap = mapOf(
-            "customerId" to purchase.customerId.toString(),
-            "purchaseDate" to purchase.purchaseDate,
-            "totalAmount" to purchase.totalAmount,
-            "items" to items
+        return syncDownloader.downloadCityData(
+            ownerId = ownerId,
+            cityId = cityId
         )
-
-        firestore
-            .collection("owners")
-            .document(purchase.ownerId)
-            .collection("purchases")
-            .document(purchase.id.toString())
-            .set(purchaseDataMap)
-            .await()
     }
 }

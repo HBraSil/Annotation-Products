@@ -13,6 +13,7 @@ data class User(
 
 fun User.toEntity() = UserEntity(
     uid = name,
+    email = email,
     ownerId = ownerId,
     role = role
 )

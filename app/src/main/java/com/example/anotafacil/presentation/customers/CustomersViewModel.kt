@@ -9,6 +9,7 @@ import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.CustomerRepository
+import com.example.anotafacil.domain.usecase.RefreshCustomersUseCase
 import com.example.anotafacil.ui.util.FormatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
@@ -32,6 +34,7 @@ class CustomersViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val customerRepository: CustomerRepository,
     private val cityRepository: CityRepository,
+    private val refreshCustomersUseCase: RefreshCustomersUseCase
 ) : ViewModel() {
 
     private val _customerUiState = MutableStateFlow(CustomersUiState())
@@ -64,6 +67,23 @@ class CustomersViewModel @Inject constructor(
             is CustomersUiEvent.OnDismissOverlayCreatedCustomer -> closeModalAndOverlayCreatedCustomer()
         }
 
+    }
+
+
+    fun refreshCustomers() {
+        viewModelScope.launch {
+            val cityId = cityIdFlow.first()
+
+            val success = refreshCustomersUseCase(cityId)
+
+            if (success) {
+                getCustomersList()
+            } else {
+                _customerUiState.update {
+                    it.copy(errorMessage = "Erro ao atualizar dados")
+                }
+            }
+        }
     }
 
 

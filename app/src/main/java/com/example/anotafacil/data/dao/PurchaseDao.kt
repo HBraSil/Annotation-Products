@@ -2,6 +2,7 @@ package com.example.anotafacil.data.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
@@ -17,7 +18,7 @@ interface PurchaseDao {
     @Update
     suspend fun updatePurchase(purchase: PurchaseEntity): Int
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addPurchase(purchase: PurchaseEntity)
 
     @Transaction
@@ -86,4 +87,13 @@ interface PurchaseDao {
     suspend fun getPurchasesBySyncStatus(
         status: SyncStatus
     ): List<PurchaseWithItemsData>
+
+    @Query("""
+    SELECT *
+    FROM purchase
+    WHERE id = :purchaseId
+""")
+    suspend fun getPurchaseById(
+        purchaseId: Uuid
+    ): PurchaseEntity?
 }

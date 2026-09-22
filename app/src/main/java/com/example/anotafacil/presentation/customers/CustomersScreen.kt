@@ -56,7 +56,7 @@ import kotlin.uuid.Uuid
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun CustomersScreen(
+fun OwnerCustomersScreen(
     customersViewModel: CustomersViewModel = hiltViewModel(),
     goToHomeScreen: () -> Unit = {},
     onBackClick: () -> Unit = {},
@@ -70,14 +70,42 @@ fun CustomersScreen(
     }
 
     ClientManagementContent(
-        currentCity = customerUiState.currentCity ?: City(),
         customerUiState = customerUiState,
+        currentCity = customerUiState.currentCity ?: City(),
         onBackClick = onBackClick,
         goToCustomerDetailScreen = goToCustomerDetailScreen,
-        onCustomerUiEvent = customersViewModel::customersEvent
-
+        onCustomerUiEvent = customersViewModel::customersEvent,
+        onRefreshClick = customersViewModel::refreshCustomers
     )
 }
+
+
+@RequiresApi(Build.VERSION_CODES.O)
+@Composable
+fun SellerCustomersScreen(
+    customersViewModel: CustomersViewModel = hiltViewModel(),
+    goToHomeScreen: () -> Unit = {},
+    onBackClick: () -> Unit = {},
+    goToCustomerDetailScreen: (Uuid?) -> Unit = {},
+) {
+
+    val customerUiState by customersViewModel.customerUiState.collectAsState()
+
+    BackHandler {
+        goToHomeScreen()
+    }
+
+    ClientManagementContent(
+        customerUiState = customerUiState,
+        currentCity = customerUiState.currentCity ?: City(),
+        onBackClick = onBackClick,
+        goToCustomerDetailScreen = goToCustomerDetailScreen,
+        onCustomerUiEvent = customersViewModel::customersEvent,
+        onRefreshClick = customersViewModel::refreshCustomers
+    )
+}
+
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,7 +115,8 @@ fun ClientManagementContent(
     currentCity: City = City(),
     onBackClick: () -> Unit = {},
     goToCustomerDetailScreen: (Uuid?) -> Unit = {},
-    onCustomerUiEvent: (CustomersUiEvent) -> Unit = {}
+    onCustomerUiEvent: (CustomersUiEvent) -> Unit = {},
+    onRefreshClick: () -> Unit = {}
 ) {
 
     Scaffold(
@@ -140,7 +169,9 @@ fun ClientManagementContent(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
-                ServerStatus()
+                ServerStatus(
+                    onRefreshClick = onRefreshClick
+                )
             }
 
 

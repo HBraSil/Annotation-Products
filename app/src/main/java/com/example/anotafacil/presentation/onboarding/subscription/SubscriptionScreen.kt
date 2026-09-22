@@ -1,4 +1,4 @@
-package com.example.anotafacil.presentation.onboarding.owner_paywall
+package com.example.anotafacil.presentation.onboarding.subscription
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -55,17 +55,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 
-private val PrimaryBlue = Color(0xFF1029D8)
-private val BrightBlue = Color(0xFF2145E8)
 private val TextPrimary = Color(0xFF111111)
 private val TextSecondary = Color(0xFF606575)
 private val Background = Color(0xFFF9F9FA)
 
 @Composable
-fun OwnerUpgradeScreen(
+fun SubscriptionScreen(
+    subscriptionViewModel: SubscriptionViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
-    onPaymentClick: () -> Unit = {}
+    goToHome: () -> Unit = {}
 ) {
     var selectedPayment by remember {
         mutableStateOf(PaymentMethod.PIX)
@@ -92,7 +92,7 @@ fun OwnerUpgradeScreen(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFFF1F1F2))
+                    .background(MaterialTheme.colorScheme.onPrimary)
             ) {
                 Icon(
                     imageVector = Icons.Default.ArrowBackIosNew,
@@ -102,9 +102,6 @@ fun OwnerUpgradeScreen(
             }
         }
 
-        /*
-         * CONTENT
-         */
         Column(
             modifier = Modifier
                 .weight(1f)
@@ -119,9 +116,6 @@ fun OwnerUpgradeScreen(
                 modifier = Modifier.height(8.dp)
             )
 
-            /*
-             * HERO
-             */
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -153,7 +147,7 @@ fun OwnerUpgradeScreen(
                         modifier = Modifier
                             .size(54.dp)
                             .clip(CircleShape)
-                            .background(BrightBlue),
+                            .background(MaterialTheme.colorScheme.primary),
                         contentAlignment = Alignment.Center
                     ) {
 
@@ -180,7 +174,7 @@ fun OwnerUpgradeScreen(
                                 horizontal = 16.dp,
                                 vertical = 7.dp
                             ),
-                            color = PrimaryBlue,
+                            color = MaterialTheme.colorScheme.primary,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
@@ -214,13 +208,8 @@ fun OwnerUpgradeScreen(
                 }
             }
 
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
+            Spacer(modifier = Modifier.height(18.dp))
 
-            /*
-             * PRICE CARD
-             */
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(20.dp),
@@ -264,7 +253,7 @@ fun OwnerUpgradeScreen(
                             imageVector = Icons.Default.Lock,
                             contentDescription = null,
                             modifier = Modifier.size(13.dp),
-                            tint = BrightBlue
+                            tint = MaterialTheme.colorScheme.primary
                         )
 
                         Spacer(
@@ -274,7 +263,7 @@ fun OwnerUpgradeScreen(
                         Text(
                             text = "Vitalício",
                             fontSize = 12.sp,
-                            color = BrightBlue
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
 
@@ -290,7 +279,7 @@ fun OwnerUpgradeScreen(
                             text = "R$",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = PrimaryBlue,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(
                                 bottom = 9.dp
                             )
@@ -364,7 +353,7 @@ fun OwnerUpgradeScreen(
                                 imageVector = Icons.Default.Check,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp),
-                                tint = BrightBlue
+                                tint = MaterialTheme.colorScheme.primary
                             )
 
                             Spacer(
@@ -387,7 +376,7 @@ fun OwnerUpgradeScreen(
                                 fontSize = 12.sp,
                                 lineHeight = 17.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = PrimaryBlue,
+                                color = MaterialTheme.colorScheme.primary,
                                 textAlign = TextAlign.End
                             )
                         }
@@ -424,7 +413,7 @@ fun OwnerUpgradeScreen(
                     text = "4 recursos\nchave",
                     fontSize = 12.sp,
                     lineHeight = 17.sp,
-                    color = PrimaryBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     textAlign = TextAlign.End
                 )
             }
@@ -542,13 +531,16 @@ fun OwnerUpgradeScreen(
              * PAYMENT BUTTON
              */
             Button(
-                onClick = onPaymentClick,
+                onClick = {
+                    goToHome()
+                    subscriptionViewModel.finalizeSubscription()
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp),
                 shape = RoundedCornerShape(24.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryBlue
+                    containerColor = MaterialTheme.colorScheme.primary
                 )
             ) {
 
@@ -647,7 +639,7 @@ private fun FeatureCard(
                     imageVector = icon,
                     contentDescription = null,
                     modifier = Modifier.size(19.dp),
-                    tint = PrimaryBlue
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -698,7 +690,7 @@ private fun PaymentOption(
             .border(
                 width = if (selected) 1.5.dp else 1.dp,
                 color = if (selected) {
-                    PrimaryBlue
+                    MaterialTheme.colorScheme.primary
                 } else {
                     Color.Transparent
                 },
@@ -736,7 +728,7 @@ private fun PaymentOption(
                     contentDescription = null,
                     modifier = Modifier.size(16.dp),
                     tint = if (selected) {
-                        PrimaryBlue
+                        MaterialTheme.colorScheme.primary
                     } else {
                         Color(0xFF454545)
                     }
@@ -758,7 +750,7 @@ private fun PaymentOption(
                         FontWeight.Normal
                     },
                     color = if (selected) {
-                        PrimaryBlue
+                        MaterialTheme.colorScheme.primary
                     } else {
                         TextPrimary
                     }
@@ -768,7 +760,7 @@ private fun PaymentOption(
                     text = subtitle,
                     fontSize = 11.sp,
                     color = if (selected) {
-                        PrimaryBlue
+                        MaterialTheme.colorScheme.primary
                     } else {
                         TextSecondary
                     }
@@ -784,8 +776,8 @@ private fun PaymentOption(
     heightDp = 1600
 )
 @Composable
-private fun OwnerUpgradeScreenPreview() {
+private fun SubscriptionScreenPreview() {
     MaterialTheme {
-        OwnerUpgradeScreen()
+        SubscriptionScreen()
     }
 }

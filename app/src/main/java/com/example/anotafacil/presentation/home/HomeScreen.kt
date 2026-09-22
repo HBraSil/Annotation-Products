@@ -17,20 +17,25 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Logout
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -49,12 +54,42 @@ import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
 
 
 @Composable
-fun HomeScreen(
+fun OwnerHomeScreen(
     innerPadding: PaddingValues = PaddingValues(),
     homeViewModel: HomeViewModel = hiltViewModel(),
     onCityClick: (City) -> Unit,
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
+
+    LaunchedEffect(Unit) {
+        homeViewModel.loadOwnerUser()
+    }
+
+    HomeContent(
+        homeState = homeUiState,
+        innerPadding = innerPadding,
+        isOwner = true,
+        onSearchChange = homeViewModel::updateSearchQuery,
+        addCity = homeViewModel::addCity,
+        onCityClick = onCityClick,
+        closeSuccessDialog = homeViewModel::closeSuccessDialog,
+        refreshHome = homeViewModel::refreshHome,
+    )
+}
+
+
+@Composable
+fun SellerHomeScreen(
+    innerPadding: PaddingValues = PaddingValues(),
+    homeViewModel: HomeViewModel = hiltViewModel(),
+    onCityClick: (City) -> Unit,
+) {
+    val homeUiState by homeViewModel.uiState.collectAsState()
+
+
+    LaunchedEffect(Unit) {
+        homeViewModel.loadSellerUser()
+    }
 
     HomeContent(
         homeState = homeUiState,
@@ -63,6 +98,7 @@ fun HomeScreen(
         addCity = homeViewModel::addCity,
         onCityClick = onCityClick,
         closeSuccessDialog = homeViewModel::closeSuccessDialog,
+        refreshHome = homeViewModel::refreshHome,
     )
 }
 
@@ -73,125 +109,151 @@ fun HomeScreen(
 fun HomeContent(
     homeState: HomeState,
     innerPadding: PaddingValues = PaddingValues(),
+    isOwner: Boolean = false,
     onSearchChange: (String) -> Unit = {},
     addCity: (String) -> Unit = {},
     onCityClick: (City) -> Unit = {},
     closeSuccessDialog: () -> Unit = {},
+    refreshHome: () -> Unit = {},
 ) {
     var showAddCityDialog by rememberSaveable { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding)
-            .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 20.dp)
+
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            refreshHome()
+            isRefreshing = false
+        },
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .background(MaterialTheme.colorScheme.background)
+                .padding(horizontal = 20.dp)
         ) {
-            Text(
-                text = homeState.user.name,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 4.dp),
-                maxLines = 1,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            TextButton(
-                onClick = { showAddCityDialog = true },
-                modifier = Modifier.padding(start = 8.dp).align(Alignment.CenterVertically)
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Add,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary
-                )
                 Text(
-                    text = "Adicionar Cidade",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    text = homeState.user.name,
+                    modifier = Modifier
+                        .weight(1f)
+                        .padding(end = 4.dp),
+                    maxLines = 1,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    overflow = TextOverflow.Ellipsis,
                 )
-            }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        AnnotationProductsSearchBar(
-            text = homeState.searchQuery,
-            placeholder = "Pesquisar cidade",
-            onSearchQueryChange = onSearchChange
-        )
-
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            item {
-                Spacer(modifier = Modifier.height(30.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-
-                    Text(
-                        text = "Cidades",
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-
-                    Text(
-                        text = "${homeState.cities.size} resultados",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            item {
-                if (homeState.cities.isEmpty()) {
-                    AnnotationProductsNothingToShow(
-                        text = "Nenhum cidade encontrada",
-                        modifier = Modifier.padding(vertical = 20.dp)
-                    )
+                if (isOwner) {
+                    TextButton(
+                        onClick = { showAddCityDialog = true },
+                        modifier = Modifier.padding(start = 8.dp).align(Alignment.CenterVertically)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Adicionar Cidade",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 } else {
-                    homeState.cities.forEach { city ->
-                        Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
-                        CityCard(
-                            city = city,
-                            onClick = { onCityClick(city) },
-                            modifier = Modifier.padding(vertical = 8.dp)
+                    IconButton(
+                        onClick = {},
+                        modifier = Modifier.padding(start = 8.dp).align(Alignment.CenterVertically)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Logout,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            AnnotationProductsSearchBar(
+                text = homeState.searchQuery,
+                placeholder = "Pesquisar cidade",
+                onSearchQueryChange = onSearchChange
+            )
+
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(30.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+
+                        Text(
+                            text = "Cidades",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        Text(
+                            text = "${homeState.cities.size} resultados",
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
+
+                item {
+                    if (homeState.cities.isEmpty()) {
+                        AnnotationProductsNothingToShow(
+                            text = "Nenhum cidade encontrada",
+                            modifier = Modifier.padding(vertical = 20.dp)
+                        )
+                    } else {
+                        homeState.cities.forEach { city ->
+                            Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
+                            CityCard(
+                                city = city,
+                                onClick = { onCityClick(city) },
+                                modifier = Modifier.padding(vertical = 8.dp)
+                            )
+                        }
+                    }
+                }
+            }
         }
-    }
 
-    if (showAddCityDialog) {
-        ModalAddCityScreen(
-            onBackClick = { showAddCityDialog = false },
-            onSaveClick = { cityName ->
-                addCity(cityName)
-            }
-        )
-    }
+        if (showAddCityDialog) {
+            ModalAddCityScreen(
+                onBackClick = { showAddCityDialog = false },
+                onSaveClick = { cityName ->
+                    addCity(cityName)
+                }
+            )
+        }
 
-    if (homeState.success) {
-        AnnotationProductsSuccessDialog(
-            text = "Cidade adicionada com sucesso!",
-            onDismiss = {
-                showAddCityDialog = false
-                closeSuccessDialog()
-            }
-        )
+        if (homeState.success) {
+            AnnotationProductsSuccessDialog(
+                text = "Cidade adicionada com sucesso!",
+                onDismiss = {
+                    showAddCityDialog = false
+                    closeSuccessDialog()
+                }
+            )
+        }
     }
 }
 
@@ -289,7 +351,7 @@ private fun HomeScreenPreview() {
         HomeContent(
             homeState = HomeState(
                 user = User(name = "João"),
-            ),
+            )
         )
     }
 }

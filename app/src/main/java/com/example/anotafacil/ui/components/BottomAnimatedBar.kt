@@ -55,7 +55,7 @@ fun AnimatedBottomBar(
             iconSelected = Icons.Default.EditNote,
             iconUnselected = Icons.Outlined.EditNote,
             label = "Home",
-            router = Screens.HOME.route
+            router = Screens.OWNER_HOME.route
         ),
         BottomBarItem(
             iconSelected = Icons.Default.QueryStats,

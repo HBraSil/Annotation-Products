@@ -56,4 +56,7 @@ object DatabaseModule {
 
     @Provides
     fun provideCustomerDao(database: AppDatabase) = database.customerDao()
+
+    @Provides
+    fun providePaymentDao(database: AppDatabase) = database.paymentDao()
 }

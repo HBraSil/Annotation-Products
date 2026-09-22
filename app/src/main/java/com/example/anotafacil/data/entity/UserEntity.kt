@@ -9,6 +9,7 @@ import com.example.anotafacil.domain.model.UserRole
 data class UserEntity(
     @PrimaryKey
     val uid: String,
+    val email: String,
     val ownerId: String?,
     val role: UserRole
 )

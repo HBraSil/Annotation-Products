@@ -2,8 +2,10 @@ package com.example.anotafacil.data.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.anotafacil.data.entity.CityEntity
+import com.example.anotafacil.domain.model.SyncStatus
 import com.example.anotafacil.presentation.customers.MonthlySalesSummary
 import kotlinx.coroutines.flow.Flow
 import kotlin.uuid.Uuid
@@ -13,8 +15,6 @@ interface CityDao {
     @Query("SELECT * FROM city")
     fun getAll(): Flow<List<CityEntity>>
 
-    @Query("SELECT * FROM city WHERE id = :id")
-    suspend fun getById(id: Long): CityEntity?
 
     @Query("SELECT * FROM city WHERE id = :id")
     suspend fun getCity(id: Uuid): CityEntity?
@@ -48,8 +48,28 @@ interface CityDao {
 """)
     fun searchCities(query: String): Flow<List<CityEntity>>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun addCity(city: CityEntity): Long
+
+
+    @Query("""
+        SELECT *
+        FROM city
+        WHERE syncStatus = :status
+    """)
+    suspend fun getCitiesBySyncStatus(
+        status: SyncStatus
+    ): List<CityEntity>
+
+    @Query("""
+        UPDATE city
+        SET syncStatus = :status
+        WHERE id = :cityId
+    """)
+    suspend fun updateSyncStatus(
+        cityId: Uuid,
+        status: SyncStatus
+    ): Int
 
 
     @Query("""SELECT

@@ -17,146 +17,170 @@ class UserRepositoryImpl @Inject constructor(
     private val userDao: UserDao
 ): UserRepository {
 
-    override suspend fun getUser(): Result<User?> {
+    private val firebaseUserUid = auth.currentUser?.uid
+
+    override suspend fun getSellerUser(): Result<User?> {
 
         val firebaseUser = auth.currentUser
             ?: return Result.success(null)
 
         return try {
 
-            Log.d(
-                "UserRepository",
-                "Buscando usuário online. UID: ${firebaseUser.uid}"
-            )
-
-            var document = firestore
+            val document = firestore
                 .collection("sellers")
                 .document(firebaseUser.uid)
                 .get()
                 .await()
 
-            if (document.exists()) {
-
-                Log.d(
-                    "UserRepository",
-                    "Usuário encontrado em sellers"
-                )
-
-                val ownerData = document.data?.toMutableMap()?.apply {
-                    this["role"] = UserRole.OWNER
-                }
-
-                if (ownerData != null) {
-                    firestore
-                        .collection("owners")
-                        .document(firebaseUser.uid)
-                        .set(ownerData)
-                        .await()
-                }
-
-                firestore
-                    .collection("sellers")
-                    .document(firebaseUser.uid)
-                    .delete()
-                    .await()
-
-                document = firestore
-                    .collection("owners")
-                    .document(firebaseUser.uid)
-                    .get()
-                    .await()
-
-            } else {
-
-                Log.d(
-                    "UserRepository",
-                    "Usuário não encontrado em sellers, buscando em owners"
-                )
-
-                document = firestore
-                    .collection("owners")
-                    .document(firebaseUser.uid)
-                    .get()
-                    .await()
+            if (!document.exists()) {
+                return Result.success(null)
             }
 
             val user = document.toObject(User::class.java)
-
-            if (user != null) {
-                userDao.saveUser(
-                    UserEntity(
-                        uid = firebaseUser.uid,
-                        ownerId = user.ownerId,
-                        role = user.role
-                    )
-                )
-            }
+                ?: return Result.success(null)
 
             Log.d(
                 "UserRepository",
-                "Usuário encontrado: $user"
+                "Seller: $user"
+            )
+
+            saveUserLocally(
+                uid = firebaseUser.uid,
+                user = user
             )
 
             Result.success(user)
+        } catch (e: Exception) {
+
+            Log.d(
+                "UserRepository",
+                "Erro ao buscar seller.",
+                e
+            )
+
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getOwnerUser(): Result<User?> {
+
+        val firebaseUser = auth.currentUser
+            ?: return Result.success(null)
+
+        return try {
+
+            val document = firestore
+                .collection("owners")
+                .document(firebaseUser.uid)
+                .get()
+                .await()
+
+            if (!document.exists()) {
+                return Result.success(null)
+            }
+
+            val user = document.toObject(User::class.java)
+                ?: return Result.success(null)
+
+            saveUserLocally(
+                uid = firebaseUser.uid,
+                user = user
+            )
+
+
+            Result.success(
+                document.toObject(User::class.java)
+            )
 
         } catch (e: Exception) {
 
             Log.d(
                 "UserRepository",
-                "Falha ao buscar usuário online. Tentando Room.",
+                "Erro ao buscar owner.",
                 e
             )
 
-            val localUser = userDao.getUser(firebaseUser.uid)
-
-            if (localUser != null) {
-                Result.success(
-                    User(
-                        ownerId = localUser.ownerId,
-                        role = localUser.role
-                    )
-                )
-            } else {
-                Result.failure(e)
-            }
+            Result.failure(e)
         }
     }
 
 
-    override suspend fun getCurrentOwnerId(): Result<String> {
-
-        val firebaseUser = auth.currentUser?.uid
-            ?: return Result.failure(Exception("Usuário não está logado"))
-
-        Log.d(
-            "UserRepository",
-            "Chegou aqui antes de UserResult"
-        )
-        val userResult = getUser()
-
-        Log.d(
-            "UserRepository",
-            "Depois de UserResult"
-        )
-
-        if (userResult.isFailure) {
-            return Result.failure(
-                userResult.exceptionOrNull()
-                    ?: Exception("Erro ao obter usuário")
+    private suspend fun saveUserLocally(
+        uid: String,
+        user: User
+    ) {
+        userDao.saveUserDao(
+            UserEntity(
+                uid = uid,
+                email = user.email,
+                ownerId = user.ownerId,
+                role = user.role
             )
+        )
+    }
+
+
+    override suspend fun getCurrentOwnerId(): Result<String> {
+        val firebaseUser = auth.currentUser
+            ?: return Result.failure(
+                Exception("Usuário não está logado")
+            )
+
+        val userDaoResult = userDao.getUserDao(firebaseUser.uid)
+
+
+        return if (userDaoResult?.ownerId == null) {
+            val ownerId = userDaoResult?.uid
+                ?: return Result.failure(
+                    Exception("Este vendedor não possui um proprietário vinculado")
+                )
+
+            Log.d(
+                "UserRepository",
+                "OwnerId não encontrado no banco local, retornando o uid do usuário: $ownerId"
+            )
+            Result.success(ownerId)
+        } else {
+            Log.d(
+                "UserRepository",
+                "OwnerId encontrado no banco local: ${userDaoResult.ownerId}"
+            )
+            Result.success(userDaoResult.ownerId)
         }
+    }
 
-        val user = userResult.getOrNull()
-            ?: return Result.failure(Exception("Usuário não encontrado"))
 
-        return when (user.role) {
+    override suspend fun becomeOwner(): Result<Boolean> {
 
-            UserRole.OWNER ->
-                Result.success(firebaseUser)
+        val firebaseUser = auth.currentUser
+            ?: return Result.failure(
+                Exception("Usuário não autenticado")
+            )
 
-            UserRole.SELLER ->
-                Result.success(user.ownerId!!)
+        return try {
 
+            val owner = User(
+                name = firebaseUser.displayName ?: "",
+                email = firebaseUser.email ?: "",
+                role = UserRole.OWNER
+            )
+
+            firestore
+                .collection("owners")
+                .document(firebaseUser.uid)
+                .set(owner)
+                .await()
+
+            firestore
+                .collection("sellers")
+                .document(firebaseUser.uid)
+                .delete()
+                .await()
+
+            Result.success(true)
+
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

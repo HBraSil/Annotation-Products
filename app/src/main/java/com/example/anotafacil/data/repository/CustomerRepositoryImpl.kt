@@ -3,6 +3,7 @@ package com.example.anotafacil.data.repository
 import android.util.Log
 import androidx.room.withTransaction
 import com.example.anotafacil.data.dao.CustomerDao
+import com.example.anotafacil.data.dao.PaymentDao
 import com.example.anotafacil.data.dao.PurchaseDao
 import com.example.anotafacil.data.entity.toDomain
 import com.example.anotafacil.data.network.AppDatabase
@@ -26,6 +27,7 @@ class CustomerRepositoryImpl @Inject constructor(
     private val appDatabase: AppDatabase,
     private val customerDao: CustomerDao,
     private val purchaseDao: PurchaseDao,
+    private val paymentDao: PaymentDao
 ) : CustomerRepository {
     override fun getCustomer(id: Uuid?): Flow<Customer?> {
         return customerDao.getCustomer(id).map {
@@ -76,7 +78,7 @@ class CustomerRepositoryImpl @Inject constructor(
     ): Pair<Int, Long> {
         return Pair(
             customerDao.updateCustomer(customer.toCustomerEntity()),
-            customerDao.insertPayment(payment.toEntity())
+            paymentDao.insertPayment(payment.toEntity())
         )
     }
 
@@ -100,7 +102,7 @@ class CustomerRepositoryImpl @Inject constructor(
     }
 
     override fun getAllPayments(customerId: Uuid?): Flow<List<Payment>> {
-        return customerDao.getPayments(customerId).map { paymentList ->
+        return paymentDao.getPayments(customerId).map { paymentList ->
             Log.d("CustomerRepositoryImpl", "getPayments: $paymentList")
             paymentList.map { it.toDomain() }
         }
@@ -120,7 +122,7 @@ class CustomerRepositoryImpl @Inject constructor(
         return appDatabase.withTransaction {
             val customerRows = customerDao.updateCustomer(customerEntity)
             val purchaseRow = purchaseDao.updatePurchase(purchaseEntity)
-            val paymentId = customerDao.insertPayment(partialPaymentEntity)
+            val paymentId = paymentDao.insertPayment(partialPaymentEntity)
 
             customerRows > 0 && purchaseRow > 0 && paymentId > 0
         }

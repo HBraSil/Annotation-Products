@@ -8,6 +8,6 @@ interface OwnerCodeRepository {
 
     suspend fun getActiveCode(): Result<OwnerCode>
 
-    suspend fun verifyCode(code: String, name: String): Result<Boolean>
+    suspend fun verifyCode(code: String): Result<Boolean>
 
 }
