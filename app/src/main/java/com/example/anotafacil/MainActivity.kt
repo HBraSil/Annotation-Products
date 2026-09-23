@@ -2,6 +2,7 @@ package com.hilquias.anotafacil
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -47,6 +48,13 @@ class MainActivity : ComponentActivity() {
                     ProductsAnnotationApp(lastScreen)
                 }
             }
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        FirebaseAuth.getInstance().addAuthStateListener { auth ->
+            Log.d("MainActivity", "onStart: ${auth.currentUser}")
         }
     }
 }

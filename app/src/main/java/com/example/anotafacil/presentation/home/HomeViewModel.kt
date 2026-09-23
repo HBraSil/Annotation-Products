@@ -97,15 +97,25 @@ class HomeViewModel @Inject constructor(
         }
     }
     fun refreshHome() {
+        _homeUiState.update { it.copy(isSyncing = true) }
+
         viewModelScope.launch {
             val result = refreshHomeUseCase()
-            Log.d("HomeViewModel", "refreshHome: $result")
 
             if(result) {
                 searchCity()
+                _homeUiState.update {
+                    it.copy(
+                        error = null,
+                        isSyncing = false
+                    )
+                }
             } else {
                 _homeUiState.update {
-                    it.copy(error = "Erro ao atualizar dados")
+                    it.copy(
+                        error = "Erro ao atualizar dados",
+                        isSyncing = false
+                    )
                 }
             }
         }
@@ -151,5 +161,6 @@ data class HomeState(
     val searchQuery: String = "",
     val cities: List<City> = emptyList(),
     val success: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val isSyncing: Boolean = false,
 )

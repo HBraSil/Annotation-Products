@@ -1,6 +1,11 @@
 package com.example.anotafacil.presentation.profile
 
 import android.widget.Toast
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -42,11 +47,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,9 +62,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = hiltViewModel(),
-    syncStatusText: String = "Dados sincronizados há 5 min",
-    appVersion: String = "v2.4",
-    goToMyProfile: () -> Unit = {},
+    goToAccountProfile: () -> Unit = {},
     onPriceTableClick: () -> Unit = {},
     onManageSellersClick: () -> Unit = {},
 ) {
@@ -68,9 +73,10 @@ fun ProfileScreen(
         onManageSellersClick = onManageSellersClick,
         onSyncCloudClick = profileViewModel::onSyncCloudClick,
         onSignOutClick = { profileViewModel.signOut() },
-        goToMyProfile = goToMyProfile
+        goToAccountProfile = goToAccountProfile
     )
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,9 +86,10 @@ fun ProfileContent(
     onManageSellersClick: () -> Unit,
     onSyncCloudClick: () -> Unit,
     onSignOutClick: () -> Unit,
-    goToMyProfile: () -> Unit = {}
+    goToAccountProfile: () -> Unit = {},
 ) {
     val context = LocalContext.current
+
 
     LaunchedEffect(uiState.success) {
         if (uiState.success) {
@@ -123,7 +130,7 @@ fun ProfileContent(
                 name = uiState.user?.name ?: "Sem nome",
                 email = uiState.user?.email ?: "email@gmail.com",
                 role = uiState.user?.role?.name ?: "No",
-                goToMyProfile = { /*TODO*/ }
+                goToAccountProfile = goToAccountProfile
             )
 
             Text(
@@ -134,19 +141,10 @@ fun ProfileContent(
                 modifier = Modifier.padding(top = 8.dp, start = 4.dp)
             )
 
-            Button(
-                onClick = {},
-                enabled = uiState.isSyncing,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-            ){
-                Text(text = if (uiState.isSyncing) "Sincronizando..." else "Sincronizado")
-            }
 
             ManagementOptionCard(
                 title = "Tabela de Preços",
-                subtitle = "Ajustar valores de sabão, desinfetante, etc.",
+                subtitle = "Definir preços dos produtos",
                 icon = Icons.Default.LocalOffer,
                 iconContainerColor = MaterialTheme.colorScheme.surface.copy(0.2f),
                 iconTintColor = MaterialTheme.colorScheme.primaryContainer.copy(0.8f),
@@ -155,7 +153,7 @@ fun ProfileContent(
 
             ManagementOptionCard(
                 title = "Equipe & Códigos de Acesso",
-                subtitle = "Gerenciar PINs, autorizações e equipe",
+                subtitle = "Gerar código de acesso e gerenciar vendedores",
                 icon = Icons.Default.Group,
                 iconContainerColor = MaterialTheme.colorScheme.secondary.copy(0.2f),
                 iconTintColor = MaterialTheme.colorScheme.onSecondary,
@@ -164,13 +162,23 @@ fun ProfileContent(
 
             ManagementOptionCard(
                 title = "Sincronizar Dados",
-                subtitle = "Conexão com internet",
-                statusDotColor = Color(0xFF10B981),
+                statusDotColor = MaterialTheme.colorScheme.surface,
                 icon = Icons.Default.Cloud,
                 iconContainerColor = MaterialTheme.colorScheme.onSecondary.copy(0.2f, blue = 0.8f),
                 iconTintColor = MaterialTheme.colorScheme.primary,
                 showTrailingIcon = false,
-                onClick = onSyncCloudClick
+                onClick = onSyncCloudClick,
+                subtitleContent = {
+                    if (uiState.isSyncing) {
+                        LoadingDots(color = MaterialTheme.colorScheme.onSecondary)
+                    } else {
+                        Text(
+                            text = "Conexão com internet",
+                            fontSize = 12.sp,
+                            color = Color(0xFF10B981)
+                        )
+                    }
+                }
             )
 
             Spacer(modifier = Modifier.height(20.dp))
@@ -183,20 +191,19 @@ fun ProfileContent(
 }
 
 
-
 @Composable
 private fun UserHeaderCard(
     name: String,
     email: String,
     role: String,
     modifier: Modifier = Modifier,
-    goToMyProfile: () -> Unit
+    goToAccountProfile: () -> Unit,
 ) {
     Card(
-        onClick = goToMyProfile,
+        onClick = goToAccountProfile,
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(20.dp)),
+            .border(1.dp, MaterialTheme.colorScheme.onPrimary, RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.secondary.copy(0.4f)
@@ -211,7 +218,7 @@ private fun UserHeaderCard(
         ) {
             Column {
                 Surface(
-                    color = Color(0xFFEEF2FF),
+                    color = MaterialTheme.colorScheme.onPrimary,
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Text(
@@ -246,13 +253,14 @@ private fun UserHeaderCard(
 @Composable
 private fun ManagementOptionCard(
     title: String,
-    subtitle: String,
+    subtitle: String = "",
     icon: ImageVector,
     iconContainerColor: Color,
     iconTintColor: Color,
     showTrailingIcon: Boolean = true,
     onClick: () -> Unit,
-    statusDotColor: Color? = null
+    statusDotColor: Color = MaterialTheme.colorScheme.onSecondary,
+    subtitleContent: (@Composable () -> Unit)? = null,
 ) {
     Card(
         modifier = Modifier
@@ -294,20 +302,23 @@ private fun ManagementOptionCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    if (statusDotColor != null) {
+                    if (subtitleContent != null) {
                         Box(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
                                 .background(statusDotColor)
                         )
+                        subtitleContent()
+                    } else {
+                        Text(
+                            text = subtitle,
+                            fontSize = 11.sp,
+                            color = statusDotColor,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
-
-                    Text(
-                        text = subtitle,
-                        fontSize = 12.sp,
-                        color = statusDotColor ?: Color(0xFF64748B)
-                    )
                 }
             }
 
@@ -326,7 +337,7 @@ private fun ManagementOptionCard(
 @Composable
 private fun LogoutButton(
     onLogoutClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.fillMaxWidth(),
@@ -363,6 +374,47 @@ private fun LogoutButton(
         }
     }
 }
+
+
+@Composable
+fun LoadingDots(
+    modifier: Modifier = Modifier,
+    color: Color = Color.White,
+) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        repeat(3) { index ->
+            val transition = rememberInfiniteTransition(label = "dots")
+
+            val alpha by transition.animateFloat(
+                initialValue = 0.3f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(
+                        durationMillis = 600,
+                        delayMillis = index * 150
+                    ),
+                    repeatMode = RepeatMode.Reverse
+                ),
+                label = "dot"
+            )
+
+            Box(
+                modifier = Modifier
+                    .size(6.dp)
+                    .alpha(alpha)
+                    .background(
+                        color = color,
+                        shape = CircleShape
+                    )
+            )
+        }
+    }
+}
+
 
 @Preview(showBackground = true)
 @Composable

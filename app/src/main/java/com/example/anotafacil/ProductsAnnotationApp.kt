@@ -1,6 +1,6 @@
 package com.example.anotafacil
 
-import MyProfileScreen
+import AccountProfileScreen
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -18,7 +18,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.anotafacil.presentation.AccountTestScreen
 import com.example.anotafacil.presentation.LastScreenViewModel
 import com.example.anotafacil.presentation.onboarding.verification_code.VerificationCodeScreen
 import com.example.anotafacil.presentation.onboarding.RoleSectionScreen
@@ -58,8 +57,7 @@ enum class Screens(val route: String) {
     PURCHASE_HISTORY("purchase_history"),
     PROFILE("profile"),
     MANAGE_SELLERS("manage_sellers"),
-    ACCOUNT_TEST("account_test"),
-    MY_PROFILE("my_profile")
+    ACCOUNT_PROFILE("account_profile")
 }
 
 
@@ -121,7 +119,6 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
             )
         }
 
-        composable(route = Screens.ACCOUNT_TEST.route) { AccountTestScreen() }
 
         composable(route = Screens.SIGN_UP.route) {
             SignUpScreen(
@@ -345,16 +342,16 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
 
         composable(route = Screens.PROFILE.route) {
             ProfileScreen(
-                goToMyProfile = {
-                    navController.navigate(Screens.MY_PROFILE.route)
+                goToAccountProfile = {
+                    navController.navigate(Screens.ACCOUNT_PROFILE.route)
                 },
                 onPriceTableClick = { navController.navigate(Screens.PRICE_DEFINITION.route) },
                 onManageSellersClick = { navController.navigate(Screens.MANAGE_SELLERS.route) },
             )
         }
 
-        composable(route = Screens.MY_PROFILE.route) {
-            MyProfileScreen(
+        composable(route = Screens.ACCOUNT_PROFILE.route) {
+            AccountProfileScreen(
                 onBackClick = { navController.navigateUp() },
             )
         }

@@ -35,7 +35,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -46,11 +45,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.airbnb.lottie.LottieProperty
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
+import com.airbnb.lottie.compose.rememberLottieDynamicProperties
+import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import com.example.anotafacil.ui.components.AnnotationProductsSearchBar
 import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.hilquias.anotafacil.R
 
 
 @Composable
@@ -103,7 +110,6 @@ fun SellerHomeScreen(
 }
 
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent(
@@ -117,143 +123,146 @@ fun HomeContent(
     refreshHome: () -> Unit = {},
 ) {
     var showAddCityDialog by rememberSaveable { mutableStateOf(false) }
-    var isRefreshing by remember { mutableStateOf(false) }
 
 
-    PullToRefreshBox(
-        isRefreshing = isRefreshing,
-        onRefresh = {
-            isRefreshing = true
-            refreshHome()
-            isRefreshing = false
-        },
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+            .background(MaterialTheme.colorScheme.background)
+            .padding(horizontal = 20.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-                .background(MaterialTheme.colorScheme.background)
-                .padding(horizontal = 20.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(
-                    text = homeState.user.name,
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp),
-                    maxLines = 1,
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                if (isOwner) {
-                    TextButton(
-                        onClick = { showAddCityDialog = true },
-                        modifier = Modifier.padding(start = 8.dp).align(Alignment.CenterVertically)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Add,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Text(
-                            text = "Adicionar Cidade",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                } else {
-                    IconButton(
-                        onClick = {},
-                        modifier = Modifier.padding(start = 8.dp).align(Alignment.CenterVertically)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.Logout,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            AnnotationProductsSearchBar(
-                text = homeState.searchQuery,
-                placeholder = "Pesquisar cidade",
-                onSearchQueryChange = onSearchChange
+            Text(
+                text = homeState.user.name,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 4.dp),
+                maxLines = 1,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                overflow = TextOverflow.Ellipsis,
             )
 
+            if (isOwner) {
+                TextButton(
+                    onClick = { showAddCityDialog = true },
+                    modifier = Modifier.padding(start = 8.dp)
+                        .align(Alignment.CenterVertically)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Add,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "Adicionar Cidade",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            } else {
+                IconButton(
+                    onClick = {},
+                    modifier = Modifier.padding(start = 8.dp)
+                        .align(Alignment.CenterVertically)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.Logout,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+        }
+
+
+        AnnotationProductsSearchBar(
+            text = homeState.searchQuery,
+            placeholder = "Pesquisar cidade",
+            onSearchQueryChange = onSearchChange
+        )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = "Cidades",
+                fontSize = 22.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = "${homeState.cities.size} resultados",
+                fontSize = 13.sp,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+
+        PullToRefreshBox(
+            isRefreshing = false,
+            onRefresh = refreshHome,
+        ) {
             LazyColumn(
+                modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 item {
-                    Spacer(modifier = Modifier.height(30.dp))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-
-                        Text(
-                            text = "Cidades",
-                            fontSize = 22.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Text(
-                            text = "${homeState.cities.size} resultados",
-                            fontSize = 13.sp,
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-
-                item {
-                    if (homeState.cities.isEmpty()) {
-                        AnnotationProductsNothingToShow(
-                            text = "Nenhum cidade encontrada",
-                            modifier = Modifier.padding(vertical = 20.dp)
-                        )
+                    if (homeState.isSyncing) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            SyncAnimation()
+                        }
                     } else {
-                        homeState.cities.forEach { city ->
-                            Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
-                            CityCard(
-                                city = city,
-                                onClick = { onCityClick(city) },
-                                modifier = Modifier.padding(vertical = 8.dp)
+                        if (homeState.cities.isEmpty()) {
+                            AnnotationProductsNothingToShow(
+                                text = "Nenhum cidade encontrada",
+                                modifier = Modifier.padding(vertical = 20.dp)
                             )
+                        } else {
+                            homeState.cities.forEach { city ->
+                                Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
+                                CityCard(
+                                    city = city,
+                                    onClick = { onCityClick(city) },
+                                    modifier = Modifier.padding(vertical = 8.dp)
+                                )
+                            }
                         }
                     }
                 }
             }
         }
+    }
 
-        if (showAddCityDialog) {
-            ModalAddCityScreen(
-                onBackClick = { showAddCityDialog = false },
-                onSaveClick = { cityName ->
-                    addCity(cityName)
-                }
-            )
-        }
+    if (showAddCityDialog) {
+        ModalAddCityScreen(
+            onBackClick = { showAddCityDialog = false },
+            onSaveClick = { cityName ->
+                addCity(cityName)
+            }
+        )
+    }
 
-        if (homeState.success) {
-            AnnotationProductsSuccessDialog(
-                text = "Cidade adicionada com sucesso!",
-                onDismiss = {
-                    showAddCityDialog = false
-                    closeSuccessDialog()
-                }
-            )
-        }
+    if (homeState.success) {
+        AnnotationProductsSuccessDialog(
+            text = "Cidade adicionada com sucesso!",
+            onDismiss = {
+                showAddCityDialog = false
+                closeSuccessDialog()
+            }
+        )
     }
 }
 
@@ -338,6 +347,20 @@ private fun CityCard(
             }
         }
     }
+}
+
+
+@Composable
+fun SyncAnimation(modifier: Modifier = Modifier) {
+    val composition by rememberLottieComposition(
+        LottieCompositionSpec.RawRes(R.raw.loading_data_home)
+    )
+
+    LottieAnimation(
+        composition = composition,
+        iterations = LottieConstants.IterateForever,
+        modifier = modifier.size(60.dp)
+    )
 }
 
 

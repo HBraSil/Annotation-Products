@@ -1,6 +1,6 @@
 package com.example.anotafacil.di
 
-import com.example.anotafacil.data.repository.AccountRepositoryImpl
+import com.example.anotafacil.data.repository.AccountProfileProfileRepositoryImpl
 import com.example.anotafacil.data.repository.AuthRepositoryImpl
 import com.example.anotafacil.data.repository.CityRepositoryImpl
 import com.example.anotafacil.data.repository.CustomerRepositoryImpl
@@ -8,7 +8,7 @@ import com.example.anotafacil.data.repository.OwnerCodeRepositoryImpl
 import com.example.anotafacil.data.repository.ProductRepositoryImpl
 import com.example.anotafacil.data.repository.SalesOverviewRepositoryImpl
 import com.example.anotafacil.data.repository.UserRepositoryImpl
-import com.example.anotafacil.domain.repository.AccountRepository
+import com.example.anotafacil.domain.repository.AccountProfileRepository
 import com.example.anotafacil.domain.repository.AuthRepository
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.CustomerRepository
@@ -47,5 +47,5 @@ abstract class RepositoryModule {
     abstract fun bindOwnerCodeRepository(impl: OwnerCodeRepositoryImpl): OwnerCodeRepository
 
     @Binds
-    abstract fun bindAccountRepository(impl: AccountRepositoryImpl): AccountRepository
+    abstract fun bindAccountRepository(impl: AccountProfileProfileRepositoryImpl): AccountProfileRepository
 }

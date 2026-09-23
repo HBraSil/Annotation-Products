@@ -17,6 +17,8 @@ import com.example.anotafacil.data.entity.PaymentEntity
 import com.example.anotafacil.data.entity.ProductEntity
 import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.data.util.Converters
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Database(
     entities = [
@@ -39,4 +41,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun customerDao(): CustomerDao
     abstract fun purchaseDao(): PurchaseDao
     abstract fun paymentDao(): PaymentDao
+
+
+    suspend fun clearAllData() {
+        withContext(Dispatchers.IO) {
+            clearAllTables()
+        }
+    }
 }

@@ -19,10 +19,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.presentation.profile.account_profile.AccountProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MyProfileScreen(
+fun AccountProfileScreen(
+    accountProfileViewModel: AccountProfileViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
 ) {
     // Valores iniciais fixos
@@ -219,7 +222,9 @@ fun MyProfileScreen(
                     }
                 }
 
-                TextButton(onClick = {}) {
+                TextButton(onClick = {
+                    accountProfileViewModel.deleteAccount()
+                }) {
                     Icon(
                         imageVector = Icons.Default.Delete,
                         contentDescription = null,
@@ -241,5 +246,5 @@ fun MyProfileScreen(
 @Preview
 @Composable
 fun ProfileScreenPreview() {
-    MyProfileScreen()
+    AccountProfileScreen()
 }

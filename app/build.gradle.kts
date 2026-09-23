@@ -115,6 +115,9 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
 
     // BILLING
-
     implementation(libs.billing.ktx)
+
+    //LOTTIE
+
+    implementation(libs.lottie.compose)
 }
