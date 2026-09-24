@@ -1,6 +1,7 @@
 package com.example.anotafacil
 
 import AccountProfileScreen
+import android.util.Log
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -11,6 +12,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -101,7 +103,7 @@ fun ProductsAnnotationApp(startDestination: String) {
 fun ProductsAnnotationApp(startDestination: String, navController: NavHostController, innerPadding: PaddingValues = PaddingValues()) {
     NavHost(
         navController = navController,
-        startDestination = Screens.LOGIN.route,
+        startDestination = Screens.OWNER_HOME.route,
     ) {
 
         composable(route = Screens.LOGIN.route) {
@@ -353,6 +355,11 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         composable(route = Screens.ACCOUNT_PROFILE.route) {
             AccountProfileScreen(
                 onBackClick = { navController.navigateUp() },
+                goToLoginScreen = {
+                    navController.navigate(Screens.LOGIN.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                    }
+                }
             )
         }
 

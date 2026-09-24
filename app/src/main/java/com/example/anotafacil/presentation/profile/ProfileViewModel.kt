@@ -7,12 +7,14 @@ import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.UserRepository
 import com.example.anotafacil.domain.usecase.UploadDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
@@ -57,6 +59,9 @@ class ProfileViewModel @Inject constructor(
                     success = result
                 )
             }
+
+            delay(400.milliseconds)
+            _uiState.update { it.copy(success = false) }
         }
     }
 

@@ -106,7 +106,7 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (String) -> Unit) {
                     onClick = {
                         onSaveClick(cityName)
                     },
-                    //enabled = cityName.isNotBlank(),
+                    enabled = cityName.isNotBlank(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 ) {
                     Row(

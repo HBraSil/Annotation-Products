@@ -26,6 +26,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Cloud
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocalOffer
 import androidx.compose.material.icons.filled.Logout
@@ -36,6 +37,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -129,9 +132,11 @@ fun ProfileContent(
             UserHeaderCard(
                 name = uiState.user?.name ?: "Sem nome",
                 email = uiState.user?.email ?: "email@gmail.com",
-                role = uiState.user?.role?.name ?: "No",
+                role = uiState.user?.role?.name ?: "No role",
                 goToAccountProfile = goToAccountProfile
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
 
             Text(
                 text = "GESTÃO COMERCIAL",
@@ -199,52 +204,51 @@ private fun UserHeaderCard(
     modifier: Modifier = Modifier,
     goToAccountProfile: () -> Unit,
 ) {
-    Card(
-        onClick = goToAccountProfile,
-        modifier = modifier
-            .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.onPrimary, RoundedCornerShape(20.dp)),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondary.copy(0.4f)
-        )
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 6.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Row(
-            modifier = Modifier
-                .padding(20.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Surface(
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        text = role,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFF4F46E5),
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(8.dp))
-
+        Column {
+            Surface(
+                color = MaterialTheme.colorScheme.onPrimary,
+                shape = RoundedCornerShape(8.dp)
+            ) {
                 Text(
-                    text = name,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = Color.Black
-                )
-
-                Text(
-                    text = email,
-                    fontSize = 14.sp,
-                    color = Color(0xFF64748B)
+                    text = role,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF4F46E5),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                 )
             }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = name,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+
+            Text(
+                text = email,
+                fontSize = 14.sp,
+                color = MaterialTheme.colorScheme.onSecondary
+            )
+        }
+
+        IconButton(
+            onClick = goToAccountProfile,
+            colors = IconButtonDefaults.iconButtonColors(
+                containerColor = MaterialTheme.colorScheme.onSecondary.copy(0.4f),
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Default.Edit,
+                contentDescription = "Editar Conta",
+            )
         }
     }
 }

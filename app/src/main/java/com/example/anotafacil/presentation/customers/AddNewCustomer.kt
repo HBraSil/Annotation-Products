@@ -122,7 +122,6 @@ fun AddNewCustomerScreen(
                     }
                 }
 
-                // Botão "Create Client" posicionado de forma fixa na base da tela
                 Box(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)

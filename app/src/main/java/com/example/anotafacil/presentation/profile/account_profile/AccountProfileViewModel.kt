@@ -7,10 +7,12 @@ import com.example.anotafacil.domain.repository.AccountProfileRepository
 import com.example.anotafacil.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class AccountProfileViewModel @Inject constructor(
@@ -22,14 +24,26 @@ class AccountProfileViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
 
+    fun showAccountDeletionConfirmationDialog() {
+        _uiState.update {
+            it.copy(showAccountDeletionConfirmationDialog = true)
+        }
+    }
+    
+    fun hideAccountDeletionConfirmationDialog() {
+        _uiState.update {
+            it.copy(showAccountDeletionConfirmationDialog = false)
+        }
+    }
+
+
     fun deleteAccount() {
+        _uiState.update { it.copy(isDeleting = true) }
+
         viewModelScope.launch {
-
-            _uiState.update {
-                it.copy(isLoading = true)
-            }
-
-            val result = accountProfileRepository.deleteAccount()
+            delay(3.seconds)
+            _uiState.update { it.copy(isDeleting = false, successfullyDeleted = true) }
+            /*val result = accountProfileRepository.deleteAccount()
 
             result
                 .onSuccess {
@@ -39,11 +53,11 @@ class AccountProfileViewModel @Inject constructor(
                     Log.d("AccountProfileViewModel", "Falha ao deletar a conta.")
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
+                            isDeleting = false,
                             error = error.message
                         )
                     }
-                }
+                }*/
         }
     }
 
@@ -54,12 +68,13 @@ class AccountProfileViewModel @Inject constructor(
                 .onSuccess {
                     _uiState.update {
                         it.copy(
-                            isLoading = false,
-                            success = true
+                            isDeleting = false,
+                            successfullyDeleted = true
                         )
                     }
                 }
                 .onFailure { error ->
+                    Log.d("AccountProfileViewModel", "Falha ao fazer logout.: ${error.message}")
                 }
         }
     }
@@ -68,7 +83,8 @@ class AccountProfileViewModel @Inject constructor(
 
 
 data class ProfileDetailUiState(
-    val isLoading: Boolean = false,
+    val isDeleting: Boolean = false,
     val error: String? = null,
-    val success: Boolean = false
+    val successfullyDeleted: Boolean = false,
+    val showAccountDeletionConfirmationDialog: Boolean = false
 )
