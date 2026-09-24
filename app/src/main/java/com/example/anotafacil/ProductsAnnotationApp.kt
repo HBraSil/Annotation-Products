@@ -64,7 +64,10 @@ enum class Screens(val route: String) {
 
 
 @Composable
-fun ProductsAnnotationApp(startDestination: String) {
+fun ProductsAnnotationApp(
+    lastScreenViewModel: LastScreenViewModel = hiltViewModel(),
+    startDestination: String
+) {
     val navController = rememberNavController()
 
     val backStackEntry = navController.currentBackStackEntryAsState()
@@ -94,23 +97,35 @@ fun ProductsAnnotationApp(startDestination: String) {
         ProductsAnnotationApp(
             startDestination = startDestination,
             navController = navController,
-            innerPadding = innerPadding
+            innerPadding = innerPadding,
+            lastRoute = {
+                Log.d("ProductsAnnotationApp", "lastRoute: $it")
+                lastScreenViewModel.lastRoute(it)
+            }
         )
     }
 }
 
 @Composable
-fun ProductsAnnotationApp(startDestination: String, navController: NavHostController, innerPadding: PaddingValues = PaddingValues()) {
+fun ProductsAnnotationApp(
+    startDestination: String,
+    navController: NavHostController,
+    innerPadding: PaddingValues = PaddingValues(),
+    lastRoute: (String) -> Unit = {},
+) {
     NavHost(
         navController = navController,
-        startDestination = Screens.OWNER_HOME.route,
+        startDestination = startDestination,
     ) {
 
         composable(route = Screens.LOGIN.route) {
+            LaunchedEffect(Unit) {
+                lastRoute(Screens.LOGIN.route)
+            }
             LoginScreen(
                 onLoginClick = {
                     navController.navigate(Screens.ROLE_SECTION.route) {
-                        popUpTo(Screens.ROLE_SECTION.route) { inclusive = false }
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -131,9 +146,9 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         }
 
         composable(route = Screens.ROLE_SECTION.route) {
-            val lastScreenViewModel: LastScreenViewModel = hiltViewModel()
-
-            lastScreenViewModel.lastRoute(Screens.ROLE_SECTION.route)
+            LaunchedEffect(Unit){
+                lastRoute(Screens.ROLE_SECTION.route)
+            }
             RoleSectionScreen {
                 when (it) {
                     0 -> navController.navigate(Screens.SUBSCRIPTION.route)
@@ -149,7 +164,7 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
                 },
                 goToHome = {
                     navController.navigate(Screens.OWNER_HOME.route) {
-                        popUpTo(Screens.OWNER_HOME.route) { inclusive = false }
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -162,7 +177,7 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
                 onContinue = {
                     navController.navigate(Screens.SELLER_HOME.route) {
 
-                        popUpTo(Screens.CODE_VERIFICATION.route) { inclusive = false }
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -176,9 +191,8 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
 
 
         composable(route = Screens.OWNER_HOME.route) { navBackStack ->
-            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
             LaunchedEffect(Unit) {
-                lastScreenViewModel.lastRoute(Screens.OWNER_HOME.route)
+                lastRoute(Screens.OWNER_HOME.route)
             }
 
             OwnerHomeScreen(
@@ -191,9 +205,8 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
 
 
         composable(route = Screens.SELLER_HOME.route) { navBackStack ->
-            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStack)
             LaunchedEffect(Unit) {
-                lastScreenViewModel.lastRoute(Screens.SELLER_HOME.route)
+                lastRoute(Screens.SELLER_HOME.route)
             }
 
             SellerHomeScreen(
@@ -205,29 +218,34 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
         }
 
 
-
         composable(
             route = "${Screens.OWNER_CUSTOMERS.route}/{cityId}",
             arguments = listOf(navArgument("cityId") { type = NavType.StringType }),
             popExitTransition = { ExitTransition.None }
         ) { navBackStackEntry ->
             val currentCity = navBackStackEntry.arguments?.getString("cityId")
-            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStackEntry)
 
             LaunchedEffect(Unit){
                 currentCity?.let {
-                    lastScreenViewModel.lastRoute("${Screens.OWNER_CUSTOMERS.route}/${currentCity}")
+                    lastRoute("${Screens.OWNER_CUSTOMERS.route}/${currentCity}")
                 }
             }
 
             OwnerCustomersScreen(
                 onBackClick = {
-                    navController.navigateUp()
+                    val popped = navController.popBackStack()
+                    if (!popped) {
+                        navController.navigate(Screens.OWNER_HOME.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true } // Limpa a pilha para a Home virar a raiz
+                        }
+                    }
                 },
                 goToHomeScreen = {
-                    navController.navigate(Screens.OWNER_HOME.route) {
-                        popUpTo(Screens.OWNER_HOME.route) { inclusive = false }
-                        launchSingleTop = true
+                    val popped = navController.popBackStack()
+                    if (!popped) {
+                        navController.navigate(Screens.OWNER_HOME.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                        }
                     }
                 },
                 goToCustomerDetailScreen = { uuid ->
@@ -245,11 +263,10 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
             popExitTransition = { ExitTransition.None }
         ) { navBackStackEntry ->
             val currentCity = navBackStackEntry.arguments?.getString("cityId")
-            val lastScreenViewModel: LastScreenViewModel = hiltViewModel(navBackStackEntry)
 
             LaunchedEffect(Unit){
                 currentCity?.let {
-                    lastScreenViewModel.lastRoute("${Screens.SELLER_CUSTOMERS.route}/${currentCity}")
+                    lastRoute("${Screens.SELLER_CUSTOMERS.route}/${currentCity}")
                 }
             }
 
@@ -349,6 +366,11 @@ fun ProductsAnnotationApp(startDestination: String, navController: NavHostContro
                 },
                 onPriceTableClick = { navController.navigate(Screens.PRICE_DEFINITION.route) },
                 onManageSellersClick = { navController.navigate(Screens.MANAGE_SELLERS.route) },
+                onSignOutClick = {
+                    navController.navigate(Screens.LOGIN.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                    }
+                }
             )
         }
 

@@ -10,25 +10,24 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.example.anotafacil.ProductsAnnotationApp
 import com.example.anotafacil.presentation.LastScreenViewModel
 import com.example.anotafacil.ui.theme.AnotacoesDeProdutosTheme
-import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    val sessionViewModel: LastScreenViewModel by viewModels()
+    val lastScreenViewModel: LastScreenViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         installSplashScreen().apply {
             setKeepOnScreenCondition {
-                sessionViewModel.lastActiveProfile.value == null
+                lastScreenViewModel.lastActiveProfile.value == null
             }
         }
 
@@ -42,19 +41,13 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             AnotacoesDeProdutosTheme {
-                val startProfile by sessionViewModel.lastActiveProfile.collectAsState()
+                val startProfile by lastScreenViewModel.lastActiveProfile.collectAsState()
 
-                startProfile?.let { lastScreen ->
-                    ProductsAnnotationApp(lastScreen)
+                startProfile?.let { initialScreen ->
+                    val startDestination = remember { initialScreen }
+                    ProductsAnnotationApp(lastScreenViewModel, startDestination)
                 }
             }
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-        FirebaseAuth.getInstance().addAuthStateListener { auth ->
-            Log.d("MainActivity", "onStart: ${auth.currentUser}")
         }
     }
 }

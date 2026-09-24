@@ -219,13 +219,12 @@ class CustomersViewModel @Inject constructor(
         viewModelScope.launch {
 
             val customer = Customer(
-                name = _customerUiState.value.name,
-                extraInfo = _customerUiState.value.extraInfo,
+                name = _customerUiState.value.name.trim(),
+                extraInfo = _customerUiState.value.extraInfo?.trim(),
                 cityId = _customerUiState.value.currentCity?.id
             )
             customerRepository.addCustomer(customer)
                 .onSuccess {
-                    println("SUCESSO -------------: $it")
                     _customerUiState.update { customerUiState ->
                         customerUiState.copy(
                             success = true,

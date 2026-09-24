@@ -48,15 +48,6 @@ fun RoleSectionScreen(
     onChoiceClick: (Int) -> Unit = {}
 ) {
 
-    RoleSectionContent(
-        onChoiceClick = onChoiceClick
-    )
-}
-
-@Composable
-fun RoleSectionContent(
-    onChoiceClick: (Int) -> Unit = {}
-) {
     var selectedProfileIndex by remember { mutableStateOf<Int?>(null) }
 
     Box(

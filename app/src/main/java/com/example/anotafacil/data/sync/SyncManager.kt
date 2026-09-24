@@ -13,14 +13,14 @@ class SyncManager @Inject constructor(
     private val syncDownloader: SyncDownloader
 ) {
 
-    suspend fun upload(): Boolean {
+    suspend fun upload(): Result<Boolean> {
         val ownerId = userRepository
             .getCurrentOwnerId()
             .getOrElse {
-                return false
+                return Result.failure(it)
             }
 
-        return syncUploader.upload(ownerId)
+        return Result.success(syncUploader.upload(ownerId))
     }
 
     suspend fun downloadAll(): Boolean {

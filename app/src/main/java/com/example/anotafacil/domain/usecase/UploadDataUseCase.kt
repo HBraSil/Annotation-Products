@@ -8,7 +8,7 @@ class UploadDataUseCase @Inject constructor(
     private val syncManager: SyncManager
 ) {
 
-    suspend operator fun invoke(): Boolean {
+    suspend operator fun invoke(): Result<Boolean> {
         return syncManager.upload()
     }
 }

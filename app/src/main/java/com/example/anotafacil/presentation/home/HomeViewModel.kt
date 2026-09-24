@@ -131,7 +131,7 @@ class HomeViewModel @Inject constructor(
 
     fun addCity(cityName: String) {
         viewModelScope.launch {
-            val city = City(name = cityName)
+            val city = City(name = cityName.trim())
             val result = cityRepository.addCity(city)
 
 

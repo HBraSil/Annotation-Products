@@ -7,7 +7,6 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +23,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Edit
@@ -48,6 +48,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -61,6 +64,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 
 @Composable
 fun ProfileScreen(
@@ -68,6 +72,7 @@ fun ProfileScreen(
     goToAccountProfile: () -> Unit = {},
     onPriceTableClick: () -> Unit = {},
     onManageSellersClick: () -> Unit = {},
+    onSignOutClick: () -> Unit = {},
 ) {
     val uiState by profileViewModel.uiState.collectAsState()
     ProfileContent(
@@ -75,7 +80,10 @@ fun ProfileScreen(
         onPriceTableClick = onPriceTableClick,
         onManageSellersClick = onManageSellersClick,
         onSyncCloudClick = profileViewModel::onSyncCloudClick,
-        onSignOutClick = { profileViewModel.signOut() },
+        onSignOutClick = {
+            onSignOutClick()
+            profileViewModel.signOut()
+        },
         goToAccountProfile = goToAccountProfile
     )
 }
@@ -91,14 +99,22 @@ fun ProfileContent(
     onSignOutClick: () -> Unit,
     goToAccountProfile: () -> Unit = {},
 ) {
+    var signOutConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-
-    LaunchedEffect(uiState.success) {
+    LaunchedEffect(uiState.success, uiState.error) {
         if (uiState.success) {
             Toast.makeText(
                 context,
                 "Dados sincronizados com sucesso!",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        uiState.error?.let {
+            Toast.makeText(
+                context,
+                it,
                 Toast.LENGTH_LONG
             ).show()
         }
@@ -167,21 +183,37 @@ fun ProfileContent(
 
             ManagementOptionCard(
                 title = "Sincronizar Dados",
-                statusDotColor = MaterialTheme.colorScheme.surface,
                 icon = Icons.Default.Cloud,
                 iconContainerColor = MaterialTheme.colorScheme.onSecondary.copy(0.2f, blue = 0.8f),
                 iconTintColor = MaterialTheme.colorScheme.primary,
                 showTrailingIcon = false,
                 onClick = onSyncCloudClick,
                 subtitleContent = {
+                    val syncDataSubtitleComponentColor = if (uiState.hasInternetConnection != null)
+                        MaterialTheme.colorScheme.surface
+                    else
+                        MaterialTheme.colorScheme.secondary.copy(0.4f)
+
+
                     if (uiState.isSyncing) {
-                        LoadingDots(color = MaterialTheme.colorScheme.onSecondary)
+                        LoadingDots( color = MaterialTheme.colorScheme.onSecondary)
                     } else {
-                        Text(
-                            text = "Conexão com internet",
-                            fontSize = 12.sp,
-                            color = Color(0xFF10B981)
-                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .clip(CircleShape)
+                                    .background(syncDataSubtitleComponentColor)
+                            )
+                            Text(
+                                text = uiState.hasInternetConnection ?: "Sem conexão com internet" ,
+                                fontSize = 12.sp,
+                                color = syncDataSubtitleComponentColor
+                            )
+                        }
                     }
                 }
             )
@@ -189,7 +221,18 @@ fun ProfileContent(
             Spacer(modifier = Modifier.height(20.dp))
 
             LogoutButton(
-                onLogoutClick = onSignOutClick,
+                onLogoutClick = {
+                    signOutConfirm = true
+                },
+            )
+        }
+
+        if (signOutConfirm) {
+            AnnotationProductsConfirmationDialog(
+                title = "Tem certeza que deseja sair?",
+                subtitle = null,
+                onDismissRequest = { signOutConfirm = false },
+                onConfirmClick = onSignOutClick
             )
         }
     }
@@ -263,7 +306,6 @@ private fun ManagementOptionCard(
     iconTintColor: Color,
     showTrailingIcon: Boolean = true,
     onClick: () -> Unit,
-    statusDotColor: Color = MaterialTheme.colorScheme.onSecondary,
     subtitleContent: (@Composable () -> Unit)? = null,
 ) {
     Card(
@@ -301,28 +343,16 @@ private fun ManagementOptionCard(
                     fontWeight = FontWeight.SemiBold,
                     color = Color(0xFF0F172A)
                 )
-
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    if (subtitleContent != null) {
-                        Box(
-                            modifier = Modifier
-                                .size(6.dp)
-                                .clip(CircleShape)
-                                .background(statusDotColor)
-                        )
-                        subtitleContent()
-                    } else {
-                        Text(
-                            text = subtitle,
-                            fontSize = 11.sp,
-                            color = statusDotColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
-                    }
+                if (subtitleContent != null) {
+                    subtitleContent()
+                } else {
+                    Text(
+                        text = subtitle,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.secondary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
                 }
             }
 
@@ -365,7 +395,7 @@ private fun LogoutButton(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Logout,
+                    imageVector = Icons.AutoMirrored.Filled.Logout,
                     contentDescription = "Sair",
                     modifier = Modifier.size(20.dp)
                 )

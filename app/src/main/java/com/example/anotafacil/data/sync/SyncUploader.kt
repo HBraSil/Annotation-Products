@@ -1,5 +1,6 @@
 package com.example.anotafacil.data.sync
 
+import android.util.Log
 import com.example.anotafacil.data.dao.CityDao
 import com.example.anotafacil.data.dao.CustomerDao
 import com.example.anotafacil.data.dao.PaymentDao
@@ -140,6 +141,9 @@ class SyncUploader @Inject constructor(
 
     private suspend fun uploadProducts(ownerId: String): Boolean {
         val pendingProducts = productDao.getProductsBySyncStatus(SyncStatus.PENDING)
+        pendingProducts.forEach {
+            Log.d("SyncUploader", "product: $it")
+        }
 
         var success = true
 
@@ -164,14 +168,18 @@ class SyncUploader @Inject constructor(
                 )
 
                 if (updatedRows != 1) {
+                    Log.d("SyncUploader", "CAIU NESSE IF")
                     success = false
                 }
+
 
             } catch (e: Exception) {
                 success = false
             }
         }
 
+
+        Log.d("SyncUploader", "sucesso retorno: $success")
         return success
     }
 

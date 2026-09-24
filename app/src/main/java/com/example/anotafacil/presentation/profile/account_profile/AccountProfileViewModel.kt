@@ -5,6 +5,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.repository.AccountProfileRepository
 import com.example.anotafacil.domain.repository.UserRepository
+import com.example.anotafacil.presentation.auth.FieldState
+import com.example.anotafacil.ui.validation.EmailValidator
+import com.example.anotafacil.ui.validation.NameValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.delay
@@ -22,6 +25,36 @@ class AccountProfileViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow(ProfileDetailUiState())
     val uiState = _uiState.asStateFlow()
+
+
+    fun updateName(name: String) {
+        val isNameValid = NameValidator.isNameValid(name)
+
+        _uiState.update {
+            it.copy(
+                name = FieldState(
+                    field = name,
+                    fieldError = isNameValid,
+                    isValid = isNameValid == null
+                )
+            )
+        }
+    }
+
+
+    fun updateEmail(email: String) {
+        val isNameValid = EmailValidator.validate(email)
+
+        _uiState.update {
+            it.copy(
+                name = FieldState(
+                    field = email,
+                    fieldError = isNameValid,
+                    isValid = isNameValid == null
+                )
+            )
+        }
+    }
 
 
     fun showAccountDeletionConfirmationDialog() {
@@ -83,6 +116,8 @@ class AccountProfileViewModel @Inject constructor(
 
 
 data class ProfileDetailUiState(
+    val name: FieldState = FieldState(),
+    val email: FieldState = FieldState(),
     val isDeleting: Boolean = false,
     val error: String? = null,
     val successfullyDeleted: Boolean = false,

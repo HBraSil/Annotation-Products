@@ -34,11 +34,13 @@ fun AccountProfileScreen(
 
     AccountProfileContent(
         uiState = uiState,
-        onBackClick = onBackClick,
-        goToLoginScreen = goToLoginScreen,
+        onUpdateName = accountProfileViewModel::updateName,
+        onUpdateEmail = accountProfileViewModel::updateEmail,
         hideAccountDeletionConfirmationDialog = accountProfileViewModel::hideAccountDeletionConfirmationDialog,
         deleteAccount = accountProfileViewModel::deleteAccount,
-        showAccountDeletionConfirmationDialog = accountProfileViewModel::showAccountDeletionConfirmationDialog
+        showAccountDeletionConfirmationDialog = accountProfileViewModel::showAccountDeletionConfirmationDialog,
+        goToLoginScreen = goToLoginScreen,
+        onBackClick = onBackClick,
     )
 }
 
@@ -48,11 +50,13 @@ fun AccountProfileScreen(
 @Composable
 fun AccountProfileContent(
     uiState: ProfileDetailUiState = ProfileDetailUiState(),
-    onBackClick: () -> Unit = {},
+    onUpdateName: (String) -> Unit = {},
+    onUpdateEmail: (String) -> Unit = {},
     goToLoginScreen: () -> Unit = {},
     hideAccountDeletionConfirmationDialog: () -> Unit = {},
     deleteAccount: () -> Unit = {},
     showAccountDeletionConfirmationDialog: () -> Unit = {},
+    onBackClick: () -> Unit = {},
 ) {
     LaunchedEffect(uiState.successfullyDeleted) {
         if (uiState.successfullyDeleted) {
@@ -60,20 +64,7 @@ fun AccountProfileContent(
         }
     }
 
-    // Valores iniciais fixos
-    val initialName = "Carlos Eduardo Silva"
-    val initialEmail = "carlos.vendas@empresa.com"
 
-    // Estados dos campos
-    var name by remember { mutableStateOf(initialName) }
-    var email by remember { mutableStateOf(initialEmail) }
-
-    // Modos de edição
-    var isEditingName by remember { mutableStateOf(false) }
-    var isEditingEmail by remember { mutableStateOf(false) }
-
-    // Habilita o botão apenas se houver alterações
-    val hasChanges = name != initialName || email != initialEmail
 
     val textMuted = Color(0xFF94A3B8)
     val textDark = Color(0xFF0F172A)
@@ -146,20 +137,16 @@ fun AccountProfileContent(
 
                     // Campo Nome Completo (Sem Card)
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
+                        value = uiState.name.field,
+                        onValueChange = onUpdateName,
                         label = { Text("NOME COMPLETO") },
-                        readOnly = !isEditingName,
-                        enabled = isEditingName,
                         singleLine = true,
                         trailingIcon = {
-                            IconButton(onClick = { isEditingName = !isEditingName }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Editar Nome",
-                                    tint = if (isEditingName) MaterialTheme.colorScheme.primary else textMuted
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Editar Nome",
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
                         },
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -181,20 +168,16 @@ fun AccountProfileContent(
 
                     // Campo E-mail Comercial (Sem Card)
                     OutlinedTextField(
-                        value = email,
-                        onValueChange = { email = it },
+                        value = uiState.email.field,
+                        onValueChange = onUpdateEmail,
                         label = { Text("E-MAIL COMERCIAL") },
-                        readOnly = !isEditingEmail,
-                        enabled = isEditingEmail,
                         singleLine = true,
                         trailingIcon = {
-                            IconButton(onClick = { isEditingEmail = !isEditingEmail }) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Editar E-mail",
-                                    tint = if (isEditingEmail) MaterialTheme.colorScheme.primary else textMuted
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Editar E-mail",
+                                tint = MaterialTheme.colorScheme.secondary
+                            )
                         },
                         shape = RoundedCornerShape(16.dp),
                         colors = OutlinedTextFieldDefaults.colors(
@@ -224,11 +207,8 @@ fun AccountProfileContent(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Button(
-                        onClick = {
-                            isEditingName = false
-                            isEditingEmail = false
-                        },
-                        enabled = hasChanges,
+                        onClick = {},
+                        enabled = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(56.dp),

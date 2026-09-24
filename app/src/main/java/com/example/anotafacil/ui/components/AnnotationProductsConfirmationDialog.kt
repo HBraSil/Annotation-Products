@@ -31,8 +31,9 @@ import androidx.compose.ui.window.Dialog
 
 @Composable
 fun AnnotationProductsConfirmationDialog(
-    title: String,
     modifier: Modifier = Modifier,
+    title: String,
+    subtitle: String? = "Esta ação não pode ser desfeita.",
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit,
 ) {
@@ -77,14 +78,16 @@ fun AnnotationProductsConfirmationDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Texto de Apoio descritivo
-                Text(
-                    text = "Esta ação não pode ser desfeita.",
-                    fontSize = 14.sp,
-                    color = MaterialTheme.colorScheme.secondary,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 20.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
+                subtitle?.let {
+                    Text(
+                        text = subtitle,
+                        fontSize = 14.sp,
+                        color = MaterialTheme.colorScheme.secondary,
+                        textAlign = TextAlign.Center,
+                        lineHeight = 20.sp,
+                        modifier = Modifier.padding(horizontal = 8.dp)
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(28.dp))
 
