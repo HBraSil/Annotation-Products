@@ -25,7 +25,7 @@ class LastScreenDatastore @Inject constructor(@param:ApplicationContext private 
 
     val lastScreenProfile = context.navigationDataStore.data.map { preferences ->
         Log.d("LastScreenDatastore", "recebi qual route? R:${preferences[LAST_SCREEN_PROFILE]}")
-        preferences[LAST_SCREEN_PROFILE] ?: Screens.OWNER_HOME.route
+        preferences[LAST_SCREEN_PROFILE] ?: Screens.LOGIN.route
     }
 
     suspend fun setLastScreenProfile(route: String) {

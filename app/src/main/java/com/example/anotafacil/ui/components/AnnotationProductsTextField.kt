@@ -20,7 +20,7 @@ fun AnnotationProductsTextField(
     capitalization: KeyboardCapitalization = KeyboardCapitalization.Words
 ) {
     TextField(
-        value = text,
+        value = text.replace(Regex("\\s+"), " "),
         onValueChange = onNameChange,
         placeholder = {
             Text(
@@ -34,6 +34,7 @@ fun AnnotationProductsTextField(
         keyboardOptions = KeyboardOptions(
             capitalization = capitalization
         ),
+        singleLine = true,
         colors = TextFieldDefaults.colors(
             focusedIndicatorColor = MaterialTheme.colorScheme.primary,
             unfocusedIndicatorColor = Color.Gray,

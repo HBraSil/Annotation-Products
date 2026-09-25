@@ -16,7 +16,7 @@
         android:theme="@style/Theme.AnotaFacil.Splash"
         >
         <activity
-            android:name=".MainActivity"
+            android:name="com.example.anotafacil.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.AnotaFacil.Splash"
             android:windowSoftInputMode="adjustResize">

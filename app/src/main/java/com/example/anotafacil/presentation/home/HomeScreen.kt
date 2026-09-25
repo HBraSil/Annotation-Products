@@ -17,11 +17,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.Logout
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -45,15 +51,13 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.airbnb.lottie.LottieProperty
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
-import com.airbnb.lottie.compose.rememberLottieDynamicProperties
-import com.airbnb.lottie.compose.rememberLottieDynamicProperty
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
+import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import com.example.anotafacil.ui.components.AnnotationProductsSearchBar
 import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
@@ -90,6 +94,9 @@ fun SellerHomeScreen(
     innerPadding: PaddingValues = PaddingValues(),
     homeViewModel: HomeViewModel = hiltViewModel(),
     onCityClick: (City) -> Unit,
+    onSignOutSellerClick: () -> Unit,
+    goToAccountProfile: () -> Unit,
+    goToRoleSection: () -> Unit
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
 
@@ -106,6 +113,12 @@ fun SellerHomeScreen(
         onCityClick = onCityClick,
         closeSuccessDialog = homeViewModel::closeSuccessDialog,
         refreshHome = homeViewModel::refreshHome,
+        onSignOutSellerClick = {
+            onSignOutSellerClick()
+            homeViewModel.signOutSeller()
+        },
+        goToAccountProfile = goToAccountProfile,
+        onDisconnectSellerClick = goToRoleSection
     )
 }
 
@@ -121,8 +134,13 @@ fun HomeContent(
     onCityClick: (City) -> Unit = {},
     closeSuccessDialog: () -> Unit = {},
     refreshHome: () -> Unit = {},
+    onSignOutSellerClick: () -> Unit = {},
+    goToAccountProfile: () -> Unit = {},
+    onDisconnectSellerClick: () -> Unit = {}
 ) {
     var showAddCityDialog by rememberSaveable { mutableStateOf(false) }
+    var signOutSellerDialog by rememberSaveable { mutableStateOf(false) }
+    var disconnectSellerDialog by rememberSaveable { mutableStateOf(false) }
 
 
 
@@ -167,17 +185,11 @@ fun HomeContent(
                     )
                 }
             } else {
-                IconButton(
-                    onClick = {},
-                    modifier = Modifier.padding(start = 8.dp)
-                        .align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Outlined.Logout,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
+                ProfileOptionsMenu(
+                    onEditProfileClick = goToAccountProfile,
+                    onDisconnectSellerClick = { disconnectSellerDialog = true },
+                    onExitClick = { signOutSellerDialog = true }
+                )
             }
         }
 
@@ -241,8 +253,33 @@ fun HomeContent(
                             }
                         }
                     }
+
+                    Spacer(modifier = Modifier.height(10.dp))
                 }
             }
+        }
+
+        if (signOutSellerDialog) {
+            AnnotationProductsConfirmationDialog(
+                title = "Tem certeza que deseja sair do app?",
+                subtitle = null,
+                onDismissRequest = { signOutSellerDialog = false },
+                onConfirmClick = {
+                    onSignOutSellerClick()
+                    signOutSellerDialog = false
+                }
+            )
+        }
+        if (disconnectSellerDialog) {
+            AnnotationProductsConfirmationDialog(
+                title = "Tem certeza que deseja desconectar do vendedor?",
+                subtitle = null,
+                onDismissRequest = { signOutSellerDialog = false },
+                onConfirmClick = {
+                    onDisconnectSellerClick()
+                    disconnectSellerDialog = false
+                }
+            )
         }
     }
 
@@ -362,6 +399,85 @@ fun SyncAnimation(modifier: Modifier = Modifier) {
         modifier = modifier.size(60.dp)
     )
 }
+
+
+@Composable
+fun ProfileOptionsMenu(
+    onEditProfileClick: () -> Unit,
+    onDisconnectSellerClick: () -> Unit,
+    onExitClick: () -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        IconButton(
+            onClick = { expanded = true }
+        ) {
+            Icon(
+                imageVector = Icons.Default.MoreVert,
+                contentDescription = "Mais opções"
+            )
+        }
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = {
+                expanded = false
+            },
+            shape = RoundedCornerShape(16.dp),
+            containerColor = MaterialTheme.colorScheme.onPrimary
+        ) {
+            DropdownMenuItem(
+                text = {
+                    Text("Editar perfil")
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null
+                    )
+                },
+                onClick = {
+                    expanded = false
+                    onEditProfileClick()
+                }
+            )
+
+            DropdownMenuItem(
+                text = {
+                    Text("Desconectar do vendedor")
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Default.LinkOff,
+                        contentDescription = null
+                    )
+                },
+                onClick = {
+                    expanded = false
+                    onDisconnectSellerClick()
+                }
+            )
+
+            DropdownMenuItem(
+                text = {
+                    Text("Sair do app")
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Logout,
+                        contentDescription = null
+                    )
+                },
+                onClick = {
+                    expanded = false
+                    onExitClick()
+                }
+            )
+        }
+    }
+}
+
 
 
 @Preview(

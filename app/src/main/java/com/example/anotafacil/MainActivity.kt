@@ -1,4 +1,4 @@
-package com.hilquias.anotafacil
+package com.example.anotafacil
 
 import android.graphics.Color
 import android.os.Bundle
@@ -12,10 +12,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.example.anotafacil.ProductsAnnotationApp
 import com.example.anotafacil.presentation.LastScreenViewModel
 import com.example.anotafacil.ui.theme.AnotacoesDeProdutosTheme
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -42,7 +40,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             AnotacoesDeProdutosTheme {
                 val startProfile by lastScreenViewModel.lastActiveProfile.collectAsState()
-
+                Log.d("MainActivityLog", "startProfile: $startProfile")
                 startProfile?.let { initialScreen ->
                     val startDestination = remember { initialScreen }
                     ProductsAnnotationApp(lastScreenViewModel, startDestination)

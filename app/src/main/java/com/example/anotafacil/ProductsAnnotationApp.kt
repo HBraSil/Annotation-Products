@@ -176,10 +176,7 @@ fun ProductsAnnotationApp(
             VerificationCodeScreen(
                 onContinue = {
                     navController.navigate(Screens.SELLER_HOME.route) {
-
-                        popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
-                        launchSingleTop = true
-                        restoreState = true
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                     }
                 },
                 onBack = {
@@ -190,7 +187,7 @@ fun ProductsAnnotationApp(
 
 
 
-        composable(route = Screens.OWNER_HOME.route) { navBackStack ->
+        composable(route = Screens.OWNER_HOME.route) {
             LaunchedEffect(Unit) {
                 lastRoute(Screens.OWNER_HOME.route)
             }
@@ -204,7 +201,7 @@ fun ProductsAnnotationApp(
         }
 
 
-        composable(route = Screens.SELLER_HOME.route) { navBackStack ->
+        composable(route = Screens.SELLER_HOME.route) {
             LaunchedEffect(Unit) {
                 lastRoute(Screens.SELLER_HOME.route)
             }
@@ -213,6 +210,19 @@ fun ProductsAnnotationApp(
                 innerPadding = innerPadding,
                 onCityClick = {
                     navController.navigate("${Screens.SELLER_CUSTOMERS.route}/${it.id}")
+                },
+                onSignOutSellerClick = {
+                    navController.navigate(Screens.LOGIN.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                    }
+                },
+                goToAccountProfile = {
+                    navController.navigate(Screens.ACCOUNT_PROFILE.route)
+                },
+                goToRoleSection = {
+                    navController.navigate(Screens.ROLE_SECTION.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                    }
                 }
             )
         }
@@ -259,25 +269,29 @@ fun ProductsAnnotationApp(
 
         composable(
             route = "${Screens.SELLER_CUSTOMERS.route}/{cityId}",
-            arguments = listOf(navArgument("cityId") { type = NavType.StringType }),
-            popExitTransition = { ExitTransition.None }
+            arguments = listOf(navArgument("cityId") { type = NavType.StringType })
         ) { navBackStackEntry ->
             val currentCity = navBackStackEntry.arguments?.getString("cityId")
 
-            LaunchedEffect(Unit){
-                currentCity?.let {
-                    lastRoute("${Screens.SELLER_CUSTOMERS.route}/${currentCity}")
-                }
+            LaunchedEffect(Unit) {
+                lastRoute("${Screens.SELLER_CUSTOMERS.route}/${currentCity}")
             }
 
             SellerCustomersScreen(
                 onBackClick = {
-                    navController.navigateUp()
+                    val popped = navController.popBackStack()
+                    if (!popped) {
+                        navController.navigate(Screens.SELLER_HOME.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = true } // Limpa a pilha para a Home virar a raiz
+                        }
+                    }
                 },
                 goToHomeScreen = {
-                    navController.navigate(Screens.SELLER_HOME.route) {
-                        popUpTo(Screens.SELLER_HOME.route) { inclusive = false }
-                        launchSingleTop = true
+                    val popped = navController.popBackStack()
+                    if (!popped) {
+                        navController.navigate(Screens.SELLER_HOME.route) {
+                            popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                        }
                     }
                 },
                 goToCustomerDetailScreen = { uuid ->

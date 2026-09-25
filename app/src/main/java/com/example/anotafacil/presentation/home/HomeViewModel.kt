@@ -147,6 +147,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    fun signOutSeller() {
+        viewModelScope.launch {
+            userRepository.signOut()
+        }
+    }
 
     fun closeSuccessDialog() {
         _homeUiState.update {

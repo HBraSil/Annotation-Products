@@ -182,7 +182,7 @@ fun ProfileContent(
             )
 
             ManagementOptionCard(
-                title = "Sincronizar Dados",
+                title = "Enviar Dados",
                 icon = Icons.Default.Cloud,
                 iconContainerColor = MaterialTheme.colorScheme.onSecondary.copy(0.2f, blue = 0.8f),
                 iconTintColor = MaterialTheme.colorScheme.primary,
@@ -221,9 +221,7 @@ fun ProfileContent(
             Spacer(modifier = Modifier.height(20.dp))
 
             LogoutButton(
-                onLogoutClick = {
-                    signOutConfirm = true
-                },
+                onLogoutClick = { signOutConfirm = true }
             )
         }
 
@@ -311,8 +309,8 @@ private fun ManagementOptionCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() },
-        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
