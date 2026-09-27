@@ -23,9 +23,8 @@ class SyncUploader @Inject constructor(
         var success = true
 
         val citiesSuccess = uploadCities(ownerId)
-        if (!citiesSuccess) {
-            success = false
-        }
+        if (!citiesSuccess) success = false
+
 
         val customersSuccess =
             if (citiesSuccess) {
@@ -33,15 +32,12 @@ class SyncUploader @Inject constructor(
             } else {
                 false
             }
+        if (!customersSuccess) success = false
 
-        if (!customersSuccess) {
-            success = false
-        }
 
         val productsSuccess = uploadProducts(ownerId)
-        if (!productsSuccess) {
-            success = false
-        }
+        if (!productsSuccess) success = false
+
 
         val purchasesSuccess =
             if (customersSuccess && productsSuccess) {
@@ -49,10 +45,8 @@ class SyncUploader @Inject constructor(
             } else {
                 false
             }
+        if (!purchasesSuccess) success = false
 
-        if (!purchasesSuccess) {
-            success = false
-        }
 
         val paymentsSuccess =
             if (customersSuccess) {
@@ -60,10 +54,8 @@ class SyncUploader @Inject constructor(
             } else {
                 false
             }
+        if (!paymentsSuccess) success = false
 
-        if (!paymentsSuccess) {
-            success = false
-        }
 
         return success
     }

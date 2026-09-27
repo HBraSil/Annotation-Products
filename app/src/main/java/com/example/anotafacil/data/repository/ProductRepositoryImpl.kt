@@ -3,6 +3,7 @@ package com.example.anotafacil.data.repository
 import com.example.anotafacil.data.dao.ProductDao
 import com.example.anotafacil.data.entity.toProductDomain
 import com.example.anotafacil.domain.model.Product
+import com.example.anotafacil.domain.model.SyncStatus
 import com.example.anotafacil.domain.repository.ProductRepository
 import javax.inject.Inject
 import kotlin.uuid.Uuid
@@ -20,9 +21,8 @@ class ProductRepositoryImpl @Inject constructor(
 
     override suspend fun updateProductPrice(productId: Uuid, newPrice: Int): Int {
         val product = productDao.getById(productId)
-        return product?.let {
-            val updatedProduct = it.copy(price = newPrice)
-            productDao.updateProductPrice(updatedProduct)
-        } ?: 0
+        val updatedProduct = product.copy(price = newPrice, syncStatus = SyncStatus.PENDING)
+
+        return productDao.updateProductPrice(updatedProduct)
     }
 }
