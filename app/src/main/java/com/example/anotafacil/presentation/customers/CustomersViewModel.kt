@@ -13,6 +13,7 @@ import com.example.anotafacil.domain.usecase.RefreshCustomersUseCase
 import com.example.anotafacil.ui.util.FormatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +25,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 
 
@@ -71,16 +73,20 @@ class CustomersViewModel @Inject constructor(
 
 
     fun refreshCustomers() {
+        _customerUiState.update { it.copy(isLoading = true) }
+
         viewModelScope.launch {
             val cityId = cityIdFlow.first()
 
             val success = refreshCustomersUseCase(cityId)
 
             if (success) {
-                getCustomersList()
+                _customerUiState.update {
+                    it.copy(isLoading = false, message = "Dados atualizados com sucesso")
+                }
             } else {
                 _customerUiState.update {
-                    it.copy(errorMessage = "Erro ao atualizar dados")
+                    it.copy(message = "Erro ao atualizar dados")
                 }
             }
         }
@@ -97,7 +103,7 @@ class CustomersViewModel @Inject constructor(
                 }
                 .onFailure { error ->
                     _customerUiState.update {
-                        it.copy(errorMessage = error.message ?: "Erro ao carregar cidade")
+                        it.copy(message = error.message ?: "Erro ao carregar cidade")
                     }
                 }
             }
@@ -115,16 +121,18 @@ class CustomersViewModel @Inject constructor(
                     result.fold(
                         onSuccess = { customers ->
                             _customerUiState.update {
-                                it.copy(customers = customers, errorMessage = null)
+                                it.copy(customers = customers)
                             }
                         },
                         onFailure = { error ->
                             _customerUiState.update {
-                                it.copy(errorMessage = error.message ?: "Erro ao carregar clientes")
+                                it.copy(message = error.message ?: "Erro ao carregar clientes")
                             }
                         }
                     )
                 }
+
+
         }
     }
 
@@ -237,7 +245,7 @@ class CustomersViewModel @Inject constructor(
                     println("ERRO -------------: $exception")
                     _customerUiState.update {
                         it.copy(
-                            errorMessage = exception.message
+                            message = exception.message
                         )
                     }
                 }
@@ -277,7 +285,7 @@ data class MonthlySalesSummary(
 data class CustomersUiState(
     val isLoading: Boolean = false,
     val success: Boolean = false,
-    val errorMessage: String? = null,
+    val message: String? = null,
     val name: String = "",
     val searchQuery: String = "",
     val extraInfo: String? = null,

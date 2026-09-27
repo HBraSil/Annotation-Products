@@ -4,6 +4,12 @@ import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -43,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -118,6 +125,17 @@ fun ClientManagementContent(
     onCustomerUiEvent: (CustomersUiEvent) -> Unit = {},
     onRefreshClick: () -> Unit = {}
 ) {
+    val context = LocalContext.current
+    LaunchedEffect(customerUiState.message) {
+        customerUiState.message?.let {
+            Toast.makeText(
+                context,
+                it,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
 
     Scaffold(
         topBar = {
@@ -170,7 +188,8 @@ fun ClientManagementContent(
         ) {
             item {
                 ServerStatus(
-                    onRefreshClick = onRefreshClick
+                    onRefreshClick = onRefreshClick,
+                    isLoading = customerUiState.isLoading
                 )
             }
 
@@ -244,22 +263,30 @@ fun ClientManagementContent(
                 modifier = Modifier.fillMaxWidth()
             )
         }
-
-        customerUiState.errorMessage?.let {
-            Toast.makeText(
-                LocalContext.current,
-                it,
-                Toast.LENGTH_SHORT
-            ).show()
-        }
     }
 }
 
 @Composable
 fun ServerStatus(
     modifier: Modifier = Modifier,
+    isLoading: Boolean = false,
     onRefreshClick: () -> Unit = {}
 ) {
+    val infiniteTransition = rememberInfiniteTransition(label = "refresh_rotation")
+
+    val rotation by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = 360f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(
+                durationMillis = 800,
+                easing = LinearEasing
+            ),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "refresh_rotation"
+    )
+
     Surface(
         modifier = modifier.fillMaxWidth()
             .clip(
@@ -304,17 +331,13 @@ fun ServerStatus(
                     )
             )
 
-            Spacer(
-                modifier = Modifier.width(16.dp)
-            )
+            Spacer(modifier = Modifier.width(16.dp))
 
             // Textos
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
 
                 Text(
-                    text = "Atualiza Dados",
+                    text = "Atualizar Dados",
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.SemiBold,
@@ -363,12 +386,14 @@ fun ServerStatus(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Atualizar",
                         tint = MaterialTheme.colorScheme.primaryContainer,
-                        modifier = Modifier.size(18.dp)
+                        modifier = Modifier
+                            .size(18.dp)
+                            .graphicsLayer {
+                                rotationZ = if (isLoading) rotation else 0f
+                            }
                     )
 
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
                         text = "Atualizar",
@@ -477,8 +502,7 @@ fun CardCustomers(
                     )
 
                     Text(
-                        text = customer.extraInfo
-                            ?: "nenhuma informação extra",
+                        text = customer.extraInfo ?: "nenhuma informação extra",
                         fontSize = 14.sp,
                         color = Color.Black,
                         fontWeight = FontWeight.W500

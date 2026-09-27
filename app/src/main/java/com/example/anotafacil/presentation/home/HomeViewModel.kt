@@ -3,13 +3,16 @@ package com.example.anotafacil.presentation.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.UserRepository
 import com.example.anotafacil.domain.usecase.RefreshHomeUseCase
+import com.example.anotafacil.domain.usecase.UploadDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,26 +21,32 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val cityRepository: CityRepository,
-    private val refreshHomeUseCase: RefreshHomeUseCase
+    private val uploadDataUseCase: UploadDataUseCase,
+    private val refreshHomeUseCase: RefreshHomeUseCase,
+    private val networkChecker: NetworkChecker
 ): ViewModel() {
-    private val _homeUiState = MutableStateFlow(HomeState())
-    val uiState = _homeUiState.asStateFlow()
+    private val _uiState = MutableStateFlow(HomeState())
+    val uiState = _uiState.asStateFlow()
 
 
-    init { searchCity() }
+    init {
+        searchCity()
+        loadOwnerUser()
+    }
 
 
     fun loadOwnerUser() {
         viewModelScope.launch {
             userRepository.getOwnerUser().fold(
                 onSuccess = { user ->
-                    _homeUiState.update {
-                        it.copy(user = user ?: User())
+                    _uiState.update {
+                        it.copy(ownerUser = user ?: User())
                     }
                 },
                 onFailure = { error ->
@@ -45,8 +54,8 @@ class HomeViewModel @Inject constructor(
                         "HomeViewModel",
                         "Erro ao buscar owner: ${error.message}"
                     )
-                    _homeUiState.update {
-                        it.copy(error = error.message)
+                    _uiState.update {
+                        it.copy(message = error.message)
                     }
                 }
             )
@@ -61,8 +70,8 @@ class HomeViewModel @Inject constructor(
                         "HomeViewModel",
                         "Seller: $user"
                     )
-                    _homeUiState.update {
-                        it.copy(user = user ?: User())
+                    _uiState.update {
+                        it.copy(sellerUser = user ?: User())
                     }
                 },
                 onFailure = { error ->
@@ -70,8 +79,8 @@ class HomeViewModel @Inject constructor(
                         "HomeViewModel",
                         "Erro ao buscar seller: ${error.message}"
                     )
-                    _homeUiState.update {
-                        it.copy(error = error.message)
+                    _uiState.update {
+                        it.copy(message = error.message)
                     }
                 }
             )
@@ -83,37 +92,37 @@ class HomeViewModel @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     private fun searchCity() {
         viewModelScope.launch {
-            _homeUiState
+            _uiState
                 .map { it.searchQuery }
                 .distinctUntilChanged()
                 .flatMapLatest {
                     cityRepository.searchCities(it)
                 }
                 .collect {  cities ->
-                    _homeUiState.update {
+                    _uiState.update {
                         it.copy(cities = cities)
                     }
                 }
         }
     }
     fun refreshHome() {
-        _homeUiState.update { it.copy(isSyncing = true) }
+        _uiState.update { it.copy(isSyncing = true) }
 
         viewModelScope.launch {
             val result = refreshHomeUseCase()
 
             if(result) {
                 searchCity()
-                _homeUiState.update {
+                _uiState.update {
                     it.copy(
-                        error = null,
+                        message = null,
                         isSyncing = false
                     )
                 }
             } else {
-                _homeUiState.update {
+                _uiState.update {
                     it.copy(
-                        error = "Erro ao atualizar dados",
+                        message = "Erro ao atualizar dados",
                         isSyncing = false
                     )
                 }
@@ -123,7 +132,7 @@ class HomeViewModel @Inject constructor(
 
 
     fun updateSearchQuery(query: String) {
-        _homeUiState.update { it.copy(searchQuery = query) }
+        _uiState.update { it.copy(searchQuery = query) }
     }
 
 
@@ -136,12 +145,12 @@ class HomeViewModel @Inject constructor(
 
 
             if(result > 0) {
-                _homeUiState.update {
-                    it.copy(success = true, error = null)
+                _uiState.update {
+                    it.copy(success = true, message = null)
                 }
             } else {
-                _homeUiState.update {
-                    it.copy(success = false, error = "Erro ao adicionar cidade")
+                _uiState.update {
+                    it.copy(success = false, message = "Erro ao adicionar cidade")
                 }
             }
         }
@@ -154,18 +163,47 @@ class HomeViewModel @Inject constructor(
     }
 
     fun closeSuccessDialog() {
-        _homeUiState.update {
+        _uiState.update {
             it.copy(success = false)
+        }
+    }
+
+
+    fun syncCloudClick() {
+        if (!networkChecker.hasInternetConnection()) {
+            _uiState.update { it.copy(message = "Sem conexão com internet") }
+            return
+        }
+
+        _uiState.update { it.copy(isUploading = true) }
+
+        viewModelScope.launch {
+            uploadDataUseCase()
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(message = "Dados enviados com sucesso")
+                    }
+                }
+                .onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(message = throwable.message)
+                    }
+                }
+
+            delay(400.milliseconds)
+            _uiState.update { it.copy(isUploading = false, message = null) }
         }
     }
 }
 
 
 data class HomeState(
-    val user: User = User(),
+    val ownerUser: User = User(),
+    val sellerUser: User = User(),
     val searchQuery: String = "",
     val cities: List<City> = emptyList(),
     val success: Boolean = false,
-    val error: String? = null,
+    val message: String? = null,
     val isSyncing: Boolean = false,
+    val isUploading: Boolean = false,
 )

@@ -1,6 +1,5 @@
 package com.example.anotafacil.presentation.profile
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.util.NetworkChecker
@@ -57,7 +56,7 @@ class ProfileViewModel @Inject constructor(
                 .onFailure { exception ->
                     _uiState.update {
                         it.copy(
-                            error = exception.message ?: "Não foi possível obter o usuário."
+                            message = exception.message ?: "Não foi possível obter o usuário."
                         )
                     }
                 }
@@ -65,26 +64,26 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    fun onSyncCloudClick() {
+    fun syncCloudClick() {
         if (_uiState.value.hasInternetConnection == null) return
 
         _uiState.update { it.copy(isSyncing = true) }
 
         viewModelScope.launch {
             uploadDataUseCase()
-                .onSuccess { result ->
+                .onSuccess {
                     _uiState.update {
-                        it.copy(isSyncing = false, success = result)
+                        it.copy(message = "Dados sincronizados com sucesso!")
                     }
                 }
                 .onFailure { throwable ->
                     _uiState.update {
-                        it.copy(isSyncing = false, error = throwable.message)
+                        it.copy(message = throwable.message)
                     }
                 }
 
             delay(400.milliseconds)
-            _uiState.update { it.copy(success = false) }
+            _uiState.update { it.copy(isSyncing = false, message = null) }
         }
     }
 
@@ -99,8 +98,7 @@ class ProfileViewModel @Inject constructor(
 
 data class ProfileUiState(
     val isSyncing: Boolean = false,
-    val success: Boolean = false,
-    val error: String? = null,
+    val message: String? = null,
     val user: User? = null,
     val hasInternetConnection: String? = null
 )

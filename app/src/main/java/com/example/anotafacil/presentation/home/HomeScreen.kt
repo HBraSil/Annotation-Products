@@ -1,6 +1,7 @@
 package com.example.anotafacil.presentation.home
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,12 +26,15 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -45,6 +49,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -72,10 +77,6 @@ fun OwnerHomeScreen(
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
 
-    LaunchedEffect(Unit) {
-        homeViewModel.loadOwnerUser()
-    }
-
     HomeContent(
         homeState = homeUiState,
         innerPadding = innerPadding,
@@ -99,33 +100,70 @@ fun SellerHomeScreen(
     goToRoleSection: () -> Unit
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
-
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         homeViewModel.loadSellerUser()
     }
 
-    HomeContent(
-        homeState = homeUiState,
-        innerPadding = innerPadding,
-        onSearchChange = homeViewModel::updateSearchQuery,
-        addCity = homeViewModel::addCity,
-        onCityClick = onCityClick,
-        closeSuccessDialog = homeViewModel::closeSuccessDialog,
-        refreshHome = homeViewModel::refreshHome,
-        onSignOutSellerClick = {
-            onSignOutSellerClick()
-            homeViewModel.signOutSeller()
+    LaunchedEffect(homeUiState.message) {
+        homeUiState.message?.let {
+            Toast.makeText(
+                context,
+                it,
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+    Scaffold(
+        floatingActionButton = {
+            ElevatedButton(
+                onClick = { homeViewModel.syncCloudClick() },
+                modifier = Modifier
+                    .width(150.dp)
+                    .height(60.dp)
+                    .padding(bottom = 20.dp),
+                enabled = !homeUiState.isUploading,
+                colors = androidx.compose.material3.ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.onPrimary,
+                    contentColor = MaterialTheme.colorScheme.primaryContainer
+                )
+            ) {
+                if (homeUiState.isUploading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp)
+                    )
+                    return@ElevatedButton
+                }
+
+                Text(text = "Enviar dados")
+            }
         },
-        goToAccountProfile = goToAccountProfile,
-        onDisconnectSellerClick = goToRoleSection
-    )
+    ) { paddingValues ->
+        HomeContent(
+            modifier = Modifier.padding(paddingValues),
+            homeState = homeUiState,
+            onSearchChange = homeViewModel::updateSearchQuery,
+            addCity = homeViewModel::addCity,
+            onCityClick = onCityClick,
+            closeSuccessDialog = homeViewModel::closeSuccessDialog,
+            refreshHome = homeViewModel::refreshHome,
+            onSignOutSellerClick = {
+                onSignOutSellerClick()
+                homeViewModel.signOutSeller()
+            },
+            goToAccountProfile = goToAccountProfile,
+            onDisconnectSellerClick = goToRoleSection
+        )
+    }
 }
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeContent(
+    modifier: Modifier = Modifier,
     homeState: HomeState,
     innerPadding: PaddingValues = PaddingValues(),
     isOwner: Boolean = false,
@@ -145,53 +183,28 @@ fun HomeContent(
 
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .padding(innerPadding)
             .background(MaterialTheme.colorScheme.background)
             .padding(horizontal = 20.dp),
         verticalArrangement = Arrangement.spacedBy(22.dp)
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                text = homeState.user.name,
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(end = 4.dp),
-                maxLines = 1,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-                overflow = TextOverflow.Ellipsis,
+        if (isOwner) {
+            OwnerTopAppBar(
+                uiState = homeState,
+                modifier = Modifier.weight(1f),
+                showAddCityDialog = { showAddCityDialog = true }
             )
-
-            if (isOwner) {
-                TextButton(
-                    onClick = { showAddCityDialog = true },
-                    modifier = Modifier.padding(start = 8.dp)
-                        .align(Alignment.CenterVertically)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Add,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Text(
-                        text = "Adicionar Cidade",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            } else {
-                ProfileOptionsMenu(
-                    onEditProfileClick = goToAccountProfile,
-                    onDisconnectSellerClick = { disconnectSellerDialog = true },
-                    onExitClick = { signOutSellerDialog = true }
-                )
-            }
+        } else {
+            SellerTopAppBar(
+                uiState = homeState,
+                onEditProfileClick = goToAccountProfile,
+                onDisconnectSellerClick = { disconnectSellerDialog = true },
+                onExitClick = { signOutSellerDialog = true }
+            )
         }
+
 
 
         AnnotationProductsSearchBar(
@@ -259,6 +272,7 @@ fun HomeContent(
             }
         }
 
+
         if (signOutSellerDialog) {
             AnnotationProductsConfirmationDialog(
                 title = "Tem certeza que deseja sair do app?",
@@ -299,6 +313,97 @@ fun HomeContent(
                 showAddCityDialog = false
                 closeSuccessDialog()
             }
+        )
+    }
+}
+
+
+@Composable
+fun OwnerTopAppBar(
+    uiState: HomeState,
+    modifier: Modifier = Modifier,
+    showAddCityDialog: () -> Unit
+) {
+    Row (
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+    ){
+        Text(
+            text = uiState.ownerUser.name,
+            maxLines = 1,
+            modifier = modifier,
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            overflow = TextOverflow.Ellipsis,
+        )
+
+        TextButton(
+            onClick = showAddCityDialog,
+            modifier = Modifier.padding(start = 8.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Add,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = "Adicionar Cidade",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+
+
+@Composable
+fun SellerTopAppBar(
+    uiState: HomeState = HomeState(),
+    onEditProfileClick: () -> Unit,
+    onDisconnectSellerClick: () -> Unit,
+    onExitClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Column {
+            Text(
+                text = "Raimundo",
+                maxLines = 1,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Spacer(Modifier.height(4.dp))
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "vendendo para: ",
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.5f),
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+                Text(
+                    text = uiState.ownerUser.name,
+                    maxLines = 1,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    overflow = TextOverflow.Ellipsis,
+                )
+
+            }
+        }
+
+        ProfileOptionsMenu(
+            onEditProfileClick = onEditProfileClick,
+            onDisconnectSellerClick = onDisconnectSellerClick,
+            onExitClick = onExitClick
         )
     }
 }
@@ -489,7 +594,7 @@ private fun HomeScreenPreview() {
     MaterialTheme {
         HomeContent(
             homeState = HomeState(
-                user = User(name = "João"),
+                ownerUser = User(name = "João"),
             )
         )
     }

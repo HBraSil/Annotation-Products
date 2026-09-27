@@ -29,7 +29,6 @@ import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.LocalOffer
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -79,7 +78,7 @@ fun ProfileScreen(
         uiState = uiState,
         onPriceTableClick = onPriceTableClick,
         onManageSellersClick = onManageSellersClick,
-        onSyncCloudClick = profileViewModel::onSyncCloudClick,
+        onSyncCloudClick = profileViewModel::syncCloudClick,
         onSignOutClick = {
             onSignOutClick()
             profileViewModel.signOut()
@@ -102,16 +101,8 @@ fun ProfileContent(
     var signOutConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    LaunchedEffect(uiState.success, uiState.error) {
-        if (uiState.success) {
-            Toast.makeText(
-                context,
-                "Dados sincronizados com sucesso!",
-                Toast.LENGTH_SHORT
-            ).show()
-        }
-
-        uiState.error?.let {
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
             Toast.makeText(
                 context,
                 it,
