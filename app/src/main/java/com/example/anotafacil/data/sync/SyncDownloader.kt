@@ -33,16 +33,25 @@ class SyncDownloader @Inject constructor(
 ) {
 
     suspend fun downloadAll(ownerId: String): Boolean {
+        Log.d("Down", "Downloading all data for owner: $ownerId")
 
         val citiesSuccess = downloadCities(ownerId)
-        if (!citiesSuccess) return false
+        if (!citiesSuccess) {
+            Log.d("Down", "Failed to download cities")
+            return false
+        }
 
 
         val productsSuccess = downloadProducts(ownerId)
-        if (!productsSuccess) return false
+        if (!productsSuccess) {
+            Log.d("Down", "Failed to download products")
+            return false
+        }
 
 
         val cities = cityDao.getAll().first()
+
+        Log.d("Down", "Downloading cities: $cities")
 
         for (city in cities) {
             val success = downloadCityData(
@@ -51,6 +60,7 @@ class SyncDownloader @Inject constructor(
             )
 
             if (!success) {
+                Log.d("Down", "Failed to download city: ${city.name}")
                 return false
             }
         }
@@ -325,9 +335,7 @@ class SyncDownloader @Inject constructor(
 
 
 
-    private suspend fun downloadProducts(
-        ownerId: String
-    ): Boolean {
+    private suspend fun downloadProducts(ownerId: String): Boolean {
 
         return try {
 
@@ -341,15 +349,10 @@ class SyncDownloader @Inject constructor(
             for (document in snapshot.documents) {
 
                 val productId = Uuid.parse(document.id)
-
                 val name = document.getString("name") ?: continue
+                val price = document.getLong("price")?.toInt() ?: continue
 
-                val price = document.getLong("price")
-                    ?.toInt()
-                    ?: continue
-
-                val localProduct =
-                    productDao.getById(productId)
+                val localProduct = productDao.getById(productId)
 
                 when {
                     localProduct == null -> {

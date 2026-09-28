@@ -8,7 +8,8 @@ import com.example.anotafacil.domain.model.UserRole
 @Entity(tableName = "user")
 data class UserEntity(
     @PrimaryKey
-    val uid: String,
+    val uid: String = "",
+    val name: String,
     val email: String,
     val ownerId: String?,
     val role: UserRole
@@ -16,8 +17,8 @@ data class UserEntity(
 
 
 fun UserEntity.toDomain() = User(
-    name = uid,
-    email = uid,
+    name = name,
+    email = email,
     ownerId = ownerId,
     role = role
 )

@@ -1,13 +1,14 @@
 package com.example.anotafacil.domain.repository
 
+import com.example.anotafacil.domain.model.SellerHomeUsers
 import com.example.anotafacil.domain.model.User
 
 interface UserRepository {
-    suspend fun getSellerUser(): Result<User?>
+    suspend fun getOwner(): Result<User>
 
-    suspend fun getOwnerUser(): Result<User?>
+    suspend fun getSellerHomeUsers(): Result<SellerHomeUsers>
 
-    suspend fun getCurrentOwnerId(): Result<String>
+    suspend fun getCurrentOwner(): Result<User>
 
     suspend fun becomeOwner(): Result<Boolean>
 

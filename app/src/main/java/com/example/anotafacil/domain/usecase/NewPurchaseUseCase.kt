@@ -14,13 +14,15 @@ class NewPurchaseUseCase @Inject constructor(
         purchase: Purchase
     ): Result<Unit> {
 
-        val ownerIdResult = userRepository.getCurrentOwnerId()
+        val ownerResult = userRepository.getCurrentOwner()
 
-        val ownerId = ownerIdResult.getOrElse {
+        val owner = ownerResult.getOrElse {
             return Result.failure(Exception(it.message))
         }
 
-        val purchaseWithOwner = purchase.copy(ownerId = ownerId)
+        val purchaseWithOwner = purchase.copy(
+            ownerId = owner.ownerId ?: return Result.failure(Exception("Proprietário não encontrado"))
+        )
 
         return customerRepository.newPurchase(purchaseWithOwner)
     }

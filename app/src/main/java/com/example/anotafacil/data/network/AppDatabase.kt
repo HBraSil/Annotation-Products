@@ -30,7 +30,7 @@ import kotlinx.coroutines.withContext
         CartItemEntity::class,
         PaymentEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

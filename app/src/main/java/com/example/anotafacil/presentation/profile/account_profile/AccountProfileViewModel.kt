@@ -3,6 +3,7 @@ package com.example.anotafacil.presentation.profile.account_profile
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.AccountProfileRepository
 import com.example.anotafacil.domain.repository.UserRepository
 import com.example.anotafacil.presentation.auth.FieldState
@@ -19,12 +20,35 @@ import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class AccountProfileViewModel @Inject constructor(
-    private val accountProfileRepository: AccountProfileRepository,
+        private val accountProfileRepository: AccountProfileRepository,
     private val userRepository: UserRepository
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileDetailUiState())
     val uiState = _uiState.asStateFlow()
+
+
+    init { getUserData() }
+
+
+    fun getUserData() {
+        viewModelScope.launch {
+            userRepository.getCurrentOwner()
+                .onSuccess {
+                    Log.d("AccountProfileViewModel", "Dados do usuário: $it")
+                    _uiState.update { uiState ->
+                        uiState.copy(
+                            name = FieldState(field = it.name),
+                            email = FieldState(field = it.email),
+                            user = it
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    Log.d("AccountProfileViewModel", "Falha ao buscar dados do usuário.: ${error.message}")
+                }
+        }
+    }
 
 
     fun updateName(name: String) {
@@ -118,6 +142,7 @@ class AccountProfileViewModel @Inject constructor(
 data class ProfileDetailUiState(
     val name: FieldState = FieldState(),
     val email: FieldState = FieldState(),
+    val user: User? = null,
     val isDeleting: Boolean = false,
     val error: String? = null,
     val successfullyDeleted: Boolean = false,

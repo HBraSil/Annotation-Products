@@ -144,8 +144,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 .get()
                 .await()
 
-            if (!document.exists())
-                return Result.failure(Exception("Código não encontrado"))
+            if (!document.exists()) return Result.failure(Exception("Código não encontrado"))
 
 
             val ownerCode = document.toObject(OwnerCode::class.java)

@@ -9,12 +9,11 @@ import com.example.anotafacil.data.entity.UserEntity
 
 @Dao
 interface UserDao {
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveUserDao(user: UserEntity)
 
-    @Query("SELECT * FROM user WHERE uid = :uid")
-    suspend fun getUserDao(uid: String): UserEntity?
+    @Query("SELECT * FROM user LIMIT 1")
+    suspend fun getUserDao(): UserEntity?
 
     @Query("DELETE FROM user")
     suspend fun deleteUserDao()

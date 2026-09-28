@@ -149,6 +149,7 @@ fun ProductsAnnotationApp(
             LaunchedEffect(Unit){
                 lastRoute(Screens.ROLE_SECTION.route)
             }
+
             RoleSectionScreen {
                 when (it) {
                     0 -> navController.navigate(Screens.SUBSCRIPTION.route)

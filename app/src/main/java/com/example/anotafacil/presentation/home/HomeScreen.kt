@@ -77,6 +77,10 @@ fun OwnerHomeScreen(
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
 
+    LaunchedEffect(Unit) {
+        homeViewModel.loadOwnerUser()
+    }
+
     HomeContent(
         homeState = homeUiState,
         innerPadding = innerPadding,
@@ -396,7 +400,6 @@ fun SellerTopAppBar(
                     color = MaterialTheme.colorScheme.primaryContainer,
                     overflow = TextOverflow.Ellipsis,
                 )
-
             }
         }
 

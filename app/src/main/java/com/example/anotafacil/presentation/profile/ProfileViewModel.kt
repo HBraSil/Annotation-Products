@@ -28,7 +28,7 @@ class ProfileViewModel @Inject constructor(
 
 
     init {
-        getUser()
+        getOwner()
         updateHasInternetConnection()
     }
 
@@ -46,9 +46,9 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    private fun getUser() {
+    private fun getOwner() {
         viewModelScope.launch {
-            userRepository.getOwnerUser()
+            userRepository.getOwner()
                 .onSuccess { user ->
 
                     _uiState.update { it.copy(user = user) }

@@ -37,16 +37,15 @@ class HomeViewModel @Inject constructor(
 
     init {
         searchCity()
-        loadOwnerUser()
     }
 
 
     fun loadOwnerUser() {
         viewModelScope.launch {
-            userRepository.getOwnerUser().fold(
+            userRepository.getOwner().fold(
                 onSuccess = { user ->
                     _uiState.update {
-                        it.copy(ownerUser = user ?: User())
+                        it.copy(ownerUser = user)
                     }
                 },
                 onFailure = { error ->
@@ -62,16 +61,20 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+
     fun loadSellerUser() {
         viewModelScope.launch {
-            userRepository.getSellerUser().fold(
-                onSuccess = { user ->
+            userRepository.getSellerHomeUsers().fold(
+                onSuccess = { users ->
                     Log.d(
                         "HomeViewModel",
-                        "Seller: $user"
+                        "Seller: ${users.seller} e Owner: ${users.owner}"
                     )
                     _uiState.update {
-                        it.copy(sellerUser = user ?: User())
+                        it.copy(
+                            sellerUser = users.seller,
+                            ownerUser = users.owner
+                        )
                     }
                 },
                 onFailure = { error ->
@@ -105,6 +108,9 @@ class HomeViewModel @Inject constructor(
                 }
         }
     }
+
+
+
     fun refreshHome() {
         _uiState.update { it.copy(isSyncing = true) }
 
@@ -113,12 +119,6 @@ class HomeViewModel @Inject constructor(
 
             if(result) {
                 searchCity()
-                _uiState.update {
-                    it.copy(
-                        message = null,
-                        isSyncing = false
-                    )
-                }
             } else {
                 _uiState.update {
                     it.copy(
@@ -127,14 +127,17 @@ class HomeViewModel @Inject constructor(
                     )
                 }
             }
+
+            delay(400.milliseconds)
+            _uiState.update { it.copy(isSyncing = false, message = null) }
         }
     }
+
 
 
     fun updateSearchQuery(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
     }
-
 
 
 
@@ -156,17 +159,22 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+
+
     fun signOutSeller() {
         viewModelScope.launch {
             userRepository.signOut()
         }
     }
 
+
+
     fun closeSuccessDialog() {
         _uiState.update {
             it.copy(success = false)
         }
     }
+
 
 
     fun syncCloudClick() {

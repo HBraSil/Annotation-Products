@@ -24,6 +24,7 @@ import com.example.anotafacil.presentation.profile.account_profile.AccountProfil
 import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiState
 import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 
+
 @Composable
 fun AccountProfileScreen(
     accountProfileViewModel: AccountProfileViewModel = hiltViewModel(),
@@ -127,7 +128,7 @@ fun AccountProfileContent(
                                 color = textMuted
                             )
                             Text(
-                                text = "Proprietário",
+                                text = uiState.user?.role?.name ?: "Nível de Acesso",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = textDark
@@ -139,7 +140,6 @@ fun AccountProfileContent(
                     OutlinedTextField(
                         value = uiState.name.field,
                         onValueChange = onUpdateName,
-                        label = { Text("NOME COMPLETO") },
                         singleLine = true,
                         trailingIcon = {
                             Icon(
@@ -170,7 +170,6 @@ fun AccountProfileContent(
                     OutlinedTextField(
                         value = uiState.email.field,
                         onValueChange = onUpdateEmail,
-                        label = { Text("E-MAIL COMERCIAL") },
                         singleLine = true,
                         trailingIcon = {
                             Icon(

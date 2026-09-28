@@ -12,11 +12,12 @@ data class User(
 
 
 fun User.toEntity() = UserEntity(
-    uid = name,
+    name = name,
     email = email,
     ownerId = ownerId,
     role = role
 )
+
 
 enum class UserRole {
     OWNER,

@@ -43,9 +43,8 @@ interface ProductDao {
     @Update
     suspend fun updateProductPrice(product: ProductEntity): Int
 
-
     @Query("SELECT * FROM product WHERE id = :id")
-    suspend fun getById(id: Uuid): ProductEntity
+    suspend fun getById(id: Uuid): ProductEntity?
 
     @Query("SELECT * FROM product WHERE name LIKE '%' || :query || '%'")
     suspend fun search(query: String): List<ProductEntity>
