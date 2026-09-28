@@ -43,6 +43,7 @@ class AuthRepositoryImpl @Inject constructor(
                     if (!sellerUser.exists() && !ownerUser.exists()) {
                         Log.d("AuthRepository", "Usuário não existe no Firestore, criando...: ${firebaseUser.displayName}, ${firebaseUser.email}")
                         val newUser = User(
+                            uid = uid,
                             name = firebaseUser.displayName ?: "",
                             email = firebaseUser.email ?: "",
                         )
@@ -56,7 +57,7 @@ class AuthRepositoryImpl @Inject constructor(
                     Result.success(true)
                 },
                 onFailure = {
-                    Result.failure(Exception("Falha ao fazer login com Google"))
+                    Result.failure(it)
                 }
             )
         } catch (e: Exception) {

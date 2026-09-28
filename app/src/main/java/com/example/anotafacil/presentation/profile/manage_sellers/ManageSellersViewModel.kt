@@ -1,8 +1,10 @@
 package com.example.anotafacil.presentation.profile.manage_sellers
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.model.OwnerCode
+import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.OwnerCodeRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -42,6 +44,32 @@ class ManageSellersViewModel @Inject constructor(
                     _uiState.update { it.copy(isLoading = false) }
                 }
         }
+
+        getSellersConnected()
+    }
+
+
+    fun showDisconnectionConfirmationDialog(isToShowDialog: Boolean) {
+        _uiState.update { it.copy(showDisconnectionConfirmationDialog = isToShowDialog) }
+    }
+
+
+    fun getSellersConnected() {
+        viewModelScope.launch {
+            ownerCodeRepository.getSellersConnected()
+                .collect {
+                    it.onSuccess { sellers ->
+                        _uiState.update { uiState ->
+                            uiState.copy(sellers = sellers)
+                        }
+                    }
+                    .onFailure { throwable ->
+                        _uiState.update { uiState ->
+                            uiState.copy(message = throwable.message)
+                        }
+                    }
+                }
+        }
     }
 
     fun generateOwnerCode() {
@@ -58,17 +86,45 @@ class ManageSellersViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            error = exception.message ?: "Não foi possível gerar o código."
+                            message = exception.message ?: "Não foi possível gerar o código."
                         )
                     }
 
                 }
 
             delay(400.milliseconds)
-            _uiState.update { it.copy(error = null) }
+            _uiState.update { it.copy(message = null) }
         }
     }
 
+
+    fun disconnectSeller(sellerUid: String) {
+        Log.d("ManageSellersViewModel", "Disconnecting seller: $sellerUid")
+        viewModelScope.launch {
+            ownerCodeRepository.disconnectSeller(sellerUid = sellerUid)
+                .onSuccess {
+                    if (it) {
+                        _uiState.update { uiState ->
+                            uiState.copy(
+                                message = "Vendedor desconectado com sucesso.",
+                                showDisconnectionConfirmationDialog = false
+                            )
+                        }
+                    } else {
+                        _uiState.update { uiState ->
+                            uiState.copy(message = "Não foi possível desconectar o vendedor.")
+                        }
+                    }
+                }
+                .onFailure { throwable ->
+                    Log.e("ManageSellersViewModel", "Error disconnecting seller: ${throwable.message}")
+                    _uiState.update { it.copy(message = throwable.message) }
+                }
+
+            delay(400.milliseconds)
+            resetUiState()
+        }
+    }
 
 
     private fun startCountdown(expiresAt: Long) {
@@ -107,12 +163,18 @@ class ManageSellersViewModel @Inject constructor(
         countdownJob?.cancel()
         super.onCleared()
     }
+
+    private fun resetUiState() {
+        _uiState.update { ManageSellersUiState() }
+    }
 }
 
 data class ManageSellersUiState(
     val ownerCode: OwnerCode = OwnerCode(),
+    val sellers: List<User> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
-    val remainingTime: String = "00:00",
+    val message: String? = null,
     val isCodeExpired: Boolean = false,
+    val showDisconnectionConfirmationDialog: Boolean = false,
+    val remainingTime: String = "00:00",
 )

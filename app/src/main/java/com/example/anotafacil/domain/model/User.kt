@@ -4,6 +4,7 @@ import com.example.anotafacil.data.entity.UserEntity
 
 
 data class User(
+    val uid: String = "",
     val name: String = "",
     val email: String = "",
     val ownerId: String? = null,
@@ -12,6 +13,7 @@ data class User(
 
 
 fun User.toEntity() = UserEntity(
+    uid = uid,
     name = name,
     email = email,
     ownerId = ownerId,

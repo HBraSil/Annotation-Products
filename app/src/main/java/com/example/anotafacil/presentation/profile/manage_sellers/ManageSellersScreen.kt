@@ -43,7 +43,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -58,13 +61,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.model.OwnerCode
+import com.example.anotafacil.domain.model.User
+import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 import kotlinx.coroutines.launch
 
 @Composable
 fun ManageSellersScreen(
     manageSellersViewModel: ManageSellersViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
-    onDisconnectSellerClick: (String) -> Unit = {},
 ) {
 
     val uiState by manageSellersViewModel.uiState.collectAsState()
@@ -72,26 +76,30 @@ fun ManageSellersScreen(
     ManageSellersContent(
         uiState = uiState,
         onBackClick = onBackClick,
-        onGenerateNewCodeClick = { manageSellersViewModel.generateOwnerCode() },
+        onShowDisconnectionConfirmationDialog = manageSellersViewModel::showDisconnectionConfirmationDialog,
+        onGenerateNewCodeClick = manageSellersViewModel::generateOwnerCode,
+        disconnectSeller = manageSellersViewModel::disconnectSeller
     )
 }
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ManageSellersContent(
     uiState: ManageSellersUiState,
-    activeSellersCount: Int = 3,
-    sellers: List<String> = listOf("Rafael Lima", "Lucas Santana"),
     onBackClick: () -> Unit = {},
-    onGenerateNewCodeClick: () -> Unit = {}
+    onShowDisconnectionConfirmationDialog: (Boolean) -> Unit = {},
+    onGenerateNewCodeClick: () -> Unit = {},
+    disconnectSeller: (String) -> Unit = {}
 ) {
 
+    var sellerUid by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val clipboard = LocalClipboard.current
     val context = LocalContext.current
-    LaunchedEffect(uiState.error) {
-        uiState.error?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_LONG).show()
         }
     }
 
@@ -149,14 +157,26 @@ fun ManageSellersContent(
                 onGenerateNewCodeClick = onGenerateNewCodeClick
             )
 
+            Spacer(modifier = Modifier.height(4.dp))
 
             ConnectedSellersSection(
-                activeSellersCount = activeSellersCount,
-                sellers = sellers,
-                onDisconnectSellerClick = {}
+                activeSellersCount = uiState.sellers.size,
+                sellers = uiState.sellers,
+                onDisconnectSellerClick = {
+                    onShowDisconnectionConfirmationDialog(true)
+                    sellerUid = it
+                }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
+        }
+        
+        if (uiState.showDisconnectionConfirmationDialog) {
+            AnnotationProductsConfirmationDialog(
+                title = "Tem certeza que deseja desconectar esse vendedor?",
+                onDismissRequest = { onShowDisconnectionConfirmationDialog(false) },
+                onConfirmClick = { disconnectSeller(sellerUid) }
+            )
         }
     }
 }
@@ -381,7 +401,7 @@ fun BoxNumericCode(char: Char) {
 @Composable
 private fun ConnectedSellersSection(
     activeSellersCount: Int,
-    sellers: List<String>,
+    sellers: List<User>,
     onDisconnectSellerClick: (String) -> Unit
 ) {
     Column(
@@ -392,26 +412,30 @@ private fun ConnectedSellersSection(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
                 Text(
-                    text = "Vendedores Conectados",
+                    text = "Seus Vendedores",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFF0F172A)
                 )
                 Text(
-                    text = "Membros da equipe sincronizados com sua conta",
+                    text = "Vendedores que estão sincronizados com sua conta",
                     fontSize = 12.sp,
                     color = Color(0xFF64748B)
                 )
             }
+
+            Spacer(modifier = Modifier.width(4.dp))
 
             Surface(
                 color = Color(0xFFEEF2FF),
                 shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "$activeSellersCount ativos",
+                    text = "$activeSellersCount ativo",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Medium,
                     color = Color(0xFF4F46E5),
@@ -420,10 +444,11 @@ private fun ConnectedSellersSection(
             }
         }
 
-        sellers.forEach { sellerName ->
+        sellers.forEach { seller ->
             SellerItemCard(
-                sellerName = sellerName,
-                onDisconnectClick = { onDisconnectSellerClick(sellerName) }
+                sellerName = seller.name,
+                sellerEmail = seller.email,
+                onDisconnectClick = { onDisconnectSellerClick(seller.uid) }
             )
         }
     }
@@ -432,46 +457,60 @@ private fun ConnectedSellersSection(
 @Composable
 private fun SellerItemCard(
     sellerName: String,
+    sellerEmail: String,
     onDisconnectClick: () -> Unit
 ) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFF1F5F9), RoundedCornerShape(16.dp)),
+            .border(
+                1.dp,
+                MaterialTheme.colorScheme.onSurface.copy(0.1f),
+                RoundedCornerShape(16.dp)
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
             modifier = Modifier
-                .padding(16.dp)
+                .padding(8.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                text = sellerName,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
-                overflow = TextOverflow.Ellipsis,
-                maxLines = 2,
-                modifier = Modifier.weight(1f),
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Column(
+                modifier = Modifier.weight(1f)
+            ) {
+                Text(
+                    text = sellerName,
+                    fontSize = 15.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = sellerEmail,
+                    fontSize = 12.sp,
+                    overflow = TextOverflow.Ellipsis,
+                    maxLines = 2,
+                    color = MaterialTheme.colorScheme.onSurface.copy(0.8f)
+                )
+            }
 
             Spacer(modifier = Modifier.width(6.dp))
 
-            Button(
+            Surface(
                 onClick = onDisconnectClick,
                 shape = RoundedCornerShape(12.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFFFEE2E2),
-                    contentColor = Color(0xFFEF4444)
-                ),
-                elevation = null,
+                color = MaterialTheme.colorScheme.errorContainer,
+                contentColor =MaterialTheme.colorScheme.error
             ) {
                 Text(
-                    text = "Desconectar conta",
-                    fontSize = 12.sp,
+                    text = "Desconectar vendedor",
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold
                 )
             }
@@ -491,9 +530,19 @@ fun ManageSellersScreenPreview() {
                 code = "123456",
                 createdAt = 39453094,
                 expiresAt = 3945309457567546456
-            )
+            ),
+            sellers = listOf(
+                User(
+                    name = "Rafael Lima",
+                    email = "john.c.calhoun@examplepetstore.com",
+                    ownerId = "123456789"
+                ),
+                User(
+                    name = "Lucas Santana",
+                    email = "james.wiwegerg4543grfgsdfvlson@example-pet-store.com",
+                    ownerId = "123456789"
+                )
+            ),
         ),
-        onBackClick = {},
-        onGenerateNewCodeClick = {}
     )
 }

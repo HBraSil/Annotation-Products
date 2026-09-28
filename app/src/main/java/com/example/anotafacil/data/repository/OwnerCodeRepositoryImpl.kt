@@ -3,10 +3,15 @@ package com.example.anotafacil.data.repository
 import android.util.Log
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.OwnerCode
+import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.OwnerCodeRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.snapshots
 import jakarta.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.security.SecureRandom
 
@@ -110,6 +115,37 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 .onFailure {
                     return Result.failure(it)
                 }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+    override fun getSellersConnected(): Flow<Result<List<User>>> {
+        return firestore
+            .collection("sellers")
+            .whereEqualTo("ownerId", firebaseUserUid)
+            .snapshots()
+            .map { snapshot ->
+                Result.success(
+                    snapshot.toObjects(User::class.java)
+                )
+            }
+            .catch { e ->
+                emit(Result.failure(e))
+            }
+    }
+
+
+    override suspend fun disconnectSeller(sellerUid: String): Result<Boolean> {
+        return try {
+            firestore
+                .collection("sellers")
+                .document(sellerUid)
+                .update("ownerId", null)
+                .await()
+
+            Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
         }
