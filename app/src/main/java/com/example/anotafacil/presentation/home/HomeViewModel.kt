@@ -64,37 +64,37 @@ class HomeViewModel @Inject constructor(
     fun loadSellerUser() {
         viewModelScope.launch {
             var menssage: String? = null
-            when(val result = userRepository.getSellerHomeUsers()) {
-                is HomeResult.Success -> {
-                    _uiState.update {
-                        it.copy(
-                            sellerUser = result.users.seller,
-                            ownerUser = result.users.owner
-                        )
+            userRepository.getUsersForSellerHome()
+                .collect { result ->
+                    when (result) {
+                        is HomeResult.Success -> {
+                            _uiState.update {
+                                it.copy(
+                                    sellerUser = result.users.seller,
+                                    ownerUser = result.users.owner
+                                )
+                            }
+                        }
+
+                        is HomeResult.NotFound -> {
+                            menssage = "Vendedor não encontrado"
+                        }
+
+                        is HomeResult.Disconnected -> {
+                            _uiState.update {
+                                it.copy(isSellerDisconnected = "Você foi desconectado do proprietário")
+                            }
+                        }
+
+                        is HomeResult.OwnerNotFound -> {
+                            Log.d("HomeViewModel", "owner n encontrado")
+
+                            menssage = "Owner não encontrado"
+                        }
+
+                        else -> {}
                     }
                 }
-                is HomeResult.OwnerError -> {
-                    Log.d("HomeViewModel", "Erro ao buscar owner")
-
-                }
-                is HomeResult.NotFound -> {
-                    menssage = "Vendedor não encontrado"
-                }
-                is HomeResult.Disconnected -> {
-                    Log.d("HomeViewModel", "Vendedor desconectado Disconnectedd")
-
-
-                    _uiState.update {
-                        it.copy(isSellerDisconnected = "Você foi desconectado do proprietário")
-                    }
-                }
-                is HomeResult.OwnerNotFound -> {
-                    Log.d("HomeViewModel", "owner n encontrado")
-
-                    menssage = "Owner não encontrado"
-                }
-                else -> {}
-            }
 
             menssage?.let { text ->
                 _uiState.update {
@@ -103,6 +103,9 @@ class HomeViewModel @Inject constructor(
                     )
                 }
             }
+
+            delay(400.milliseconds)
+            _uiState.update { it.copy(message = null, isSellerDisconnected = null) }
 
         }
     }

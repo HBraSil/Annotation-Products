@@ -1,6 +1,9 @@
 package com.example.anotafacil.data.sync
 
 import android.util.Log
+import com.example.anotafacil.data.network.RemoteDatabase
+import com.example.anotafacil.domain.model.UserRole
+import com.example.anotafacil.domain.model.toEntity
 import com.example.anotafacil.domain.repository.UserRepository
 import javax.inject.Inject
 import kotlin.uuid.Uuid
@@ -8,25 +11,39 @@ import kotlin.uuid.Uuid
 
 
 class SyncManager @Inject constructor(
+    private val remoteDb: RemoteDatabase,
     private val userRepository: UserRepository,
     private val syncUploader: SyncUploader,
     private val syncDownloader: SyncDownloader
 ) {
 
     suspend fun upload(): Result<Boolean> {
-        val owner = userRepository
-            .getCurrentOwner()
-            .getOrElse {
-                return Result.failure(it)
-            }
 
-        return if (owner.ownerId != null) Result.success(syncUploader.upload(owner.ownerId))
-        else Result.failure(Exception("Proprietário não encontrado"))
+        val remoteUser = remoteDb.getUserData { uid ->
+            val currentUser = userRepository.getCurrentUser(uid).getOrNull()
+
+            currentUser?.let {
+                return@getUserData it.toEntity()
+            }
+        }.getOrElse {
+            return Result.failure(it)
+        }
+
+        val ownerUid = when(remoteUser.role) {
+            UserRole.OWNER -> remoteUser.uid
+            UserRole.SELLER -> remoteUser.ownerId
+        }
+
+        return if (ownerUid != null) {
+            Log.d("SyncManager", "Uploading data for owner: ${remoteUser.name} -- ${remoteUser.uid} -- ${remoteUser.ownerId}")
+            Result.success(syncUploader.upload(ownerUid))
+        }
+        else Result.failure(Exception("Você não está mais conectado a um proprietário"))
     }
 
     suspend fun downloadAll(): Boolean {
         val owner = userRepository
-            .getCurrentOwner()
+            .getCurrentUser()
             .getOrElse {
                 return false
             }
@@ -38,7 +55,7 @@ class SyncManager @Inject constructor(
 
     suspend fun downloadCity(cityId: Uuid): Boolean {
         val owner = userRepository
-            .getCurrentOwner()
+            .getCurrentUser()
             .getOrElse {
                 return false
             }

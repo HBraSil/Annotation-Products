@@ -33,7 +33,7 @@ class AccountProfileViewModel @Inject constructor(
 
     fun getUserData() {
         viewModelScope.launch {
-            userRepository.getCurrentOwner()
+            userRepository.getCurrentUser()
                 .onSuccess {
                     Log.d("AccountProfileViewModel", "Dados do usuário: $it")
                     _uiState.update { uiState ->

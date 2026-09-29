@@ -123,7 +123,7 @@ fun SellerHomeScreen(
             Toast.makeText(
                 context,
                 it,
-                Toast.LENGTH_SHORT
+                Toast.LENGTH_LONG
             ).show()
         }
     }

@@ -12,7 +12,7 @@ data class UserEntity(
     val name: String,
     val email: String,
     val ownerId: String?,
-    val role: UserRole
+    val role: UserRole = UserRole.SELLER
 )
 
 

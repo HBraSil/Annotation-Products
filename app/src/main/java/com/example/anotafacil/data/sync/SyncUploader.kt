@@ -20,11 +20,12 @@ class SyncUploader @Inject constructor(
     private val firestore: FirebaseFirestore
 ){
     suspend fun upload(ownerId: String): Boolean {
+        Log.d("SyncUploaderOreo", "Uploading data for owner: $ownerId")
         var success = true
 
         val citiesSuccess = uploadCities(ownerId)
         if (!citiesSuccess) success = false
-
+        Log.d("SyncUploaderOreo", "Cities success: $citiesSuccess")
 
         val customersSuccess =
             if (citiesSuccess) {
@@ -33,7 +34,7 @@ class SyncUploader @Inject constructor(
                 false
             }
         if (!customersSuccess) success = false
-
+        Log.d("SyncUploaderOreo", "Customers success: $customersSuccess")
 
         val productsSuccess = uploadProducts(ownerId)
         if (!productsSuccess) success = false
@@ -47,6 +48,8 @@ class SyncUploader @Inject constructor(
             }
         if (!purchasesSuccess) success = false
 
+        Log.d("SyncUploaderOreo", "Purchases success: $purchasesSuccess")
+
 
         val paymentsSuccess =
             if (customersSuccess) {
@@ -57,6 +60,7 @@ class SyncUploader @Inject constructor(
         if (!paymentsSuccess) success = false
 
 
+        Log.d("SyncUploaderOreo", "Payments success: $success")
         return success
     }
 

@@ -1,6 +1,7 @@
 package com.example.anotafacil.data.network
 
 import android.util.Log
+import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.model.UserRole
 import com.google.firebase.auth.FirebaseAuth
@@ -12,16 +13,16 @@ class RemoteDatabase @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth
 ) {
-    suspend fun getUserData(getUserRole: suspend (String) -> UserRole?): Result<User> {
+    suspend fun getUserData(getUserEntity: suspend (String) -> UserEntity?): Result<User> {
         return try {
             val firebaseUserUid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuário não autenticado"))
 
-            Log.d("RemoteDatabase", "firebaseUserUid: $firebaseUserUid, getUserRole: $getUserRole")
-            val userRole = getUserRole(firebaseUserUid)
+            Log.d("RemoteDatabase", "firebaseUserUid: $firebaseUserUid, getUserRole: $getUserEntity")
+            val userEntity = getUserEntity(firebaseUserUid)
                 ?: return Result.failure(Exception("Tipo de usuário não encontrado"))
 
-            val collectionPath = when (userRole) {
+            val collectionPath = when (userEntity.role) {
                 UserRole.OWNER -> "owners"
                 UserRole.SELLER -> "sellers"
             }

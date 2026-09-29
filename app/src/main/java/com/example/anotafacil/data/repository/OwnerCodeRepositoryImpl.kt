@@ -1,6 +1,8 @@
 package com.example.anotafacil.data.repository
 
 import android.util.Log
+import com.example.anotafacil.data.dao.UserDao
+import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.OwnerCode
 import com.example.anotafacil.domain.model.User
@@ -17,6 +19,7 @@ import java.security.SecureRandom
 
 class OwnerCodeRepositoryImpl @Inject constructor(
     auth: FirebaseAuth,
+    private val userDao: UserDao,
     private val firestore: FirebaseFirestore,
     private val networkChecker: NetworkChecker
 ) : OwnerCodeRepository {
@@ -52,7 +55,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 ownerId = firebaseUserUid ?: "",
                 code = code,
                 createdAt = now,
-                expiresAt = now + 1 * 60 * 1000
+                expiresAt = now + 2 * 60 * 1000
             )
 
             firestore
@@ -145,6 +148,9 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 .document(sellerUid)
                 .update("ownerId", null)
                 .await()
+
+            userDao.updateOwnerId(sellerUid, null)
+
 
             Result.success(true)
         } catch (e: Exception) {

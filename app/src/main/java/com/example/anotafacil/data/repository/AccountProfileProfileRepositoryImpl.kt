@@ -16,16 +16,23 @@ import javax.inject.Inject
 
 class AccountProfileProfileRepositoryImpl @Inject constructor(
     private val userDao: UserDao,
-    private val remoteDb: RemoteDatabase,
+    private val auth: FirebaseAuth,
     private val firebaseFunctions: FirebaseFunctions,
     private val appDatabase: AppDatabase
 ) : AccountProfileRepository {
 
     override suspend fun getUserData(): Result<User> {
-        val user = userDao.getUserDao()
-            ?: return Result.failure(Exception("Usuário não encontrado"))
+        return try {
+            val firebaseUserUid = auth.currentUser?.uid
+                ?: return Result.failure(Exception("Usuário não autenticado"))
 
-        return Result.success(user.toDomain())
+            val user = userDao.getUserDao(firebaseUserUid)
+                ?: return Result.failure(Exception("Usuário não encontrado no banco local"))
+
+            Result.success(user.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
 
