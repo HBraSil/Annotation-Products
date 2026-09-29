@@ -275,7 +275,8 @@ fun CustomerDetailContent(
     if (uiState.showSuccessDialog) {
         AnnotationProductsSuccessDialog(
             text = "Pagamento realizado com sucesso!",
-            onDismiss = onDismiss
+            confirmClick = onDismiss,
+            onDismiss = onDismiss,
         )
     }
 

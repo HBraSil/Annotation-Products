@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MoreVert
@@ -105,6 +106,13 @@ fun SellerHomeScreen(
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
     val context = LocalContext.current
+    var showSuccessDialog by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(homeUiState.isSellerDisconnected) {
+        homeUiState.isSellerDisconnected?.let {
+            showSuccessDialog = it
+        }
+    }
 
     LaunchedEffect(Unit) {
         homeViewModel.loadSellerUser()
@@ -160,6 +168,22 @@ fun SellerHomeScreen(
             goToAccountProfile = goToAccountProfile,
             onDisconnectSellerClick = goToRoleSection
         )
+
+        showSuccessDialog?.let {
+            AnnotationProductsSuccessDialog(
+                text = it,
+                confirmButtonText = "Sair",
+                icon = Icons.Default.Close,
+                iconColor = MaterialTheme.colorScheme.error,
+                containerIconColor = MaterialTheme.colorScheme.errorContainer,
+                confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
+                confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
+                confirmClick = {
+                    goToRoleSection()
+                    showSuccessDialog = null
+                },
+            )
+        }
     }
 }
 
@@ -313,10 +337,14 @@ fun HomeContent(
     if (homeState.success) {
         AnnotationProductsSuccessDialog(
             text = "Cidade adicionada com sucesso!",
+            confirmClick = {
+                showAddCityDialog = false
+                closeSuccessDialog()
+            },
             onDismiss = {
                 showAddCityDialog = false
                 closeSuccessDialog()
-            }
+            },
         )
     }
 }

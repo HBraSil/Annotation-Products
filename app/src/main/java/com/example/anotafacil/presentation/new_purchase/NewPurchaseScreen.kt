@@ -348,10 +348,14 @@ fun NewPurchaseContent(
     if (uiState.success) {
         AnnotationProductsSuccessDialog(
             text = "Compra feita com sucesso",
+            confirmClick = {
+                onBackClick()
+                onDismiss()
+            },
             onDismiss = {
                 onBackClick()
                 onDismiss()
-            }
+            },
         )
     }
 }

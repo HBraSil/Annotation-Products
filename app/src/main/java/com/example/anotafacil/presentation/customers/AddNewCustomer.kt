@@ -164,7 +164,8 @@ fun AddNewCustomerScreen(
     if (uiState.success) {
         AnnotationProductsSuccessDialog(
             text = "Cliente adicionado com sucesso!",
-            onDismiss = onDismissOverlayCreatedCustomer
+            confirmClick = onDismissOverlayCreatedCustomer,
+            onDismiss = onDismissOverlayCreatedCustomer,
         )
     }
 }
@@ -174,8 +175,6 @@ fun AddNewCustomerScreen(
 @Composable
 fun AddNewClientScreenPreview() {
     MaterialTheme {
-        AddNewCustomerScreen(
-            
-        )
+        AddNewCustomerScreen()
     }
 }

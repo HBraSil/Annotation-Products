@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.util.NetworkChecker
+import com.example.anotafacil.domain.exception.HomeResult
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.CityRepository
@@ -35,9 +36,7 @@ class HomeViewModel @Inject constructor(
     val uiState = _uiState.asStateFlow()
 
 
-    init {
-        searchCity()
-    }
+    init { searchCity() }
 
 
     fun loadOwnerUser() {
@@ -64,32 +63,49 @@ class HomeViewModel @Inject constructor(
 
     fun loadSellerUser() {
         viewModelScope.launch {
-            userRepository.getSellerHomeUsers().fold(
-                onSuccess = { users ->
-                    Log.d(
-                        "HomeViewModel",
-                        "Seller: ${users.seller} e Owner: ${users.owner}"
-                    )
+            var menssage: String? = null
+            when(val result = userRepository.getSellerHomeUsers()) {
+                is HomeResult.Success -> {
                     _uiState.update {
                         it.copy(
-                            sellerUser = users.seller,
-                            ownerUser = users.owner
+                            sellerUser = result.users.seller,
+                            ownerUser = result.users.owner
                         )
                     }
-                },
-                onFailure = { error ->
-                    Log.d(
-                        "HomeViewModel",
-                        "Erro ao buscar seller: ${error.message}"
-                    )
+                }
+                is HomeResult.OwnerError -> {
+                    Log.d("HomeViewModel", "Erro ao buscar owner")
+
+                }
+                is HomeResult.NotFound -> {
+                    menssage = "Vendedor não encontrado"
+                }
+                is HomeResult.Disconnected -> {
+                    Log.d("HomeViewModel", "Vendedor desconectado Disconnectedd")
+
+
                     _uiState.update {
-                        it.copy(message = error.message)
+                        it.copy(isSellerDisconnected = "Você foi desconectado do proprietário")
                     }
                 }
-            )
+                is HomeResult.OwnerNotFound -> {
+                    Log.d("HomeViewModel", "owner n encontrado")
+
+                    menssage = "Owner não encontrado"
+                }
+                else -> {}
+            }
+
+            menssage?.let { text ->
+                _uiState.update {
+                    it.copy(
+                        message = text
+                    )
+                }
+            }
+
         }
     }
-
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
@@ -214,4 +230,5 @@ data class HomeState(
     val message: String? = null,
     val isSyncing: Boolean = false,
     val isUploading: Boolean = false,
+    val isSellerDisconnected: String? = null
 )

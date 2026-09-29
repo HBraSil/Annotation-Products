@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,10 +30,14 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun AnnotationProductsSuccessDialog(
     text: String,
+    icon: ImageVector = Icons.Default.Check,
+    iconColor: Color = MaterialTheme.colorScheme.onPrimary,
+    containerIconColor: Color = MaterialTheme.colorScheme.primary,
     confirmButtonText: String = "OK",
     confirmButtonTextColor: Color = MaterialTheme.colorScheme.onPrimary,
     confirmButtonContainerColor: Color = MaterialTheme.colorScheme.primary,
-    onDismiss: () -> Unit,
+    confirmClick: () -> Unit = {},
+    onDismiss: () -> Unit = {},
 ) {
 
     BasicAlertDialog(
@@ -54,15 +59,15 @@ fun AnnotationProductsSuccessDialog(
                         modifier = Modifier
                             .size(56.dp)
                             .background(
-                                color = MaterialTheme.colorScheme.primary,
+                                color = containerIconColor,
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Check,
+                            imageVector = icon,
                             contentDescription = "Sucesso",
-                            tint = Color.White,
+                            tint = iconColor,
                             modifier = Modifier.size(32.dp)
                         )
                     }
@@ -86,7 +91,7 @@ fun AnnotationProductsSuccessDialog(
                         contentAlignment = Alignment.CenterEnd
                     ) {
                         Button(
-                            onClick = onDismiss,
+                            onClick = confirmClick,
                             colors = ButtonDefaults.buttonColors(
                                 contentColor = confirmButtonTextColor,
                                 containerColor = confirmButtonContainerColor
@@ -111,5 +116,5 @@ fun AnnotationProductsSuccessDialog(
 @Preview(showBackground = true)
 @Composable
 fun PreviewAnnotationProductsSuccessDialog() {
-    AnnotationProductsSuccessDialog("", onDismiss = {})
+    AnnotationProductsSuccessDialog("",)
 }

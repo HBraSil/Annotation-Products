@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.anotafacil.data.dao.UserDao
 import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.data.entity.toDomain
+import com.example.anotafacil.domain.exception.HomeResult
 import com.example.anotafacil.domain.model.SellerHomeUsers
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.model.UserRole
@@ -112,10 +113,7 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
-    private suspend fun getOwnerById(
-        ownerId: String
-    ): Result<User?> {
-
+    private suspend fun getOwnerById(ownerId: String): Result<User?> {
         return try {
 
             val document = firestore
@@ -151,41 +149,27 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun getSellerHomeUsers(): Result<SellerHomeUsers> {
+    override suspend fun getSellerHomeUsers(): HomeResult {
         val sellerResult = getSeller()
+        if (sellerResult.isFailure) return HomeResult.Error
 
-        if (sellerResult.isFailure) {
-            return Result.failure(
-                sellerResult.exceptionOrNull() ?: Exception("Erro ao buscar vendedor")
-            )
-        }
 
-        val seller = sellerResult.getOrNull()
-            ?: return Result.failure(Exception("Vendedor não encontrado"))
-
-        val ownerId = seller.ownerId
-            ?: return Result.failure(Exception("Vendedor não possui um owner vinculado"))
+        val seller = sellerResult.getOrNull() ?: return HomeResult.NotFound
+        val ownerId = seller.ownerId ?: return HomeResult.Disconnected
 
         val ownerResult = getOwnerById(ownerId)
+        if (ownerResult.isFailure) return HomeResult.OwnerError
 
-        if (ownerResult.isFailure) {
-            return Result.failure(
-                ownerResult.exceptionOrNull()
-                    ?: Exception("Erro ao buscar proprietário")
-            )
-        }
 
-        val owner = ownerResult.getOrNull()
-            ?: return Result.failure(Exception("proprietário não encontrado"))
+        val owner = ownerResult.getOrNull()?: return HomeResult.OwnerNotFound
 
-        return Result.success(
+        return HomeResult.Success(
             SellerHomeUsers(
                 seller = seller,
                 owner = owner
             )
         )
     }
-
 
 
     private suspend fun saveUserLocally(

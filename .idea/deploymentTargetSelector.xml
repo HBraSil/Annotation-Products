@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-09-28T20:32:29.495751400Z">
+        <DropdownSelection timestamp="2026-09-29T01:18:36.370904800Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Windows\.android\avd\Pixel_4a.avd" />
@@ -46,17 +46,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="ProfileScreenPreview (1)">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-09-15T12:11:29.588265200Z">
-          <Target type="DEFAULT_BOOT">
-            <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Windows\.android\avd\Pixel_4a.avd" />
-            </handle>
-          </Target>
-        </DropdownSelection>
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="Preview">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-09-15T12:11:29.588265200Z">
@@ -93,6 +82,17 @@
       <SelectionState runConfigName="TestPreview">
         <option name="selectionMode" value="DROPDOWN" />
         <DropdownSelection timestamp="2026-09-16T11:52:47.971719400Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Windows\.android\avd\Pixel_4a.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="PreviewAnnotationProductsSuccessDialog">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-09-28T20:32:29.495751400Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Windows\.android\avd\Pixel_4a.avd" />

@@ -155,6 +155,7 @@ fun PriceDefinitionContent(
     if (uiState.priceSaved) {
         AnnotationProductsSuccessDialog(
             text = "Preços salvos com sucesso!",
+            confirmClick = onDismiss,
             onDismiss = onDismiss,
         )
     }

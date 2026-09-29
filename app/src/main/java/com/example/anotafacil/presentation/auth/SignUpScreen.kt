@@ -300,11 +300,14 @@ fun SignUpContent(
                     confirmButtonText = "Ir para a tela de login",
                     confirmButtonTextColor = MaterialTheme.colorScheme.primary,
                     confirmButtonContainerColor = Color.Transparent,
+                    confirmClick = {
+                        onBackClick()
+                        isPasswordVisible = false
+                    },
                     onDismiss = {
                         onBackClick()
                         isPasswordVisible = false
-
-                    },
+                    }
                 )
             }
     }
