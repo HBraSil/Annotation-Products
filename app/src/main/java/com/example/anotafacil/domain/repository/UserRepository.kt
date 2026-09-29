@@ -5,7 +5,7 @@ import com.example.anotafacil.domain.model.User
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
-    suspend fun getOwner(): Result<User>
+    suspend fun getOwner(): Flow<HomeResult>
 
     fun getUsersForSellerHome(): Flow<HomeResult>
 

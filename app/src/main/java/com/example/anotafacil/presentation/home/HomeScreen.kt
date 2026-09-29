@@ -66,7 +66,7 @@ import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import com.example.anotafacil.ui.components.AnnotationProductsSearchBar
-import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 import com.hilquias.anotafacil.R
 
 
@@ -75,6 +75,7 @@ fun OwnerHomeScreen(
     innerPadding: PaddingValues = PaddingValues(),
     homeViewModel: HomeViewModel = hiltViewModel(),
     onCityClick: (City) -> Unit,
+    onDisconnectUser: () -> Unit,
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
 
@@ -83,7 +84,7 @@ fun OwnerHomeScreen(
     }
 
     HomeContent(
-        homeState = homeUiState,
+        uiState = homeUiState,
         innerPadding = innerPadding,
         isOwner = true,
         onSearchChange = homeViewModel::updateSearchQuery,
@@ -91,6 +92,7 @@ fun OwnerHomeScreen(
         onCityClick = onCityClick,
         closeSuccessDialog = homeViewModel::closeSuccessDialog,
         refreshHome = homeViewModel::refreshHome,
+        onDisconnectUserClick = onDisconnectUser
     )
 }
 
@@ -106,13 +108,7 @@ fun SellerHomeScreen(
 ) {
     val homeUiState by homeViewModel.uiState.collectAsState()
     val context = LocalContext.current
-    var showSuccessDialog by rememberSaveable { mutableStateOf<String?>(null) }
 
-    LaunchedEffect(homeUiState.isSellerDisconnected) {
-        homeUiState.isSellerDisconnected?.let {
-            showSuccessDialog = it
-        }
-    }
 
     LaunchedEffect(Unit) {
         homeViewModel.loadSellerUser()
@@ -155,7 +151,7 @@ fun SellerHomeScreen(
     ) { paddingValues ->
         HomeContent(
             modifier = Modifier.padding(paddingValues),
-            homeState = homeUiState,
+            uiState = homeUiState,
             onSearchChange = homeViewModel::updateSearchQuery,
             addCity = homeViewModel::addCity,
             onCityClick = onCityClick,
@@ -166,24 +162,9 @@ fun SellerHomeScreen(
                 homeViewModel.signOutSeller()
             },
             goToAccountProfile = goToAccountProfile,
-            onDisconnectSellerClick = goToRoleSection
+            onDisconnectUserClick = goToRoleSection
         )
 
-        showSuccessDialog?.let {
-            AnnotationProductsSuccessDialog(
-                text = it,
-                confirmButtonText = "Sair",
-                icon = Icons.Default.Close,
-                iconColor = MaterialTheme.colorScheme.error,
-                containerIconColor = MaterialTheme.colorScheme.errorContainer,
-                confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
-                confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
-                confirmClick = {
-                    goToRoleSection()
-                    showSuccessDialog = null
-                },
-            )
-        }
     }
 }
 
@@ -192,7 +173,7 @@ fun SellerHomeScreen(
 @Composable
 fun HomeContent(
     modifier: Modifier = Modifier,
-    homeState: HomeState,
+    uiState: HomeState,
     innerPadding: PaddingValues = PaddingValues(),
     isOwner: Boolean = false,
     onSearchChange: (String) -> Unit = {},
@@ -202,12 +183,18 @@ fun HomeContent(
     refreshHome: () -> Unit = {},
     onSignOutSellerClick: () -> Unit = {},
     goToAccountProfile: () -> Unit = {},
-    onDisconnectSellerClick: () -> Unit = {}
+    onDisconnectUserClick: () -> Unit = {}
 ) {
     var showAddCityDialog by rememberSaveable { mutableStateOf(false) }
     var signOutSellerDialog by rememberSaveable { mutableStateOf(false) }
     var disconnectSellerDialog by rememberSaveable { mutableStateOf(false) }
+    var showStatusDialog by rememberSaveable { mutableStateOf<String?>(null) }
 
+    LaunchedEffect(uiState.isUserDisconnected) {
+        uiState.isUserDisconnected?.let {
+            showStatusDialog = it
+        }
+    }
 
 
     Column(
@@ -220,13 +207,13 @@ fun HomeContent(
     ) {
         if (isOwner) {
             OwnerTopAppBar(
-                uiState = homeState,
+                uiState = uiState,
                 modifier = Modifier.weight(1f),
                 showAddCityDialog = { showAddCityDialog = true }
             )
         } else {
             SellerTopAppBar(
-                uiState = homeState,
+                uiState = uiState,
                 onEditProfileClick = goToAccountProfile,
                 onDisconnectSellerClick = { disconnectSellerDialog = true },
                 onExitClick = { signOutSellerDialog = true }
@@ -236,7 +223,7 @@ fun HomeContent(
 
 
         AnnotationProductsSearchBar(
-            text = homeState.searchQuery,
+            text = uiState.searchQuery,
             placeholder = "Pesquisar cidade",
             onSearchQueryChange = onSearchChange
         )
@@ -253,7 +240,7 @@ fun HomeContent(
             )
 
             Text(
-                text = "${homeState.cities.size} resultados",
+                text = "${uiState.cities.size} resultados",
                 fontSize = 13.sp,
                 color = MaterialTheme.colorScheme.onSurface
             )
@@ -270,7 +257,7 @@ fun HomeContent(
             ) {
                 item {
 
-                    if (homeState.isSyncing) {
+                    if (uiState.isSyncing) {
                         Row(
                             modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
                             horizontalArrangement = Arrangement.Center
@@ -278,13 +265,13 @@ fun HomeContent(
                             SyncAnimation()
                         }
                     } else {
-                        if (homeState.cities.isEmpty()) {
+                        if (uiState.cities.isEmpty()) {
                             AnnotationProductsNothingToShow(
                                 text = "Nenhum cidade encontrada",
                                 modifier = Modifier.padding(vertical = 20.dp)
                             )
                         } else {
-                            homeState.cities.forEach { city ->
+                            uiState.cities.forEach { city ->
                                 Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
                                 CityCard(
                                     city = city,
@@ -318,9 +305,26 @@ fun HomeContent(
                 subtitle = null,
                 onDismissRequest = { signOutSellerDialog = false },
                 onConfirmClick = {
-                    onDisconnectSellerClick()
+                    onDisconnectUserClick()
                     disconnectSellerDialog = false
                 }
+            )
+        }
+
+
+        showStatusDialog?.let {
+            AnnotationProductsStatusDialog(
+                text = it,
+                confirmButtonText = "Sair",
+                icon = Icons.Default.Close,
+                iconColor = MaterialTheme.colorScheme.error,
+                containerIconColor = MaterialTheme.colorScheme.errorContainer,
+                confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
+                confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
+                confirmClick = {
+                    onDisconnectUserClick()
+                    showStatusDialog = null
+                },
             )
         }
     }
@@ -334,8 +338,8 @@ fun HomeContent(
         )
     }
 
-    if (homeState.success) {
-        AnnotationProductsSuccessDialog(
+    if (uiState.success) {
+        AnnotationProductsStatusDialog(
             text = "Cidade adicionada com sucesso!",
             confirmClick = {
                 showAddCityDialog = false
@@ -624,7 +628,7 @@ fun ProfileOptionsMenu(
 private fun HomeScreenPreview() {
     MaterialTheme {
         HomeContent(
-            homeState = HomeState(
+            uiState = HomeState(
                 ownerUser = User(name = "João"),
             )
         )

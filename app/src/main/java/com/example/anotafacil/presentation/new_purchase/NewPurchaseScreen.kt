@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.model.Product
-import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 import com.example.anotafacil.ui.components.EasyNotesExposedDropDown
 import com.example.anotafacil.ui.util.currencyFormatter
 
@@ -346,7 +346,7 @@ fun NewPurchaseContent(
     }
 
     if (uiState.success) {
-        AnnotationProductsSuccessDialog(
+        AnnotationProductsStatusDialog(
             text = "Compra feita com sucesso",
             confirmClick = {
                 onBackClick()

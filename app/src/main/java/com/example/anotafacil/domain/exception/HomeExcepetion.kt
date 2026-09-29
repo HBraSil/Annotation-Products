@@ -11,7 +11,7 @@ sealed interface HomeResult {
 
     data object Disconnected : HomeResult
 
-    data object OwnerNotFound : HomeResult
+    data object ErrorToParse : HomeResult
 
     data class Error(val message: String? = null) : HomeResult
 

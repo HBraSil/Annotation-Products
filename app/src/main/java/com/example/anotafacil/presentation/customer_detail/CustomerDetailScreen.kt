@@ -37,7 +37,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsFab
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
-import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 import com.example.anotafacil.ui.util.currencyFormatter
 import com.example.anotafacil.ui.util.toBrazilianDate
 import kotlin.uuid.Uuid
@@ -273,7 +273,7 @@ fun CustomerDetailContent(
     }
 
     if (uiState.showSuccessDialog) {
-        AnnotationProductsSuccessDialog(
+        AnnotationProductsStatusDialog(
             text = "Pagamento realizado com sucesso!",
             confirmClick = onDismiss,
             onDismiss = onDismiss,

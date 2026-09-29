@@ -19,7 +19,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.anotafacil.ui.components.AnnotationProductsTextField
-import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +162,7 @@ fun AddNewCustomerScreen(
     }
 
     if (uiState.success) {
-        AnnotationProductsSuccessDialog(
+        AnnotationProductsStatusDialog(
             text = "Cliente adicionado com sucesso!",
             confirmClick = onDismissOverlayCreatedCustomer,
             onDismiss = onDismissOverlayCreatedCustomer,

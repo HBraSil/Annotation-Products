@@ -36,7 +36,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 
 
 @Composable
@@ -295,7 +295,7 @@ fun SignUpContent(
                             Color.Black.copy(alpha = 0.5f)
                         )
                 )
-                AnnotationProductsSuccessDialog(
+                AnnotationProductsStatusDialog(
                     text = "Conta criada com sucesso!",
                     confirmButtonText = "Ir para a tela de login",
                     confirmButtonTextColor = MaterialTheme.colorScheme.primary,

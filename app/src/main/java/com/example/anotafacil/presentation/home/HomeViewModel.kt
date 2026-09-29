@@ -1,6 +1,5 @@
 package com.example.anotafacil.presentation.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.util.NetworkChecker
@@ -41,7 +40,40 @@ class HomeViewModel @Inject constructor(
 
     fun loadOwnerUser() {
         viewModelScope.launch {
-            userRepository.getOwner().fold(
+            userRepository.getOwner()
+                .collect { result ->
+                    when (result) {
+                        is HomeResult.Success -> {
+                            _uiState.update {
+                                it.copy(ownerUser = result.users.owner)
+                            }
+                        }
+
+                        is HomeResult.NotFound -> {
+                            _uiState.update {
+                                it.copy(isUserDisconnected = "Proprietário não encontrado")
+                            }
+                        }
+
+                        is HomeResult.Disconnected -> {
+                            _uiState.update {
+                                it.copy(message = "Você foi desconectado do proprietário")
+                            }
+                        }
+
+                        is HomeResult.Error -> {
+                            _uiState.update {
+                                it.copy(message = result.message)
+                            }
+                        }
+
+                        else -> {}
+                    }
+                }
+        }
+    }
+/*
+* /*.fold(
                 onSuccess = { user ->
                     _uiState.update {
                         it.copy(ownerUser = user)
@@ -55,11 +87,7 @@ class HomeViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(message = error.message)
                     }
-                }
-            )
-        }
-    }
-
+                }*/*/
 
     fun loadSellerUser() {
         viewModelScope.launch {
@@ -82,16 +110,9 @@ class HomeViewModel @Inject constructor(
 
                         is HomeResult.Disconnected -> {
                             _uiState.update {
-                                it.copy(isSellerDisconnected = "Você foi desconectado do proprietário")
+                                it.copy(isUserDisconnected = "Você foi desconectado do proprietário")
                             }
                         }
-
-                        is HomeResult.OwnerNotFound -> {
-                            Log.d("HomeViewModel", "owner n encontrado")
-
-                            menssage = "Owner não encontrado"
-                        }
-
                         else -> {}
                     }
                 }
@@ -105,7 +126,7 @@ class HomeViewModel @Inject constructor(
             }
 
             delay(400.milliseconds)
-            _uiState.update { it.copy(message = null, isSellerDisconnected = null) }
+            _uiState.update { it.copy(message = null, isUserDisconnected = null) }
 
         }
     }
@@ -233,5 +254,5 @@ data class HomeState(
     val message: String? = null,
     val isSyncing: Boolean = false,
     val isUploading: Boolean = false,
-    val isSellerDisconnected: String? = null
+    val isUserDisconnected: String? = null
 )

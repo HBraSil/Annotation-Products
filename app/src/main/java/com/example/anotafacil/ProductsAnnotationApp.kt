@@ -196,6 +196,11 @@ fun ProductsAnnotationApp(
                 innerPadding = innerPadding,
                 onCityClick = {
                     navController.navigate("${Screens.OWNER_CUSTOMERS.route}/${it.id}")
+                },
+                onDisconnectUser = {
+                    navController.navigate(Screens.ROLE_SECTION.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                    }
                 }
             )
         }
@@ -382,6 +387,11 @@ fun ProductsAnnotationApp(
                 onManageSellersClick = { navController.navigate(Screens.MANAGE_SELLERS.route) },
                 onSignOutClick = {
                     navController.navigate(Screens.LOGIN.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                    }
+                },
+                onDisconnectOwner = {
+                    navController.navigate(Screens.ROLE_SECTION.route) {
                         popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                     }
                 }

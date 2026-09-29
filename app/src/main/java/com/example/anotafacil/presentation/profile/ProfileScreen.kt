@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
@@ -49,6 +50,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +66,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 
 @Composable
 fun ProfileScreen(
@@ -72,6 +75,7 @@ fun ProfileScreen(
     onPriceTableClick: () -> Unit = {},
     onManageSellersClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
+    onDisconnectOwner: () -> Unit = {},
 ) {
     val uiState by profileViewModel.uiState.collectAsState()
     ProfileContent(
@@ -83,7 +87,8 @@ fun ProfileScreen(
             onSignOutClick()
             profileViewModel.signOut()
         },
-        goToAccountProfile = goToAccountProfile
+        goToAccountProfile = goToAccountProfile,
+        onDisconnectOwnerClick = onDisconnectOwner
     )
 }
 
@@ -92,14 +97,22 @@ fun ProfileScreen(
 @Composable
 fun ProfileContent(
     uiState: ProfileUiState,
-    onPriceTableClick: () -> Unit,
-    onManageSellersClick: () -> Unit,
-    onSyncCloudClick: () -> Unit,
-    onSignOutClick: () -> Unit,
+    onPriceTableClick: () -> Unit = {},
+    onManageSellersClick: () -> Unit = {},
+    onSyncCloudClick: () -> Unit = {},
+    onSignOutClick: () -> Unit = {},
     goToAccountProfile: () -> Unit = {},
+    onDisconnectOwnerClick: () -> Unit = {},
 ) {
     var signOutConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    var showStatusDialog by rememberSaveable { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(uiState.isUserDisconnected) {
+        uiState.isUserDisconnected?.let {
+            showStatusDialog = it
+        }
+    }
 
     LaunchedEffect(uiState.message) {
         uiState.message?.let {
@@ -214,6 +227,23 @@ fun ProfileContent(
             LogoutButton(
                 onLogoutClick = { signOutConfirm = true }
             )
+
+
+            showStatusDialog?.let {
+                AnnotationProductsStatusDialog(
+                    text = it,
+                    confirmButtonText = "Sair",
+                    icon = Icons.Default.Close,
+                    iconColor = MaterialTheme.colorScheme.error,
+                    containerIconColor = MaterialTheme.colorScheme.errorContainer,
+                    confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
+                    confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
+                    confirmClick = {
+                        onDisconnectOwnerClick()
+                        showStatusDialog = null
+                    },
+                )
+            }
         }
 
         if (signOutConfirm) {
@@ -443,12 +473,6 @@ fun LoadingDots(
 @Composable
 fun Preview() {
     MaterialTheme {
-        ProfileContent(
-            uiState = ProfileUiState(),
-            onPriceTableClick = {},
-            onManageSellersClick = {},
-            onSyncCloudClick = {},
-            onSignOutClick = {}
-        )
+        ProfileContent(uiState = ProfileUiState())
     }
 }

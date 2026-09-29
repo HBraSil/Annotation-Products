@@ -3,6 +3,7 @@ package com.example.anotafacil.presentation.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.util.NetworkChecker
+import com.example.anotafacil.domain.exception.HomeResult
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.UserRepository
 import com.example.anotafacil.domain.usecase.UploadDataUseCase
@@ -48,18 +49,23 @@ class ProfileViewModel @Inject constructor(
 
     private fun getOwner() {
         viewModelScope.launch {
-            userRepository.getOwner()
-                .onSuccess { user ->
-
-                    _uiState.update { it.copy(user = user) }
-                }
-                .onFailure { exception ->
-                    _uiState.update {
-                        it.copy(
-                            message = exception.message ?: "Não foi possível obter o usuário."
-                        )
+            userRepository.getOwner().collect { result ->
+                when (result) {
+                    is HomeResult.Success -> {
+                        _uiState.update { it.copy(user = result.users.owner) }
                     }
+                    is HomeResult.NotFound -> {
+                        _uiState.update { it.copy(isUserDisconnected = "Proprietário não encontrado") }
+                    }
+                    is HomeResult.Disconnected -> {
+                        _uiState.update { it.copy(message = "Você foi desconectado do proprietário") }
+                    }
+                    is HomeResult.Error -> {
+                        _uiState.update { it.copy(message = result.message) }
+                    }
+                    else -> {}
                 }
+            }
         }
     }
 
@@ -100,5 +106,6 @@ data class ProfileUiState(
     val isSyncing: Boolean = false,
     val message: String? = null,
     val user: User? = null,
-    val hasInternetConnection: String? = null
+    val hasInternetConnection: String? = null,
+    val isUserDisconnected: String? = null
 )

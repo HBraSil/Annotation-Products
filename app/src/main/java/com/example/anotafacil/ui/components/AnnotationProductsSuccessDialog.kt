@@ -28,7 +28,7 @@ import androidx.compose.ui.unit.sp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AnnotationProductsSuccessDialog(
+fun AnnotationProductsStatusDialog(
     text: String,
     icon: ImageVector = Icons.Default.Check,
     iconColor: Color = MaterialTheme.colorScheme.onPrimary,
@@ -115,6 +115,6 @@ fun AnnotationProductsSuccessDialog(
 
 @Preview(showBackground = true)
 @Composable
-fun PreviewAnnotationProductsSuccessDialog() {
-    AnnotationProductsSuccessDialog("",)
+fun PreviewAnnotationProductsStatusDialog() {
+    AnnotationProductsStatusDialog("",)
 }

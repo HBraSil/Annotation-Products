@@ -24,7 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotafacil.ui.components.AnnotationProductsSuccessDialog
+import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 import kotlin.uuid.Uuid
 
 
@@ -153,7 +153,7 @@ fun PriceDefinitionContent(
     }
 
     if (uiState.priceSaved) {
-        AnnotationProductsSuccessDialog(
+        AnnotationProductsStatusDialog(
             text = "Preços salvos com sucesso!",
             confirmClick = onDismiss,
             onDismiss = onDismiss,
