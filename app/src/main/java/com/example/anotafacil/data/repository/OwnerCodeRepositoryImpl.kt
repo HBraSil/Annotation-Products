@@ -52,7 +52,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 ownerId = firebaseUserUid ?: "",
                 code = code,
                 createdAt = now,
-                expiresAt = now + 5 * 60 * 1000
+                expiresAt = now + 1 * 60 * 1000
             )
 
             firestore

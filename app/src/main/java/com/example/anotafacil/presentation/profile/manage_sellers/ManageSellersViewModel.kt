@@ -79,31 +79,6 @@ class ManageSellersViewModel @Inject constructor(
     }
 
 
-    fun generateOwnerCode() {
-        _uiState.update { it.copy(isLoading = true) }
-
-        viewModelScope.launch {
-            ownerCodeRepository.generateCode()
-                .onSuccess { code ->
-                    _uiState.update { it.copy(ownerCode = code, isLoading = false) }
-
-                    startCountdown(code.expiresAt)
-                }
-                .onFailure { exception ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            message = exception.message ?: "Não foi possível gerar o código."
-                        )
-                    }
-
-                }
-
-            delay(400.milliseconds)
-            _uiState.update { it.copy(message = null) }
-        }
-    }
-
 
     fun disconnectSeller(sellerUid: String) {
         Log.d("ManageSellersViewModel", "Disconnecting seller: $sellerUid")
@@ -126,6 +101,31 @@ class ManageSellersViewModel @Inject constructor(
                 .onFailure { throwable ->
                     Log.e("ManageSellersViewModel", "Error disconnecting seller: ${throwable.message}")
                     _uiState.update { it.copy(message = throwable.message) }
+                }
+
+            delay(400.milliseconds)
+            _uiState.update { it.copy(message = null) }
+        }
+    }
+
+    fun generateOwnerCode() {
+        _uiState.update { it.copy(isLoading = true) }
+
+        viewModelScope.launch {
+            ownerCodeRepository.generateCode()
+                .onSuccess { code ->
+                    _uiState.update { it.copy(ownerCode = code, isLoading = false, isCodeExpired = false) }
+
+                    startCountdown(code.expiresAt)
+                }
+                .onFailure { exception ->
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            message = exception.message ?: "Não foi possível gerar o código."
+                        )
+                    }
+
                 }
 
             delay(400.milliseconds)
