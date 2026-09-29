@@ -55,15 +55,21 @@ class ManageSellersViewModel @Inject constructor(
 
 
     fun getSellersConnected() {
+        Log.d("HellersViewModel", "Caiu aqui")
         viewModelScope.launch {
             ownerCodeRepository.getSellersConnected()
                 .collect {
                     it.onSuccess { sellers ->
+                        sellers.forEach { user ->
+                            Log.d("HellersViewModel", "SellerOla: $user")
+                        }
+                            Log.d("HellersViewModel", "OuFor: $sellers")
                         _uiState.update { uiState ->
                             uiState.copy(sellers = sellers)
                         }
                     }
                     .onFailure { throwable ->
+                        Log.e("HellersViewModel", "Error getting sellers: ${throwable.message}")
                         _uiState.update { uiState ->
                             uiState.copy(message = throwable.message)
                         }
@@ -71,6 +77,7 @@ class ManageSellersViewModel @Inject constructor(
                 }
         }
     }
+
 
     fun generateOwnerCode() {
         _uiState.update { it.copy(isLoading = true) }
@@ -122,7 +129,7 @@ class ManageSellersViewModel @Inject constructor(
                 }
 
             delay(400.milliseconds)
-            resetUiState()
+            _uiState.update { it.copy(message = null) }
         }
     }
 
@@ -162,10 +169,6 @@ class ManageSellersViewModel @Inject constructor(
     override fun onCleared() {
         countdownJob?.cancel()
         super.onCleared()
-    }
-
-    private fun resetUiState() {
-        _uiState.update { ManageSellersUiState() }
     }
 }
 

@@ -117,7 +117,6 @@ fun ProductsAnnotationApp(
         navController = navController,
         startDestination = startDestination,
     ) {
-
         composable(route = Screens.LOGIN.route) {
             LaunchedEffect(Unit) {
                 lastRoute(Screens.LOGIN.route)

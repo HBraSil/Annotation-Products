@@ -127,6 +127,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
             .whereEqualTo("ownerId", firebaseUserUid)
             .snapshots()
             .map { snapshot ->
+                Log.d("HellersViewModel", "Repository caiu aqui gertSelt")
                 Result.success(
                     snapshot.toObjects(User::class.java)
                 )
