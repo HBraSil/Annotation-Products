@@ -82,7 +82,7 @@ class UserRepositoryImpl @Inject constructor(
 
                 val user = documentSnapshot.toObject(User::class.java) ?: return@map (null)
 
-                Log.d("UserRepositoryGetSeller", "Seller: $user")
+                Log.d("UserRepositoryGetSeller", "nome do Seller: ${user.name}")
                 if (user.ownerId != null) {
                     saveUserLocally(
                         uid = firebaseUserUid,
@@ -133,7 +133,7 @@ class UserRepositoryImpl @Inject constructor(
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getUsersForSellerHome(): Flow<HomeResult> {
+    override fun getSellerData(): Flow<HomeResult> {
 
         return getSeller()
             .mapLatest { seller ->
@@ -146,6 +146,7 @@ class UserRepositoryImpl @Inject constructor(
                         return@mapLatest HomeResult.Error(it.message)
                     }
 
+                Log.d("UserRepository", "SellerNameGetSellerData: ${seller.name}")
 
                 HomeResult.Success(
                     SellerHomeUsers(

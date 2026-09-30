@@ -9,6 +9,7 @@ import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.OwnerCodeRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
 import com.google.firebase.firestore.snapshots
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
@@ -67,10 +68,13 @@ class OwnerCodeRepositoryImpl @Inject constructor(
             Result.success(ownerCode)
 
         } catch (e: Exception) {
-            Log.e("OwnerCodeRepository", "Error generating code: ${e.message} e = ${e.cause} e = ${e.stackTrace}")
+            Log.e(
+                "OwnerCodeRepository",
+                "Error generating code: ${e.message} e = ${e.cause} e = ${e.stackTrace}"
+            )
             Result.failure(Exception(e.message))
         }
-    } // the supplied auth credential is incorrect, malformed or has expired.
+    }
 
 
     override suspend fun getActiveCode(): Result<OwnerCode> {
@@ -101,58 +105,24 @@ class OwnerCodeRepositoryImpl @Inject constructor(
         }
     }
 
+
     override suspend fun verifyCode(code: String): Result<Boolean> {
         return try {
             isOwner()
-                    .onSuccess { isOwner ->
-                        if (!isOwner) {
-                            val ownerCode = isCodeWorking(code).getOrElse {
-                                return Result.failure(it)
-                            }
-
-                            return linkSellerWithOwner(ownerCode)
+                .onSuccess { isOwner ->
+                    if (!isOwner) {
+                        val ownerCode = isCodeWorking(code).getOrElse {
+                            return Result.failure(it)
                         }
 
-                        return Result.success(false)
+                        return linkSellerWithOwner(ownerCode)
                     }
+
+                    return Result.success(false)
+                }
                 .onFailure {
                     return Result.failure(it)
                 }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-
-    override fun getSellersConnected(): Flow<Result<List<User>>> {
-        return firestore
-            .collection("sellers")
-            .whereEqualTo("ownerId", firebaseUserUid)
-            .snapshots()
-            .map { snapshot ->
-                Log.d("HellersViewModel", "Repository caiu aqui gertSelt")
-                Result.success(
-                    snapshot.toObjects(User::class.java)
-                )
-            }
-            .catch { e ->
-                emit(Result.failure(e))
-            }
-    }
-
-
-    override suspend fun disconnectSeller(sellerUid: String): Result<Boolean> {
-        return try {
-            firestore
-                .collection("sellers")
-                .document(sellerUid)
-                .update("ownerId", null)
-                .await()
-
-            userDao.updateOwnerId(sellerUid, null)
-
-
-            Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -174,10 +144,25 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
             Result.success(document.exists())
 
+        } catch (e: FirebaseFirestoreException) {
+            when (e.code) {
+                FirebaseFirestoreException.Code.UNAVAILABLE -> {
+                    Result.failure(Exception("Sem conexão com a internet"))
+                }
+
+                FirebaseFirestoreException.Code.PERMISSION_DENIED -> {
+                    Result.failure(Exception("Sem permissão para acessar o banco de dados"))
+                }
+
+                else -> {
+                    Result.failure(e)
+                }
+            }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
 
     private suspend fun isCodeWorking(code: String): Result<OwnerCode> {
         try {
@@ -228,6 +213,41 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
             Result.success(true)
 
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+    override fun getSellersConnected(): Flow<Result<List<User>>> {
+        return firestore
+            .collection("sellers")
+            .whereEqualTo("ownerId", firebaseUserUid)
+            .snapshots()
+            .map { snapshot ->
+                Log.d("HellersViewModel", "Repository caiu aqui gertSelt")
+                Result.success(
+                    snapshot.toObjects(User::class.java)
+                )
+            }
+            .catch { e ->
+                emit(Result.failure(e))
+            }
+    }
+
+
+    override suspend fun disconnectSeller(sellerUid: String): Result<Boolean> {
+        return try {
+            firestore
+                .collection("sellers")
+                .document(sellerUid)
+                .update("ownerId", null)
+                .await()
+
+            userDao.updateOwnerId(sellerUid, null)
+
+
+            Result.success(true)
         } catch (e: Exception) {
             Result.failure(e)
         }

@@ -7,7 +7,7 @@ class RefreshHomeUseCase @Inject constructor(
     private val syncManager: SyncManager
 ) {
 
-    suspend operator fun invoke(): Boolean {
+    suspend operator fun invoke(): Result<Boolean> {
         return syncManager.downloadAll()
     }
 }

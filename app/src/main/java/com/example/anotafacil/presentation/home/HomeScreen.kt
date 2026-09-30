@@ -111,7 +111,7 @@ fun SellerHomeScreen(
 
 
     LaunchedEffect(Unit) {
-        homeViewModel.loadSellerUser()
+        homeViewModel.loadSellerData()
     }
 
     LaunchedEffect(homeUiState.message) {
@@ -407,7 +407,7 @@ fun SellerTopAppBar(
     ) {
         Column {
             Text(
-                text = "Raimundo",
+                text = uiState.sellerUser.name,
                 maxLines = 1,
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurface,

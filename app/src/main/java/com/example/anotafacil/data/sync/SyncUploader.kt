@@ -136,7 +136,9 @@ class SyncUploader @Inject constructor(
 
 
     private suspend fun uploadProducts(ownerId: String): Boolean {
-        val pendingProducts = productDao.getProductsBySyncStatus(SyncStatus.PENDING)
+        val pendingProducts = productDao
+            .getProductsBySyncStatus(SyncStatus.PENDING)
+            .filter { it.price > 0 }
         pendingProducts.forEach {
             Log.d("SyncUploader", "product: $it")
         }

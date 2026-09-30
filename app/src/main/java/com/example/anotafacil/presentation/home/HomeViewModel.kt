@@ -1,5 +1,6 @@
 package com.example.anotafacil.presentation.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.util.NetworkChecker
@@ -89,13 +90,14 @@ class HomeViewModel @Inject constructor(
                     }
                 }*/*/
 
-    fun loadSellerUser() {
+    fun loadSellerData() {
         viewModelScope.launch {
             var menssage: String? = null
-            userRepository.getUsersForSellerHome()
+            userRepository.getSellerData()
                 .collect { result ->
                     when (result) {
                         is HomeResult.Success -> {
+                            Log.d("HomeViewModel", "Usuários carregados com sucesso ${result.users.seller.name}")
                             _uiState.update {
                                 it.copy(
                                     sellerUser = result.users.seller,
@@ -155,18 +157,26 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(isSyncing = true) }
 
         viewModelScope.launch {
-            val result = refreshHomeUseCase()
-
-            if(result) {
-                searchCity()
-            } else {
-                _uiState.update {
-                    it.copy(
-                        message = "Erro ao atualizar dados",
-                        isSyncing = false
-                    )
+            refreshHomeUseCase()
+                .onSuccess { result ->
+                    if(result) {
+                        _uiState.update {
+                            it.copy(
+                                message = "Sucesso ao atualizar"
+                            )
+                        }
+                    } else {
+                        _uiState.update {
+                            it.copy(message = "Erro ao atualizar")
+                        }
+                    }
                 }
-            }
+                .onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(message = throwable.message)
+                    }
+                }
+
 
             delay(400.milliseconds)
             _uiState.update { it.copy(isSyncing = false, message = null) }

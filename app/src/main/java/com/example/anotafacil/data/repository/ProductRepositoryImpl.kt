@@ -20,7 +20,7 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     override suspend fun updateProductPrice(productId: Uuid, newPrice: Int): Int {
-        val product = productDao.getById(productId)
+        val product = productDao.getById(productId) ?: return 0
         val updatedProduct = product.copy(price = newPrice, syncStatus = SyncStatus.PENDING)
 
         return productDao.updateProductPrice(updatedProduct)

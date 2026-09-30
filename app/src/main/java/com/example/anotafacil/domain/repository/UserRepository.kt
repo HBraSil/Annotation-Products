@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 interface UserRepository {
     suspend fun getOwner(): Flow<HomeResult>
 
-    fun getUsersForSellerHome(): Flow<HomeResult>
+    fun getSellerData(): Flow<HomeResult>
 
     suspend fun getCurrentUser(uid: String? = null): Result<User>
 

@@ -41,16 +41,17 @@ class SyncManager @Inject constructor(
         else Result.failure(Exception("Você não está mais conectado a um proprietário"))
     }
 
-    suspend fun downloadAll(): Boolean {
+    suspend fun downloadAll(): Result<Boolean> {
         val owner = userRepository
             .getCurrentUser()
             .getOrElse {
-                return false
+                return Result.failure(it)
             }
 
         Log.d("SyncManager", "Downloading all data for owner: $owner")
 
-        return if (owner.ownerId != null) syncDownloader.downloadAll(owner.ownerId) else false
+        return if (owner.ownerId != null) Result.success(syncDownloader.downloadAll(owner.ownerId))
+        else Result.failure(Exception("Você não está mais conectado a um proprietário"))
     }
 
     suspend fun downloadCity(cityId: Uuid): Boolean {
