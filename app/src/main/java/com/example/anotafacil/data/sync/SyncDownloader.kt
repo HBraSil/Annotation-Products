@@ -45,13 +45,6 @@ class SyncDownloader @Inject constructor(
             }
 
 
-            val productsSuccess = downloadProducts(ownerId)
-            if (!productsSuccess) {
-                Log.d("Down", "Failed to download products")
-                return@withContext false
-            }
-
-
             val cities = cityDao.getAll()
 
             for (city in cities) {
@@ -107,10 +100,12 @@ class SyncDownloader @Inject constructor(
         ownerId: String,
         cityId: Uuid
     ): Boolean {
-        Log.d("TESTESyncManager", "Downloading city: caiu aqui no downloadcitydata")
 
         val customersSuccess = downloadCustomers(ownerId, cityId)
         if (!customersSuccess) return false
+
+        val productsSuccess = downloadProducts(ownerId)
+        if (!productsSuccess) return false
 
         val purchasesSuccess = downloadPurchases(ownerId, cityId)
         if (!purchasesSuccess) return false

@@ -1,12 +1,15 @@
 package com.example.anotafacil.domain.usecase
 
+import com.example.anotafacil.data.network.RemoteDatabase
 import com.example.anotafacil.domain.model.Purchase
 import com.example.anotafacil.domain.model.UserRole
+import com.example.anotafacil.domain.model.toEntity
 import com.example.anotafacil.domain.repository.CustomerRepository
 import com.example.anotafacil.domain.repository.UserRepository
 import jakarta.inject.Inject
 
 class NewPurchaseUseCase @Inject constructor(
+    private val remoteDb: RemoteDatabase,
     private val userRepository: UserRepository,
     private val customerRepository: CustomerRepository
 ) {
@@ -15,23 +18,26 @@ class NewPurchaseUseCase @Inject constructor(
         purchase: Purchase
     ): Result<Unit> {
 
-        val user = userRepository
-            .getCurrentUser()
-            .getOrElse {
-                return Result.failure(Exception(it.message))
-            }
+        val remoteUser = remoteDb.getUserData { uid ->
+            val currentUser = userRepository.getCurrentUser(uid).getOrNull()
 
-        val resolvedOwnerId = when (user.role) {
-            UserRole.OWNER -> user.uid // Se é o Dono, o ownerId é o próprio ID dele
-            UserRole.SELLER -> user.ownerId // Se é Vendedor, pega o ID do Dono vinculado
+            currentUser?.let { return@getUserData it.toEntity() }
+        }.getOrElse {
+            return Result.failure(it)
         }
 
-        if (resolvedOwnerId.isNullOrBlank()) {
-            return Result.failure(Exception("Vendedor não possui um proprietário vinculado."))
+        val ownerUid = when (remoteUser.role) {
+            UserRole.OWNER -> remoteUser.uid
+            UserRole.SELLER -> remoteUser.ownerId
         }
+
+        if (ownerUid == null) {
+            return Result.failure(Exception("Você não está mais conectado a um proprietário"))
+        }
+
 
         val purchaseWithOwner = purchase.copy(
-            ownerId = resolvedOwnerId
+            ownerId = ownerUid
         )
 
         return customerRepository.newPurchase(purchaseWithOwner)
