@@ -9,7 +9,6 @@ data class Purchase(
     val ownerId: String = "",
     val purchaseDate: Long = 0,
     val totalAmount: Double = 0.0,
-    val items: List<CartItem> = emptyList()
 )
 
 fun Purchase.toEntity() = PurchaseEntity(

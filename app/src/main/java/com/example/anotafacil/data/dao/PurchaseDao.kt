@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Transaction
 import androidx.room.Update
+import com.example.anotafacil.data.entity.CartItemEntity
 import com.example.anotafacil.data.entity.PurchaseEntity
 import com.example.anotafacil.domain.model.MonthlySalesData
 import com.example.anotafacil.domain.model.PurchaseWithItemsData
@@ -96,4 +97,13 @@ interface PurchaseDao {
     suspend fun getPurchaseById(
         purchaseId: Uuid
     ): PurchaseEntity?
+
+
+
+    @Query("DELETE FROM purchase")
+    suspend fun deleteAll()
+
+
+    @Query("DELETE FROM cart_item")
+    suspend fun deleteAllCartItems()
 }

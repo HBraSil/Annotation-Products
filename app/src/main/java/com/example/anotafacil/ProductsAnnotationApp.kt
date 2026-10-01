@@ -198,7 +198,7 @@ fun ProductsAnnotationApp(
                     navController.navigate("${Screens.OWNER_CUSTOMERS.route}/${it.id}")
                 },
                 onDisconnectUser = {
-                    navController.navigate(Screens.ROLE_SECTION.route) {
+                    navController.navigate(Screens.LOGIN.route) {
                         popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                     }
                 }

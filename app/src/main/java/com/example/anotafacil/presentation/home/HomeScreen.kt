@@ -40,6 +40,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshDefaults
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -57,6 +59,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
 import com.airbnb.lottie.compose.LottieConstants
@@ -80,6 +83,7 @@ fun OwnerHomeScreen(
     val homeUiState by homeViewModel.uiState.collectAsState()
 
     LaunchedEffect(Unit) {
+        Log.d("OwnerHomeScreen", "LaunchedEffect caiu aqui")
         homeViewModel.loadOwnerUser()
     }
 
@@ -91,7 +95,7 @@ fun OwnerHomeScreen(
         addCity = homeViewModel::addCity,
         onCityClick = onCityClick,
         closeSuccessDialog = homeViewModel::closeSuccessDialog,
-        refreshHome = homeViewModel::refreshHome,
+        refreshHome = homeViewModel::downloadAllUserData,
         onDisconnectUserClick = onDisconnectUser
     )
 }
@@ -106,23 +110,18 @@ fun SellerHomeScreen(
     goToAccountProfile: () -> Unit,
     goToRoleSection: () -> Unit
 ) {
-    val homeUiState by homeViewModel.uiState.collectAsState()
-    val context = LocalContext.current
+    val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
 
+
+    LaunchedEffect(homeUiState.sellerCanDisconnect) {
+        if (homeUiState.sellerCanDisconnect) goToRoleSection()
+    }
 
     LaunchedEffect(Unit) {
+        Log.d("SellerHomeScreen", "LaunchedEffect caiu aqui")
         homeViewModel.loadSellerData()
     }
 
-    LaunchedEffect(homeUiState.message) {
-        homeUiState.message?.let {
-            Toast.makeText(
-                context,
-                it,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
 
     Scaffold(
         floatingActionButton = {
@@ -156,13 +155,13 @@ fun SellerHomeScreen(
             addCity = homeViewModel::addCity,
             onCityClick = onCityClick,
             closeSuccessDialog = homeViewModel::closeSuccessDialog,
-            refreshHome = homeViewModel::refreshHome,
+            refreshHome = homeViewModel::downloadAllUserData,
             onSignOutSellerClick = {
                 onSignOutSellerClick()
                 homeViewModel.signOutSeller()
             },
             goToAccountProfile = goToAccountProfile,
-            onDisconnectUserClick = goToRoleSection
+            onDisconnectUserClick = homeViewModel::verifyingIfSellerCanDisconnect
         )
 
     }
@@ -185,17 +184,29 @@ fun HomeContent(
     goToAccountProfile: () -> Unit = {},
     onDisconnectUserClick: () -> Unit = {}
 ) {
+    val pullState = rememberPullToRefreshState()
     var showAddCityDialog by rememberSaveable { mutableStateOf(false) }
     var signOutSellerDialog by rememberSaveable { mutableStateOf(false) }
     var disconnectSellerDialog by rememberSaveable { mutableStateOf(false) }
     var showStatusDialog by rememberSaveable { mutableStateOf<String?>(null) }
+    val context = LocalContext.current
 
-    LaunchedEffect(uiState.isUserDisconnected) {
-        uiState.isUserDisconnected?.let {
-            showStatusDialog = it
+
+    LaunchedEffect(uiState.userDisconnectedMessage) {
+        uiState.userDisconnectedMessage?.let {
+              showStatusDialog = it
         }
     }
 
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let {
+            Toast.makeText(
+                context,
+                it,
+                Toast.LENGTH_LONG
+            ).show()
+        }
+    }
 
     Column(
         modifier = modifier
@@ -250,6 +261,16 @@ fun HomeContent(
         PullToRefreshBox(
             isRefreshing = false,
             onRefresh = refreshHome,
+            state = pullState,
+            indicator = {
+                PullToRefreshDefaults.Indicator(
+                    state = pullState,
+                    isRefreshing = false,
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    containerColor = MaterialTheme.colorScheme.onPrimary,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                )
+            }
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -301,7 +322,7 @@ fun HomeContent(
         }
         if (disconnectSellerDialog) {
             AnnotationProductsConfirmationDialog(
-                title = "Tem certeza que deseja desconectar do vendedor?",
+                title = "Tem certeza que deseja desconectar do proprietário?",
                 subtitle = null,
                 onDismissRequest = { signOutSellerDialog = false },
                 onConfirmClick = {

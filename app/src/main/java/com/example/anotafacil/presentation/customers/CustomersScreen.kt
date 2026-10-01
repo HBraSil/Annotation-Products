@@ -127,6 +127,7 @@ fun ClientManagementContent(
 ) {
     val context = LocalContext.current
     LaunchedEffect(customerUiState.message) {
+        println("EEEEEEEEEEEEsdafsdfsdIIIIIIIIII - ${customerUiState.message}")
         customerUiState.message?.let {
             Toast.makeText(
                 context,

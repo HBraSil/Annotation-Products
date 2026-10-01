@@ -72,4 +72,7 @@ interface CustomerDao {
 
     @Update
     suspend fun updateCustomer(customer: CustomerEntity): Int
+
+    @Query("DELETE FROM customer")
+    suspend fun deleteAll()
 }

@@ -10,7 +10,8 @@ data class Customer(
     val lastPurchase: List<CartItem> = emptyList(),
     val lastPurchaseDate: String? = null,
     val extraInfo: String? = null,
-    val cityId: Uuid? = null
+    val cityId: Uuid? = null,
+    val syncStatus: SyncStatus = SyncStatus.PENDING
 )
 
 fun Customer.toCustomerEntity() = CustomerEntity(

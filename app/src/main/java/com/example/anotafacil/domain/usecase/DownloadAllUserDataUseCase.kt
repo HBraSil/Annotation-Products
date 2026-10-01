@@ -3,7 +3,7 @@ package com.example.anotafacil.domain.usecase
 import com.example.anotafacil.data.sync.SyncManager
 import javax.inject.Inject
 
-class RefreshHomeUseCase @Inject constructor(
+class DownloadAllUserDataUseCase @Inject constructor(
     private val syncManager: SyncManager
 ) {
 

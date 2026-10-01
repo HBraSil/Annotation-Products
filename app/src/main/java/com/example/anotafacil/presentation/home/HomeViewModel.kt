@@ -1,6 +1,5 @@
 package com.example.anotafacil.presentation.home
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.util.NetworkChecker
@@ -9,9 +8,10 @@ import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.UserRepository
-import com.example.anotafacil.domain.usecase.RefreshHomeUseCase
+import com.example.anotafacil.domain.usecase.DownloadAllUserDataUseCase
 import com.example.anotafacil.domain.usecase.UploadDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import javax.inject.Inject
@@ -29,7 +29,7 @@ class HomeViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val cityRepository: CityRepository,
     private val uploadDataUseCase: UploadDataUseCase,
-    private val refreshHomeUseCase: RefreshHomeUseCase,
+    private val downloadAllUserDataUseCase: DownloadAllUserDataUseCase,
     private val networkChecker: NetworkChecker
 ): ViewModel() {
     private val _uiState = MutableStateFlow(HomeState())
@@ -52,13 +52,13 @@ class HomeViewModel @Inject constructor(
 
                         is HomeResult.NotFound -> {
                             _uiState.update {
-                                it.copy(isUserDisconnected = "Proprietário não encontrado")
+                                it.copy(message = "Proprietário não encontrado")
                             }
                         }
 
                         is HomeResult.Disconnected -> {
                             _uiState.update {
-                                it.copy(message = "Você foi desconectado do proprietário")
+                                it.copy(userDisconnectedMessage = "Você foi desconectado do proprietário")
                             }
                         }
 
@@ -73,37 +73,25 @@ class HomeViewModel @Inject constructor(
                 }
         }
     }
-/*
-* /*.fold(
-                onSuccess = { user ->
-                    _uiState.update {
-                        it.copy(ownerUser = user)
-                    }
-                },
-                onFailure = { error ->
-                    Log.d(
-                        "HomeViewModel",
-                        "Erro ao buscar owner: ${error.message}"
-                    )
-                    _uiState.update {
-                        it.copy(message = error.message)
-                    }
-                }*/*/
+
 
     fun loadSellerData() {
+        _uiState.update { it.copy(isSyncing = true) }
+
         viewModelScope.launch {
             var menssage: String? = null
+
             userRepository.getSellerData()
                 .collect { result ->
                     when (result) {
                         is HomeResult.Success -> {
-                            Log.d("HomeViewModel", "Usuários carregados com sucesso ${result.users.seller.name}")
                             _uiState.update {
                                 it.copy(
                                     sellerUser = result.users.seller,
                                     ownerUser = result.users.owner
                                 )
                             }
+
                         }
 
                         is HomeResult.NotFound -> {
@@ -112,23 +100,25 @@ class HomeViewModel @Inject constructor(
 
                         is HomeResult.Disconnected -> {
                             _uiState.update {
-                                it.copy(isUserDisconnected = "Você foi desconectado do proprietário")
+                                it.copy(userDisconnectedMessage = "Você foi desconectado do proprietário")
                             }
                         }
                         else -> {}
                     }
+
+
+                    menssage?.let { text ->
+                        _uiState.update {
+                            it.copy(
+                                message = text
+                            )
+                        }
+                    }
+
+                    delay(400.milliseconds)
+                    _uiState.update { it.copy(message = null, userDisconnectedMessage = null, isSyncing = false) }
                 }
 
-            menssage?.let { text ->
-                _uiState.update {
-                    it.copy(
-                        message = text
-                    )
-                }
-            }
-
-            delay(400.milliseconds)
-            _uiState.update { it.copy(message = null, isUserDisconnected = null) }
 
         }
     }
@@ -153,11 +143,11 @@ class HomeViewModel @Inject constructor(
 
 
 
-    fun refreshHome() {
+    fun downloadAllUserData() {
         _uiState.update { it.copy(isSyncing = true) }
 
         viewModelScope.launch {
-            refreshHomeUseCase()
+            downloadAllUserDataUseCase()
                 .onSuccess { result ->
                     if(result) {
                         _uiState.update {
@@ -209,6 +199,23 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+
+
+    fun verifyingIfSellerCanDisconnect() {
+        viewModelScope.launch {
+            userRepository.verifyingIfSellerCanDisconnect()
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(sellerCanDisconnect = true)
+                    }
+                }
+                .onFailure { throwable ->
+                    _uiState.update {
+                        it.copy(message = throwable.message)
+                    }
+                }
+        }
+    }
 
 
     fun signOutSeller() {
@@ -264,5 +271,6 @@ data class HomeState(
     val message: String? = null,
     val isSyncing: Boolean = false,
     val isUploading: Boolean = false,
-    val isUserDisconnected: String? = null
+    val userDisconnectedMessage: String? = null,
+    val sellerCanDisconnect: Boolean = false
 )

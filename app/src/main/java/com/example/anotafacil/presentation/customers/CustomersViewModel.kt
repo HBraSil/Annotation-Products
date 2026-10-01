@@ -78,17 +78,27 @@ class CustomersViewModel @Inject constructor(
         viewModelScope.launch {
             val cityId = cityIdFlow.first()
 
-            val success = refreshCustomersUseCase(cityId)
+            refreshCustomersUseCase(cityId)
+                .onSuccess { success ->
+                    if (success) {
+                    println("EEEEEEEEEEEEEEIIIIIIIIIIIII - ccessCAUIIU")
+                        _customerUiState.update {
+                            it.copy(message = "Dados atualizados com sucesso")
+                        }
+                    } else {
+                        _customerUiState.update {
+                            it.copy(message = "Erro ao atualizar dados")
+                        }
+                    }
+                }
+                .onFailure {
+                    _customerUiState.update {
+                        it.copy(message = it.message ?: "Erro ao atualizar dados")
+                    }
+                }
 
-            if (success) {
-                _customerUiState.update {
-                    it.copy(isLoading = false, message = "Dados atualizados com sucesso")
-                }
-            } else {
-                _customerUiState.update {
-                    it.copy(message = "Erro ao atualizar dados")
-                }
-            }
+            delay(400.milliseconds)
+            _customerUiState.update { it.copy(isLoading = false, message = null) }
         }
     }
 
@@ -242,7 +252,6 @@ class CustomersViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
-                    println("ERRO -------------: $exception")
                     _customerUiState.update {
                         it.copy(
                             message = exception.message

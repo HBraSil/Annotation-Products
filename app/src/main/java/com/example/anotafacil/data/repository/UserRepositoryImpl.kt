@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.anotafacil.data.dao.UserDao
 import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.data.entity.toDomain
+import com.example.anotafacil.data.network.AppDatabase
 import com.example.anotafacil.domain.exception.HomeResult
 import com.example.anotafacil.domain.model.SellerHomeUsers
 import com.example.anotafacil.domain.model.User
@@ -16,19 +17,21 @@ import jakarta.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.tasks.await
 
 class UserRepositoryImpl @Inject constructor(
+    private val appDatabase: AppDatabase,
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val userDao: UserDao,
 ) : UserRepository {
 
 
-    override suspend fun getOwner(): Flow<HomeResult> {
+    override suspend fun getOwner(ownerUid: String?): Flow<HomeResult> {
 
         val firebaseUserUid = auth.currentUser?.uid
             ?: return flowOf(HomeResult.Disconnected)
@@ -37,7 +40,7 @@ class UserRepositoryImpl @Inject constructor(
 
             firestore
                 .collection("owners")
-                .document(firebaseUserUid)
+                .document(ownerUid ?: firebaseUserUid)
                 .snapshots()
                 .map { documentSnapshot ->
                     if (!documentSnapshot.exists()) {
@@ -48,7 +51,7 @@ class UserRepositoryImpl @Inject constructor(
                         ?: return@map HomeResult.ErrorToParse
 
                     saveUserLocally(
-                        uid = firebaseUserUid,
+                        uid = ownerUid ?: firebaseUserUid,
                         user = owner
                     )
 
@@ -82,7 +85,6 @@ class UserRepositoryImpl @Inject constructor(
 
                 val user = documentSnapshot.toObject(User::class.java) ?: return@map (null)
 
-                Log.d("UserRepositoryGetSeller", "nome do Seller: ${user.name}")
                 if (user.ownerId != null) {
                     saveUserLocally(
                         uid = firebaseUserUid,
@@ -97,70 +99,47 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
-    private suspend fun getOwnerById(ownerId: String): Result<User> {
-        return try {
-
-            val document = firestore
-                .collection("owners")
-                .document(ownerId)
-                .get()
-                .await()
-
-            if (!document.exists()) {
-                return Result.failure(Exception("Proprietário não encontrado"))
-            }
-
-            val user = document.toObject(User::class.java)
-                ?: return Result.failure(Exception("Erro ao converter usuário"))
-
-            saveUserLocally(
-                uid = ownerId,
-                user = user
-            )
-
-            Result.success(user)
-        } catch (e: Exception) {
-
-            Log.d(
-                "UserRepository",
-                "Erro ao buscar owner.",
-                e
-            )
-
-            Result.failure(e)
-        }
-    }
-
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getSellerData(): Flow<HomeResult> {
-
         return getSeller()
-            .mapLatest { seller ->
-                if (seller == null) return@mapLatest HomeResult.NotFound
+            .flatMapLatest { seller ->
+                // 1. Se o vendedor não existe no banco local
+                if (seller == null) {
+                    return@flatMapLatest flowOf(HomeResult.NotFound)
+                }
 
-                val ownerId = seller.ownerId ?: return@mapLatest HomeResult.Disconnected
-
-                val owner = getOwnerById(ownerId)
-                    .getOrElse {
-                        return@mapLatest HomeResult.Error(it.message)
-                    }
+                val ownerId = seller.ownerId
+                    ?: return@flatMapLatest flowOf(HomeResult.Disconnected)
 
                 Log.d("UserRepository", "SellerNameGetSellerData: ${seller.name}")
 
-                HomeResult.Success(
-                    SellerHomeUsers(
-                        seller = seller,
-                        owner = owner
-                    )
-                )
-            }
-            .catch {
-                emit(
-                    HomeResult.Error(message = it.message)
-                )
-            }
+                // 3. O getOwner agora retorna um Flow<HomeResult>
+                getOwner(ownerId).map { ownerResult ->
+                    when (ownerResult) {
+                        is HomeResult.Success -> {
+                            val owner = ownerResult.users.owner
+                            HomeResult.Success(
+                                SellerHomeUsers(
+                                    seller = seller,
+                                    owner = owner
+                                )
+                            )
+                        }
 
+                        is HomeResult.Error -> {
+                            HomeResult.Error(ownerResult.message)
+                        }
+
+                        else -> {
+                            HomeResult.Error("Erro ao buscar proprietário")
+                        }
+                    }
+                }
+            }
+            .catch { throwable ->
+                emit(HomeResult.Error(message = throwable.message))
+            }
     }
 
 
@@ -243,5 +222,13 @@ class UserRepositoryImpl @Inject constructor(
             Log.e("UserRepository", "Erro ao sair da conta", e)
             Result.failure(e)
         }
+    }
+
+    override suspend fun verifyingIfSellerCanDisconnect(): Result<Boolean> {
+        return appDatabase.clearSellerData()
+    }
+
+    override suspend fun clearSellerData(): Result<Boolean> {
+        TODO("Not yet implemented")
     }
 }

@@ -48,9 +48,6 @@ class CustomerRepositoryImpl @Inject constructor(
 
     override suspend fun addCustomer(customer: Customer): Result<Boolean> {
         return try {
-            println(
-                "ANALISAR ----> ${customer.toCustomerEntity()}"
-            )
             customerDao.saveCustomer(customer.toCustomerEntity())
             Result.success(true)
         } catch (e: Exception) {

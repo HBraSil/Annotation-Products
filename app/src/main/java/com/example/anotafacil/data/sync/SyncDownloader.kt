@@ -18,8 +18,10 @@ import com.example.anotafacil.data.network.AppDatabase
 import com.example.anotafacil.domain.model.SyncStatus
 import com.google.firebase.firestore.FirebaseFirestore
 import jakarta.inject.Inject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 import kotlin.uuid.Uuid
 
 class SyncDownloader @Inject constructor(
@@ -33,75 +35,71 @@ class SyncDownloader @Inject constructor(
 ) {
 
     suspend fun downloadAll(ownerId: String): Boolean {
-        Log.d("Down", "Downloading all data for owner: $ownerId")
+        return withContext(Dispatchers.IO) {
+            Log.d("Down", "Downloading all data for owner: $ownerId")
 
-        val citiesSuccess = downloadCities(ownerId)
-        if (!citiesSuccess) {
-            Log.d("Down", "Failed to download cities")
-            return false
-        }
-
-
-        val productsSuccess = downloadProducts(ownerId)
-        if (!productsSuccess) {
-            Log.d("Down", "Failed to download products")
-            return false
-        }
-
-
-        val cities = cityDao.getAll().first()
-
-        Log.d("Down", "Downloading cities: $cities")
-
-        for (city in cities) {
-            val success = downloadCityData(
-                ownerId = ownerId,
-                cityId = city.id
-            )
-
-            if (!success) {
-                Log.d("Down", "Failed to download city: ${city.name}")
-                return false
+            val citiesSuccess = downloadCities(ownerId)
+            if (!citiesSuccess) {
+                Log.d("Down", "Failed to download cities")
+                return@withContext false
             }
-        }
 
-        return true
-    }
 
-    private suspend fun downloadCities(ownerId: String): Boolean {
-        return try {
-            val snapshot = firestore
-                .collection("owners")
-                .document(ownerId)
-                .collection("cities")
-                .get()
-                .await()
+            val productsSuccess = downloadProducts(ownerId)
+            if (!productsSuccess) {
+                Log.d("Down", "Failed to download products")
+                return@withContext false
+            }
 
-            for (document in snapshot.documents) {
-                val cityId = Uuid.parse(document.id)
-                val name = document.getString("name") ?: continue
 
-                Log.d("SyncManager", "Downloading city: $name")
-                val localCity = cityDao.getCity(cityId)
+            val cities = cityDao.getAll()
 
-                if (localCity == null) {
-                    cityDao.addCity(
-                        CityEntity(
-                            id = cityId,
-                            name = name,
-                            syncStatus = SyncStatus.SYNCED
-                        )
-                    )
-                } else {
-                    cityDao.addCity(localCity.copy(name = name))
+            for (city in cities) {
+                Log.d("TESTESyncManager", "Downloading city: ${city.name}: caiu aqui")
+                val success = downloadCityData(
+                    ownerId = ownerId,
+                    cityId = city.id
+                )
+
+                if (!success) {
+                    Log.d("Down", "Failed to download city: ${city.name}")
+                    return@withContext false
                 }
             }
 
             true
-
-        } catch (e: Exception) {
-            false
         }
+    }
+
+
+    private suspend fun downloadCities(ownerId: String): Boolean {
+
+        val snapshot = firestore
+            .collection("owners")
+            .document(ownerId)
+            .collection("cities")
+            .get()
+            .await()
+
+        for (document in snapshot.documents) {
+            val cityId = Uuid.parse(document.id)
+            val name = document.getString("name") ?: continue
+
+            val localCity = cityDao.getCity(cityId)
+
+            if (localCity == null) {
+                cityDao.insertCity(
+                    CityEntity(
+                        id = cityId,
+                        name = name,
+                        syncStatus = SyncStatus.SYNCED
+                    )
+                )
+            }
+        }
+
+
+        return true
     }
 
 
@@ -109,6 +107,8 @@ class SyncDownloader @Inject constructor(
         ownerId: String,
         cityId: Uuid
     ): Boolean {
+        Log.d("TESTESyncManager", "Downloading city: caiu aqui no downloadcitydata")
+
         val customersSuccess = downloadCustomers(ownerId, cityId)
         if (!customersSuccess) return false
 
@@ -130,73 +130,68 @@ class SyncDownloader @Inject constructor(
         cityId: Uuid
     ): Boolean {
 
-        return try {
-            val snapshot = firestore
-                .collection("owners")
-                .document(ownerId)
-                .collection("customers")
-                .whereEqualTo("cityId", cityId.toString())
-                .get()
-                .await()
 
-            for (document in snapshot.documents) {
+        val snapshot = firestore
+            .collection("owners")
+            .document(ownerId)
+            .collection("customers")
+            .whereEqualTo("cityId", cityId.toString())
+            .get()
+            .await()
 
-                val customerId = Uuid.parse(document.id)
+        for (document in snapshot.documents) {
 
-                val name = document.getString("name")
-                    ?: continue
+            val customerId = Uuid.parse(document.id)
 
-                val lastPurchaseDate =
-                    document.getString("lastPurchaseDate")
+            val name = document.getString("name") ?: continue
 
-                val owes =
-                    document.getDouble("owes")
+            val lastPurchaseDate =
+                document.getString("lastPurchaseDate")
 
-                val extraInfo =
-                    document.getString("extraInfo")
+            val owes =
+                document.getDouble("owes")
 
-                val localCustomer =
-                    customerDao.getCustomer(customerId).first()
+            val extraInfo =
+                document.getString("extraInfo")
 
-                when {
-                    localCustomer == null -> {
-                        customerDao.saveCustomer(
-                            CustomerEntity(
-                                id = customerId,
-                                name = name,
-                                lastPurchaseDate = lastPurchaseDate,
-                                owes = owes,
-                                extraInfo = extraInfo,
-                                cityId = cityId,
-                                syncStatus = SyncStatus.SYNCED
-                            )
+            val localCustomer =
+                customerDao.getCustomer(customerId).first()
+
+            when {
+                localCustomer == null -> {
+                    customerDao.saveCustomer(
+                        CustomerEntity(
+                            id = customerId,
+                            name = name,
+                            lastPurchaseDate = lastPurchaseDate,
+                            owes = owes,
+                            extraInfo = extraInfo,
+                            cityId = cityId,
+                            syncStatus = SyncStatus.SYNCED
                         )
-                    }
+                    )
+                }
 
-                    localCustomer.syncStatus == SyncStatus.SYNCED -> {
-                        customerDao.saveCustomer(
-                            localCustomer.copy(
-                                name = name,
-                                lastPurchaseDate = lastPurchaseDate,
-                                owes = owes,
-                                extraInfo = extraInfo,
-                                cityId = cityId,
-                                syncStatus = SyncStatus.SYNCED
-                            )
+                localCustomer.syncStatus == SyncStatus.SYNCED -> {
+                    customerDao.saveCustomer(
+                        localCustomer.copy(
+                            name = name,
+                            lastPurchaseDate = lastPurchaseDate,
+                            owes = owes,
+                            extraInfo = extraInfo,
+                            cityId = cityId,
+                            syncStatus = SyncStatus.SYNCED
                         )
-                    }
+                    )
+                }
 
-                    localCustomer.syncStatus == SyncStatus.PENDING -> {
-                        // Não sobrescreve alteração local pendente.
-                    }
+                localCustomer.syncStatus == SyncStatus.PENDING -> {
+                    // Não sobrescreve alteração local pendente.
                 }
             }
-
-            true
-
-        } catch (e: Exception) {
-            false
         }
+
+        return true
     }
 
 
@@ -206,8 +201,6 @@ class SyncDownloader @Inject constructor(
         ownerId: String,
         cityId: Uuid
     ): Boolean {
-
-        return try {
 
             val customers = customerDao.getCustomersByCity(cityId)
 
@@ -269,11 +262,8 @@ class SyncDownloader @Inject constructor(
                 }
             }
 
-            true
+            return true
 
-        } catch (e: Exception) {
-            false
-        }
     }
 
 
@@ -282,7 +272,6 @@ class SyncDownloader @Inject constructor(
         cityId: Uuid
     ): Boolean {
 
-        return try {
 
             val customers = customerDao.getCustomersByCity(cityId)
 
@@ -325,19 +314,14 @@ class SyncDownloader @Inject constructor(
                 }
             }
 
-            true
+            return true
 
-        } catch (e: Exception) {
-            false
-        }
     }
 
 
 
 
     private suspend fun downloadProducts(ownerId: String): Boolean {
-
-        return try {
 
             val snapshot = firestore
                 .collection("owners")
@@ -384,11 +368,8 @@ class SyncDownloader @Inject constructor(
                 }
             }
 
-            true
+            return true
 
-        } catch (e: Exception) {
-            false
-        }
     }
 
 }

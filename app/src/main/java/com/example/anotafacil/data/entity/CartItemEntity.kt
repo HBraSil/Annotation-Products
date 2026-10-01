@@ -32,6 +32,7 @@ data class CartItemEntity(
     val subtotal: Int,
 )
 
+
 fun CartItemEntity.toCartItemDomain() = CartItem(
     id = id,
     productId = productId,

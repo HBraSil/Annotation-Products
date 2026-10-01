@@ -3,6 +3,7 @@ package com.example.anotafacil.data.network
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.withTransaction
 import com.example.anotafacil.data.dao.CityDao
 import com.example.anotafacil.data.dao.CustomerDao
 import com.example.anotafacil.data.dao.PaymentDao
@@ -17,6 +18,7 @@ import com.example.anotafacil.data.entity.PaymentEntity
 import com.example.anotafacil.data.entity.ProductEntity
 import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.data.util.Converters
+import com.example.anotafacil.domain.model.SyncStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -46,6 +48,38 @@ abstract class AppDatabase : RoomDatabase() {
     suspend fun clearAllData() {
         withContext(Dispatchers.IO) {
             clearAllTables()
+        }
+    }
+
+
+    suspend fun clearSellerData(): Result<Boolean> {
+        if (hasPendingData()) return Result.failure(Exception("Há dados pendentes. Salve antes de desconectar-se!"))
+
+        return withContext(Dispatchers.IO) {
+            try {
+                withTransaction {
+                    paymentDao().deleteAll()
+                    purchaseDao().deleteAll()
+                    customerDao().deleteAll()
+                    cityDao().deleteAll()
+                    productDao().deleteAll()
+                }
+
+                Result.success(true)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        }
+    }
+
+
+    suspend fun hasPendingData(): Boolean {
+        return withContext(Dispatchers.IO) {
+             cityDao().getCitiesBySyncStatus(SyncStatus.PENDING).isNotEmpty() ||
+                    productDao().getProductsBySyncStatus(SyncStatus.PENDING).isNotEmpty() ||
+                    customerDao().getCustomersBySyncStatus(SyncStatus.PENDING).isNotEmpty() ||
+                    purchaseDao().getPurchasesBySyncStatus(SyncStatus.PENDING).isNotEmpty() ||
+                    paymentDao().getPaymentsBySyncStatus(SyncStatus.PENDING).isNotEmpty()
         }
     }
 }

@@ -44,4 +44,7 @@ interface PaymentDao {
         paymentId: Uuid,
         status: SyncStatus
     ): Int
+
+    @Query("DELETE FROM payment")
+    suspend fun deleteAll()
 }

@@ -13,7 +13,7 @@ import kotlin.collections.map
 import kotlin.uuid.Uuid
 
 class CityRepositoryImpl @Inject constructor(
-    private val cityDao: CityDao
+    private val cityDao: CityDao,
 ) : CityRepository {
 
     override fun getCities(): Flow<List<City>> = cityDao.getCities().map { cityList ->
@@ -24,7 +24,7 @@ class CityRepositoryImpl @Inject constructor(
 
     override suspend fun addCity(city: City): Long {
         val newCity = city.toCityEntity()
-        return cityDao.addCity(newCity)
+        return cityDao.insertCity(newCity)
     }
 
     override suspend fun getCity(cityId: Uuid?): Result<City?> {

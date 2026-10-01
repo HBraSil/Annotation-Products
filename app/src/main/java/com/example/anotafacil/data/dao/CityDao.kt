@@ -2,8 +2,8 @@ package com.example.anotafacil.data.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
-import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.example.anotafacil.data.entity.CityEntity
 import com.example.anotafacil.domain.model.SyncStatus
 import com.example.anotafacil.presentation.customers.MonthlySalesSummary
@@ -12,8 +12,17 @@ import kotlin.uuid.Uuid
 
 @Dao
 interface CityDao {
+
+    @Insert
+    suspend fun insertCity(city: CityEntity): Long
+
+
+    @Update
+    suspend fun updateCity(city: CityEntity)
+
+
     @Query("SELECT * FROM city")
-    fun getAll(): Flow<List<CityEntity>>
+    fun getAll(): List<CityEntity>
 
 
     @Query("SELECT * FROM city WHERE id = :id")
@@ -48,9 +57,6 @@ interface CityDao {
 """)
     fun searchCities(query: String): Flow<List<CityEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun addCity(city: CityEntity): Long
-
 
     @Query("""
         SELECT *
@@ -84,4 +90,7 @@ interface CityDao {
       AND purchase.purchaseDate < :endMonth
       AND customer.cityId = :cityId""")
     fun getMonthlySalesSummary(cityId: Uuid, startMonth: Long, endMonth: Long): Flow<MonthlySalesSummary>
+
+    @Query("DELETE FROM city")
+    suspend fun deleteAll()
 }

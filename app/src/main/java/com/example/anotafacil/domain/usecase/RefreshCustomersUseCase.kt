@@ -9,7 +9,7 @@ class RefreshCustomersUseCase @Inject constructor(
     private val syncManager: SyncManager
 ) {
 
-    suspend operator fun invoke(cityId: Uuid): Boolean {
+    suspend operator fun invoke(cityId: Uuid): Result<Boolean> {
         return syncManager.downloadCity(cityId)
     }
 }

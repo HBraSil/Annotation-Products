@@ -48,4 +48,7 @@ interface ProductDao {
 
     @Query("SELECT * FROM product WHERE name LIKE '%' || :query || '%'")
     suspend fun search(query: String): List<ProductEntity>
+
+    @Query("DELETE FROM product")
+    suspend fun deleteAll()
 }
