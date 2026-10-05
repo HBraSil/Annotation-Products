@@ -141,7 +141,7 @@ fun LoginContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                CustomTextField(
+                EasyNotesAuthTextField(
                     value = loginState.email.field,
                     onValueChange = { onEmailChange(it) },
                     placeholder = "exemplo@email.com",
@@ -165,7 +165,7 @@ fun LoginContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                CustomTextField(
+                EasyNotesAuthTextField(
                     value = loginState.password.field,
                     onValueChange = { onPasswordChange(it) },
                     placeholder = "••••••••",
@@ -322,7 +322,7 @@ fun LoginContent(
 
 
 @Composable
-private fun CustomTextField(
+private fun EasyNotesAuthTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,

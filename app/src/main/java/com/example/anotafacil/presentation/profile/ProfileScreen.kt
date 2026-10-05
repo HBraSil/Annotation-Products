@@ -229,7 +229,7 @@ fun ProfileContent(
             )
 
 
-            showStatusDialog?.let {
+            /*showStatusDialog?.let {
                 AnnotationProductsStatusDialog(
                     text = it,
                     confirmButtonText = "Sair",
@@ -243,7 +243,7 @@ fun ProfileContent(
                         showStatusDialog = null
                     },
                 )
-            }
+            }*/
         }
 
         if (signOutConfirm) {

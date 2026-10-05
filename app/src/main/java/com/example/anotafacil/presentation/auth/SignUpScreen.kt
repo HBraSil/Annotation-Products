@@ -269,7 +269,6 @@ fun SignUpContent(
 
                                 if (uiState.isLoading) {
                                     CircularProgressIndicator(
-                                        progress = { if (uiState.isLoading) 0.5f else 0f },
                                         modifier = Modifier
                                             .align(Alignment.Center)
                                             .size(24.dp),

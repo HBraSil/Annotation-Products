@@ -26,6 +26,7 @@ firebaseBom = "34.18.0"
 googleServicesVersion = "4.5.0"
 credentials = "1.6.0"
 googleid = "1.2.0"
+lifecycleProcess = "2.11.0"
 
 
 [libraries]
@@ -74,6 +75,7 @@ androidx-datastore-core = { group = "androidx.datastore", name = "datastore-pref
 
 vico-compose = { group = "com.patrykandpatrick.vico", name = "compose", version.ref = "vico" }
 vico-compose-m3 = { group = "com.patrykandpatrick.vico", name = "compose-m3", version.ref = "vico" }
+androidx-lifecycle-process = { group = "androidx.lifecycle", name = "lifecycle-process", version.ref = "lifecycleProcess" }
 
 
 

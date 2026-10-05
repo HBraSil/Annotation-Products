@@ -20,15 +20,17 @@ import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class AccountProfileViewModel @Inject constructor(
-        private val accountProfileRepository: AccountProfileRepository,
-    private val userRepository: UserRepository
-): ViewModel() {
+    private val accountProfileRepository: AccountProfileRepository,
+    private val userRepository: UserRepository,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileDetailUiState())
     val uiState = _uiState.asStateFlow()
 
 
-    init { getUserData() }
+    init {
+        getUserData()
+    }
 
 
     fun getUserData() {
@@ -45,7 +47,10 @@ class AccountProfileViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    Log.d("AccountProfileViewModel", "Falha ao buscar dados do usuário.: ${error.message}")
+                    Log.d(
+                        "AccountProfileViewModel",
+                        "Falha ao buscar dados do usuário.: ${error.message}"
+                    )
                 }
         }
     }
@@ -63,33 +68,77 @@ class AccountProfileViewModel @Inject constructor(
                 )
             )
         }
+
+        wasFormChanged(name = name)
     }
 
 
     fun updateEmail(email: String) {
-        val isNameValid = EmailValidator.validate(email)
+        val isEmailValid = EmailValidator.validate(email)
 
         _uiState.update {
             it.copy(
-                name = FieldState(
+                email = FieldState(
                     field = email,
-                    fieldError = isNameValid,
-                    isValid = isNameValid == null
+                    fieldError = isEmailValid,
+                    isValid = isEmailValid == null
                 )
+            )
+        }
+
+        wasFormChanged(email = email)
+    }
+
+
+    fun wasFormChanged(name: String? = null, email: String? = null) {
+        val currentName = name ?: _uiState.value.name.field
+        val currentEmail = email ?: _uiState.value.email.field
+
+        val nameChanged = currentName != _uiState.value.user?.name
+        val emailChanged = currentEmail != _uiState.value.user?.email
+
+        _uiState.update {
+            it.copy(
+                wasNameChanged = nameChanged,
+                wasEmailChanged = emailChanged
             )
         }
     }
 
 
-    fun showAccountDeletionConfirmationDialog() {
-        _uiState.update {
-            it.copy(showAccountDeletionConfirmationDialog = true)
-        }
-    }
-    
-    fun hideAccountDeletionConfirmationDialog() {
-        _uiState.update {
-            it.copy(showAccountDeletionConfirmationDialog = false)
+
+    fun saveChanges() {
+        viewModelScope.launch {
+            with(_uiState.value) {
+                println("Saving changes...: ${name.isValid}, ${email.isValid}")
+                if (!name.isValid || !email.isValid) {
+                    Log.d(
+                        "AccountProfileViewModel",
+                        "Formulário inválido. Não é possível salvar alterações."
+                    )
+                    return@launch
+                }
+
+                userRepository.saveChanges(
+                    newUserName = if (wasNameChanged) user?.copy(name = name.field) else null,
+                    newUserEmail = if (wasEmailChanged) user?.copy(email = email.field) else null
+                )
+                .onSuccess { text ->
+                    _uiState.update {
+                        it.copy(
+                            wasNameChanged = false,
+                            wasEmailChanged = false,
+                            emailSentMessage = text
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    Log.d(
+                        "AccountProfileViewModel",
+                        "Falha ao salvar alterações.: ${error.message}"
+                    )
+                }
+            }
         }
     }
 
@@ -100,21 +149,20 @@ class AccountProfileViewModel @Inject constructor(
         viewModelScope.launch {
             delay(3.seconds)
             _uiState.update { it.copy(isDeleting = false, successfullyDeleted = true) }
-            /*val result = accountProfileRepository.deleteAccount()
+            val result = accountProfileRepository.deleteAccount()
 
             result
                 .onSuccess {
                     signOut()
                 }
                 .onFailure { error ->
-                    Log.d("AccountProfileViewModel", "Falha ao deletar a conta.")
                     _uiState.update {
                         it.copy(
                             isDeleting = false,
                             error = error.message
                         )
                     }
-                }*/
+                }
         }
     }
 
@@ -145,6 +193,8 @@ data class ProfileDetailUiState(
     val user: User? = null,
     val isDeleting: Boolean = false,
     val error: String? = null,
+    val wasNameChanged: Boolean = false,
+    val wasEmailChanged: Boolean = false,
     val successfullyDeleted: Boolean = false,
-    val showAccountDeletionConfirmationDialog: Boolean = false
+    val emailSentMessage: String? = null
 )

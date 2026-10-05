@@ -8,24 +8,36 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.example.anotafacil.presentation.LastScreenViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.anotafacil.data.util.AppForegroundManager
+import com.example.anotafacil.presentation.MainActivityViewModel
 import com.example.anotafacil.ui.theme.AnotacoesDeProdutosTheme
 import dagger.hilt.android.AndroidEntryPoint
+import jakarta.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    val lastScreenViewModel: LastScreenViewModel by viewModels()
+
+
+    @Inject
+    lateinit var appForegroundManager: AppForegroundManager
+
+    val mainActivityViewModel: MainActivityViewModel by viewModels()
+
+
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         installSplashScreen().apply {
             setKeepOnScreenCondition {
-                lastScreenViewModel.lastActiveProfile.value == null
+                mainActivityViewModel.lastActiveProfile.value == null
             }
         }
 
@@ -36,14 +48,45 @@ class MainActivity : ComponentActivity() {
                 darkScrim = Color.TRANSPARENT
             )
         )
+            Log.d(
+                "APP_LIFECYCLE",
+                "MainActivity manager = ${
+                    System.identityHashCode(appForegroundManager)
+                }"
+            )
 
         setContent {
+            val showEmailChangedDialog by appForegroundManager
+                .showEmailChangedDialog
+                .collectAsStateWithLifecycle()
+
+            val sellerConnection by mainActivityViewModel
+                .sellerConnection
+                .collectAsStateWithLifecycle()
+
+            LaunchedEffect(showEmailChangedDialog) {
+                Log.d(
+                    "APP_LIFECYCLE",
+                    "MainActivity recebeu: $showEmailChangedDialog"
+                )
+            }
+
+
             AnotacoesDeProdutosTheme {
-                val startProfile by lastScreenViewModel.lastActiveProfile.collectAsState()
-                Log.d("MainActivityLog", "startProfile: $startProfile")
+                val startProfile by mainActivityViewModel.lastActiveProfile.collectAsState()
+
+
                 startProfile?.let { initialScreen ->
                     val startDestination = remember { initialScreen }
-                    ProductsAnnotationApp(lastScreenViewModel, startDestination)
+
+                    ProductsAnnotationApp(
+                        sellerConnection,
+                        showEmailChangedDialog,
+                        mainActivityViewModel,
+                        startDestination,
+                        appForegroundManager::dismissEmailChangedDialog,
+                        mainActivityViewModel::confirmSellerDisconnected
+                    )
                 }
             }
         }

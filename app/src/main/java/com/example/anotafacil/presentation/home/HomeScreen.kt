@@ -324,7 +324,7 @@ fun HomeContent(
             AnnotationProductsConfirmationDialog(
                 title = "Tem certeza que deseja desconectar do proprietário?",
                 subtitle = null,
-                onDismissRequest = { signOutSellerDialog = false },
+                onDismissRequest = { disconnectSellerDialog = false },
                 onConfirmClick = {
                     onDisconnectUserClick()
                     disconnectSellerDialog = false
@@ -333,7 +333,7 @@ fun HomeContent(
         }
 
 
-        showStatusDialog?.let {
+/*        showStatusDialog?.let {
             AnnotationProductsStatusDialog(
                 text = it,
                 confirmButtonText = "Sair",
@@ -347,7 +347,7 @@ fun HomeContent(
                     showStatusDialog = null
                 },
             )
-        }
+        }*/
     }
 
     if (showAddCityDialog) {

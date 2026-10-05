@@ -7,6 +7,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,7 +23,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.anotafacil.presentation.LastScreenViewModel
+import com.example.anotafacil.domain.exception.HomeResult
+import com.example.anotafacil.presentation.MainActivityViewModel
 import com.example.anotafacil.presentation.onboarding.verification_code.VerificationCodeScreen
 import com.example.anotafacil.presentation.onboarding.RoleSectionScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
@@ -38,6 +42,8 @@ import com.example.anotafacil.presentation.price_definition.PriceDefinitionScree
 import com.example.anotafacil.presentation.profile.manage_sellers.ManageSellersScreen
 import com.example.anotafacil.presentation.profile.ProfileScreen
 import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
+import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 
 enum class Screens(val route: String) {
     ROLE_SECTION("role_section"),
@@ -65,14 +71,53 @@ enum class Screens(val route: String) {
 
 @Composable
 fun ProductsAnnotationApp(
-    lastScreenViewModel: LastScreenViewModel = hiltViewModel(),
-    startDestination: String
+    sellerConnection: HomeResult,
+    showEmailChangedDialog: Boolean,
+    mainActivityViewModel: MainActivityViewModel = hiltViewModel(),
+    startDestination: String,
+    dismissEmailChangedDialog: () -> Unit,
+    dismissDisconnectDialog: () -> Unit
 ) {
     val navController = rememberNavController()
 
+
+    if (showEmailChangedDialog) {
+        AnnotationProductsConfirmationDialog(
+            title = "Alteração de e-mail",
+            subtitle = "Seu e-mail foi alterado. Você precisará fazer login novamente.",
+            onDismissRequest = {},
+            onConfirmClick = {
+                dismissEmailChangedDialog()
+                navController.navigate(Screens.LOGIN.route) {
+                    popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                }
+            }
+        )
+    }
+
+
+    if (sellerConnection == HomeResult.Disconnected) {
+        AnnotationProductsStatusDialog(
+            text = "Você foi desconectado do proprietário",
+            confirmButtonText = "Sair",
+            icon = Icons.Default.Close,
+            iconColor = MaterialTheme.colorScheme.error,
+            containerIconColor = MaterialTheme.colorScheme.errorContainer,
+            confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
+            confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
+            confirmClick = {
+                dismissDisconnectDialog()
+                navController.navigate(Screens.LOGIN.route) {
+                    popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                }
+            }
+        )
+    }
+
+
+
     val backStackEntry = navController.currentBackStackEntryAsState()
     val backStackRoute = backStackEntry.value?.destination?.route
-
     Scaffold(
         bottomBar = {
             if (
@@ -100,7 +145,7 @@ fun ProductsAnnotationApp(
             innerPadding = innerPadding,
             lastRoute = {
                 Log.d("ProductsAnnotationApp", "lastRoute: $it")
-                lastScreenViewModel.lastRoute(it)
+                mainActivityViewModel.lastRoute(it)
             }
         )
     }
@@ -115,7 +160,7 @@ fun ProductsAnnotationApp(
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = Screens.LOGIN.route,
     ) {
         composable(route = Screens.LOGIN.route) {
             LaunchedEffect(Unit) {

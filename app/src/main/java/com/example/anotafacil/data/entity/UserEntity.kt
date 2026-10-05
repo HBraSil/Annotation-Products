@@ -17,6 +17,7 @@ data class UserEntity(
 
 
 fun UserEntity.toDomain() = User(
+    uid = uid,
     name = name,
     email = email,
     ownerId = ownerId,

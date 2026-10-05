@@ -214,6 +214,9 @@ class HomeViewModel @Inject constructor(
                         it.copy(message = throwable.message)
                     }
                 }
+
+            delay(400.milliseconds)
+            _uiState.update { it.copy(message = null) }
         }
     }
 
