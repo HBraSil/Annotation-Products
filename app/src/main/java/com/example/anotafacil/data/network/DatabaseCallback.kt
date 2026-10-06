@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.anotafacil.data.dao.ProductDao
 import com.example.anotafacil.data.entity.ProductEntity
+import com.example.anotafacil.domain.model.SyncStatus
 import javax.inject.Provider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -18,22 +19,22 @@ class DatabaseCallback(
         super.onCreate(db)
         scope.launch {
             val databaseList = listOf(
-                ProductEntity(name = "Sabão", price = 0),
-                ProductEntity(name = "Brilho", price = 0),
-                ProductEntity(name = "Alvejante", price = 0),
-                ProductEntity(name = "Amaciante", price = 0),
-                ProductEntity(name = "Desinfetante", price = 0),
-                ProductEntity(name = "Água Sanitária", price = 0),
-                ProductEntity(name = "Metazil", price = 0),
-                ProductEntity(name = "Detergente", price = 0),
-                ProductEntity(name = "Sabão 2l", price = 0),
-                ProductEntity(name = "Brilho 2l", price = 0),
-                ProductEntity(name = "Alvejante 2l", price = 0),
-                ProductEntity(name = "Amaciante 2l", price = 0),
-                ProductEntity(name = "Desinfetante 2l", price = 0),
-                ProductEntity(name = "Água Sanitária 2l", price = 0),
-                ProductEntity(name = "Metazil 2l", price = 0),
-                ProductEntity(name = "Detergente 2l", price = 0),
+                ProductEntity(name = "Sabão", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Brilho", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Alvejante", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Amaciante", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Desinfetante", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Água Sanitária", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Metazil", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Detergente", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Sabão 2l", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Brilho 2l", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Alvejante 2l", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Amaciante 2l", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Desinfetante 2l", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Água Sanitária 2l", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Metazil 2l", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Detergente 2l", price = 0, syncStatus = SyncStatus.SYNCED),
             )
 
 

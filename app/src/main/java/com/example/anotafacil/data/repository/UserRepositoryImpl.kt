@@ -41,6 +41,7 @@ class UserRepositoryImpl @Inject constructor(
     private val appDatabase: AppDatabase,
     private val auth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
+    private val ownerCodeRepositoryImpl: OwnerCodeRepositoryImpl,
     private val userDao: UserDao,
     private val userDataStore: UserDataStore
 ) : UserRepository {
@@ -66,6 +67,9 @@ class UserRepositoryImpl @Inject constructor(
             ?: return Result.failure(Exception("Usuário não está logado"))
 
         userDao.updateOwnerId(uid = firebaseUserUid, ownerId = null)
+        val userDisconnectedFromFirestore = ownerCodeRepositoryImpl.disconnectSeller(firebaseUserUid)
+        if (userDisconnectedFromFirestore.isFailure) return Result.failure(Exception(userDisconnectedFromFirestore.exceptionOrNull()))
+
         return appDatabase.clearSellerData()
     }
 
