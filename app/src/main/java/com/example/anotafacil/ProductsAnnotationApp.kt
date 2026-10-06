@@ -25,11 +25,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.anotafacil.domain.exception.HomeResult
 import com.example.anotafacil.presentation.MainActivityViewModel
-import com.example.anotafacil.presentation.onboarding.verification_code.VerificationCodeScreen
-import com.example.anotafacil.presentation.onboarding.RoleSectionScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
-import com.example.anotafacil.ui.components.AnimatedBottomBar
 import com.example.anotafacil.presentation.customer_detail.CustomerDetailScreen
 import com.example.anotafacil.presentation.customers.OwnerCustomersScreen
 import com.example.anotafacil.presentation.customers.SellerCustomersScreen
@@ -37,11 +34,14 @@ import com.example.anotafacil.presentation.history.PurchaseHistoryScreen
 import com.example.anotafacil.presentation.home.OwnerHomeScreen
 import com.example.anotafacil.presentation.home.SellerHomeScreen
 import com.example.anotafacil.presentation.new_purchase.NewPurchaseScreen
+import com.example.anotafacil.presentation.onboarding.RoleSectionScreen
 import com.example.anotafacil.presentation.onboarding.subscription.SubscriptionScreen
+import com.example.anotafacil.presentation.onboarding.verification_code.VerificationCodeScreen
 import com.example.anotafacil.presentation.price_definition.PriceDefinitionScreen
-import com.example.anotafacil.presentation.profile.manage_sellers.ManageSellersScreen
 import com.example.anotafacil.presentation.profile.ProfileScreen
+import com.example.anotafacil.presentation.profile.manage_sellers.ManageSellersScreen
 import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
+import com.example.anotafacil.ui.components.AnimatedBottomBar
 import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 
@@ -113,7 +113,6 @@ fun ProductsAnnotationApp(
             }
         )
     }
-
 
 
     val backStackEntry = navController.currentBackStackEntryAsState()

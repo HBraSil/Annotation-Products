@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -57,7 +58,7 @@ class MainActivityViewModel @Inject constructor(
         viewModelScope.launch {
             userRepository.verifyingIfSellerCanDisconnect()
             userRepository.signOut()
-            _sellerConnection.value = HomeResult.NotAuthenticated
+            _sellerConnection.update { HomeResult.NotAuthenticated }
         }
     }
 }

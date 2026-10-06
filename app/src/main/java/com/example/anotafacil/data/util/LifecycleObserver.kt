@@ -1,6 +1,5 @@
 package com.example.anotafacil.data.util
 
-import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.example.anotafacil.domain.repository.UserRepository
@@ -24,29 +23,11 @@ class AppForegroundManager @Inject constructor(
     val showEmailChangedDialog: StateFlow<Boolean> = _showEmailChangedDialog.asStateFlow()
 
     override fun onStart(owner: LifecycleOwner) {
-        Log.d(
-            "APP_LIFECYCLE",
-            "onStart() manager = ${
-                System.identityHashCode(this)
-            }"
-        )
         CoroutineScope(Dispatchers.IO).launch {
-
             val result = userRepository.checkEmailChange()
 
-            if (result.getOrNull() == true) {
-                    Log.d(
-                        "APP_LIFECYCLE",
-                        "Antes: ${_showEmailChangedDialog.value}"
-                    )
-                _showEmailChangedDialog.update { true }
+            if (result.getOrNull() == true) _showEmailChangedDialog.update { true }
 
-
-                    Log.d(
-                        "APP_LIFECYCLE",
-                        "Depois: ${_showEmailChangedDialog.value}"
-                    )
-            }
         }
     }
 

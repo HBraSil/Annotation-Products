@@ -3,35 +3,58 @@ package com.example.anotafacil.presentation.auth
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.outlined.Login
 import androidx.compose.material.icons.filled.Mail
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.Visibility
-import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.ui.components.EasyNotesTextField
 import com.hilquias.anotafacil.R
 
 @Composable
@@ -45,13 +68,11 @@ fun LoginScreen(
 
 
     LaunchedEffect(uiState.success) {
-        if (uiState.success) {
-            onLoginClick()
-        }
+        if (uiState.success) onLoginClick()
     }
 
     LoginContent(
-        loginState = uiState,
+        uiState = uiState,
         onForgotPasswordClick = onForgotPasswordClick,
         onGoogleLoginClick = authViewModel::loginWithGoogle,
         onEmailChange = authViewModel::updateEmail,
@@ -61,22 +82,23 @@ fun LoginScreen(
     )
 }
 
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LoginContent(
-    loginState: AuthUiState = AuthUiState(),
+    uiState: AuthUiState = AuthUiState(),
     onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
     onForgotPasswordClick: () -> Unit = {},
     onLoginWithEmailAndPassword: () -> Unit = {},
     onGoogleLoginClick: () -> Unit = {},
-    goToSignUpScreen: () -> Unit = {}
+    goToSignUpScreen: () -> Unit = {},
 ) {
     var isPasswordVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    LaunchedEffect(loginState.error) {
-        loginState.error?.let {
+    LaunchedEffect(uiState.error) {
+        uiState.error?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
         }
     }
@@ -93,7 +115,6 @@ fun LoginContent(
     ) {
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Ícone do topo (Bússola/Logo)
         Surface(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.onPrimary,
@@ -111,7 +132,6 @@ fun LoginContent(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Título e Descrição
         Text(
             text = "Faça o login",
             style = MaterialTheme.typography.headlineMedium.copy(
@@ -122,7 +142,6 @@ fun LoginContent(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Card Principal do Formulário
         Card(
             shape = RoundedCornerShape(24.dp),
             colors = CardDefaults.cardColors(
@@ -141,16 +160,16 @@ fun LoginContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                EasyNotesAuthTextField(
-                    value = loginState.email.field,
+                EasyNotesTextField(
+                    value = uiState.email.field,
                     onValueChange = { onEmailChange(it) },
                     placeholder = "exemplo@email.com",
                     leadingIcon = Icons.Default.Mail,
                     keyboardType = KeyboardType.Email,
                     supportingText = {
-                        if (loginState.email.fieldError != null) {
+                        uiState.email.fieldError?.let {
                             Text(
-                                text = loginState.email.fieldError,
+                                text = it,
                                 color = MaterialTheme.colorScheme.error,
                             )
                         }
@@ -165,8 +184,8 @@ fun LoginContent(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                EasyNotesAuthTextField(
-                    value = loginState.password.field,
+                EasyNotesTextField(
+                    value = uiState.password.field,
                     onValueChange = { onPasswordChange(it) },
                     placeholder = "••••••••",
                     leadingIcon = Icons.Outlined.Lock,
@@ -175,9 +194,9 @@ fun LoginContent(
                     onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
                     keyboardType = KeyboardType.Password,
                     supportingText = {
-                        if (loginState.password.fieldError != null) {
+                        uiState.password.fieldError?.let {
                             Text(
-                                text = loginState.password.fieldError,
+                                text = it,
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.error
                             )
@@ -185,7 +204,6 @@ fun LoginContent(
                     }
                 )
 
-                // Esqueceu a senha
                 Box(
                     modifier = Modifier.fillMaxWidth(),
                     contentAlignment = Alignment.CenterEnd
@@ -208,7 +226,7 @@ fun LoginContent(
                     onClick = onLoginWithEmailAndPassword,
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(26.dp),
-                    enabled = loginState.loginFieldsValid && !loginState.isLoading,
+                    enabled = uiState.loginFieldsValid && !uiState.isLoading,
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     )
@@ -231,7 +249,7 @@ fun LoginContent(
                             )
                         }
 
-                        if (loginState.isLoading) {
+                        if (uiState.isLoading) {
                             CircularProgressIndicator(
                                 modifier = Modifier.size(20.dp),
                                 color = MaterialTheme.colorScheme.onPrimary,
@@ -268,7 +286,7 @@ fun LoginContent(
 
                     Button(
                         onClick = onGoogleLoginClick,
-                        enabled = !loginState.isLoading,
+                        enabled = !uiState.isLoading,
                         colors = ButtonDefaults.buttonColors(
                             contentColor = MaterialTheme.colorScheme.onPrimary,
                             containerColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
@@ -318,67 +336,6 @@ fun LoginContent(
 
         Spacer(modifier = Modifier.height(16.dp))
     }
-}
-
-
-@Composable
-private fun EasyNotesAuthTextField(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    leadingIcon: ImageVector,
-    isPassword: Boolean = false,
-    isPasswordVisible: Boolean = false,
-    onTogglePasswordVisibility: () -> Unit = {},
-    keyboardType: KeyboardType = KeyboardType.Text,
-    supportingText: @Composable (() -> Unit)?
-) {
-    TextField(
-        value = value,
-        onValueChange = onValueChange,
-        placeholder = {
-            Text(
-                text = placeholder,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
-        },
-        leadingIcon = {
-            Icon(
-                imageVector = leadingIcon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        },
-        trailingIcon = {
-            if (isPassword) {
-                IconButton(onClick = onTogglePasswordVisibility) {
-                    Icon(
-                        imageVector = if (isPasswordVisible) Icons.Outlined.Visibility else Icons.Outlined.VisibilityOff,
-                        contentDescription = "Alternar visibilidade da senha",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-        },
-        visualTransformation = if (isPassword && !isPasswordVisible) PasswordVisualTransformation() else VisualTransformation.None,
-        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-        singleLine = true,
-        maxLines = 1,
-        colors = TextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f),
-            focusedIndicatorColor = Color.Transparent,
-            unfocusedIndicatorColor = Color.Transparent,
-            disabledIndicatorColor = Color.Transparent
-        ),
-        supportingText = supportingText,
-        shape = RoundedCornerShape(12.dp),
-        modifier = Modifier.fillMaxWidth()
-    )
 }
 
 

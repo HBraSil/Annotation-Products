@@ -77,6 +77,8 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             val authResult = firebaseAuth.signInWithEmailAndPassword(email, password).await()
 
+            //val
+
             if (authResult.user?.uid == null)
                 return Result.failure(Exception("Erro ao fazer login"))
 
@@ -102,11 +104,12 @@ class AuthRepositoryImpl @Inject constructor(
             val firebaseUserUid = authResult.user?.uid
                 ?: return Result.failure(Exception("Erro ao criar usuário"))
 
+            val user = User(uid = firebaseUserUid, name = name, email = email)
+
+
             firestore.collection("sellers")
                 .document(firebaseUserUid)
-                .set(
-                    User(name = name, email = email)
-                )
+                .set(user)
                 .await()
 
             Result.success(true)
