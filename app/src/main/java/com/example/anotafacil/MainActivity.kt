@@ -80,12 +80,12 @@ class MainActivity : ComponentActivity() {
                     val startDestination = remember { initialScreen }
 
                     ProductsAnnotationApp(
-                        sellerConnection,
-                        showEmailChangedDialog,
-                        mainActivityViewModel,
-                        startDestination,
-                        appForegroundManager::dismissEmailChangedDialog,
-                        mainActivityViewModel::confirmSellerDisconnected
+                        sellerConnection = sellerConnection,
+                        showEmailChangedDialog = showEmailChangedDialog,
+                        mainActivityViewModel = mainActivityViewModel,
+                        startDestination = startDestination,
+                        dismissEmailChangedDialog = appForegroundManager::dismissEmailChangedDialog,
+                        dismissDisconnectDialog = mainActivityViewModel::confirmSellerDisconnected
                     )
                 }
             }

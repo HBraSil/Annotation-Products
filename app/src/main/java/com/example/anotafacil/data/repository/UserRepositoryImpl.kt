@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
@@ -60,17 +61,20 @@ class UserRepositoryImpl @Inject constructor(
     }.distinctUntilChanged()
 
 
-    override suspend fun verifyingIfSellerCanDisconnect(): Result<Boolean> =
-        appDatabase.clearSellerData()
+    override suspend fun verifyingIfSellerCanDisconnect(): Result<Boolean> {
+        val firebaseUserUid = auth.currentUser?.uid
+            ?: return Result.failure(Exception("Usuário não está logado"))
+
+        userDao.updateOwnerId(uid = firebaseUserUid, ownerId = null)
+        return appDatabase.clearSellerData()
+    }
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val sellerFlow: SharedFlow<User?> =
         currentUserUid.flatMapLatest { uid ->
-            if (uid == null) return@flatMapLatest flowOf(null)
-
-
-            getSeller(uid)
+            if (uid == null) flowOf(null)
+            else getSeller(uid)
         }
             .shareIn(
                 scope = repositoryScope,
@@ -99,10 +103,7 @@ class UserRepositoryImpl @Inject constructor(
                     val owner = documentSnapshot.toObject(User::class.java)
                         ?: return@map HomeResult.ErrorToParse
 
-                    saveUserLocally(
-                        uid = ownerUid ?: firebaseUserUid,
-                        user = owner
-                    )
+                    saveUserLocally(user = owner)
 
                     HomeResult.Success(
                         SellerHomeUsers(owner = owner)
@@ -116,22 +117,16 @@ class UserRepositoryImpl @Inject constructor(
 
 
     private fun getSeller(uid: String): Flow<User?> {
-
         return firestore
             .collection("sellers")
             .document(uid)
             .snapshots()
             .map { documentSnapshot ->
-                if (!documentSnapshot.exists()) return@map (null)
+                if (!documentSnapshot.exists()) return@map null
 
-                val user = documentSnapshot.toObject(User::class.java) ?: return@map (null)
+                val user = documentSnapshot.toObject(User::class.java) ?: return@map null
 
-                if (user.ownerId != null) {
-                    saveUserLocally(
-                        uid = uid,
-                        user = user
-                    )
-                }
+                if (user.ownerId != null) saveUserLocally(user = user)
 
                 user
             }
@@ -141,10 +136,11 @@ class UserRepositoryImpl @Inject constructor(
     override fun observeSellerConnection(): Flow<HomeResult>  {
         return sellerFlow.map { seller ->
             if (seller == null) return@map HomeResult.NotFound
+
             if (seller.ownerId != null) return@map HomeResult.Connected
 
-
             val localUser = userDao.getUserDao(seller.uid)
+
 
             if (localUser?.ownerId != null) HomeResult.Disconnected
             else HomeResult.NotConnected
@@ -157,44 +153,42 @@ class UserRepositoryImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getSellerData(): Flow<HomeResult> {
-        return sellerFlow.flatMapLatest { seller ->
+        return try {
+            sellerFlow.flatMapLatest { seller ->
 
-            val seller = seller ?: return@flatMapLatest flowOf(HomeResult.NotFound)
+                val seller = seller ?: return@flatMapLatest flowOf(HomeResult.NotFound)
 
-            val ownerId = seller.ownerId ?: return@flatMapLatest flowOf(HomeResult.Disconnected)
+                val ownerId = seller.ownerId ?: return@flatMapLatest flowOf(HomeResult.Disconnected)
 
 
-            getOwner(ownerId).map { ownerResult ->
-                when (ownerResult) {
-                    is HomeResult.Success -> {
-                        val owner = ownerResult.users.owner
-                        HomeResult.Success(
-                            SellerHomeUsers(
-                                seller = seller,
-                                owner = owner
+                getOwner(ownerId).map { ownerResult ->
+                    when (ownerResult) {
+                        is HomeResult.Success -> {
+                            val owner = ownerResult.users.owner
+                            HomeResult.Success(
+                                SellerHomeUsers(
+                                    seller = seller,
+                                    owner = owner
+                                )
                             )
-                        )
+                        }
+
+                        is HomeResult.Error -> HomeResult.Error(ownerResult.message)
+
+                        else -> HomeResult.Error("Erro ao buscar proprietário")
                     }
-
-                    is HomeResult.Error -> HomeResult.Error(ownerResult.message)
-
-                    else -> HomeResult.Error("Erro ao buscar proprietário")
                 }
             }
+        } catch (throwable: Throwable) {
+            flowOf(HomeResult.Error(message = throwable.message))
         }
-            .catch { throwable ->
-                emit(HomeResult.Error(message = throwable.message))
-            }
     }
 
 
-    private suspend fun saveUserLocally(
-        uid: String,
-        user: User,
-    ) {
+    private suspend fun saveUserLocally(user: User) {
         userDao.saveUserDao(
             UserEntity(
-                uid = uid,
+                uid = user.uid,
                 name = user.name,
                 email = user.email,
                 ownerId = user.ownerId,

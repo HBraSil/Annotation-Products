@@ -27,7 +27,7 @@ class MainActivityViewModel @Inject constructor(
         initialValue = null
     )
 
-    private val _sellerConnection = MutableStateFlow<HomeResult>(HomeResult.NotAuthenticated)
+    private val _sellerConnection = MutableStateFlow<HomeResult>(HomeResult.NotConnected)
 
     val sellerConnection: StateFlow<HomeResult> = _sellerConnection.asStateFlow()
 
@@ -41,9 +41,7 @@ class MainActivityViewModel @Inject constructor(
         viewModelScope.launch {
             userRepository
                 .observeSellerConnection()
-                .collect { result ->
-                    _sellerConnection.value = result
-                }
+                .collect { _sellerConnection.value = it }
         }
     }
 
@@ -56,9 +54,9 @@ class MainActivityViewModel @Inject constructor(
 
     fun confirmSellerDisconnected() {
         viewModelScope.launch {
+            _sellerConnection.update { HomeResult.NotConnected }
             userRepository.verifyingIfSellerCanDisconnect()
             userRepository.signOut()
-            _sellerConnection.update { HomeResult.NotAuthenticated }
         }
     }
 }

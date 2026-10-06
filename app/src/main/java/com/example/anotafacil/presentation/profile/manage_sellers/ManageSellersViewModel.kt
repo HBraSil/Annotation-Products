@@ -81,7 +81,6 @@ class ManageSellersViewModel @Inject constructor(
 
 
     fun disconnectSeller(sellerUid: String) {
-        Log.d("ManageSellersViewModel", "Disconnecting seller: $sellerUid")
         viewModelScope.launch {
             ownerCodeRepository.disconnectSeller(sellerUid = sellerUid)
                 .onSuccess {
@@ -168,7 +167,6 @@ class ManageSellersViewModel @Inject constructor(
 
     override fun onCleared() {
         countdownJob?.cancel()
-        super.onCleared()
     }
 }
 

@@ -108,42 +108,17 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
     override suspend fun verifyCode(code: String): Result<Boolean> {
         return try {
-            isOwner()
-                .onSuccess { isOwner ->
-                    if (!isOwner) {
-                        val ownerCode = isCodeWorking(code).getOrElse {
-                            return Result.failure(it)
-                        }
+            val owner = currentUserIsOwner()
 
-                        return linkSellerWithOwner(ownerCode)
-                    }
-
-                    return Result.success(false)
+            if (owner == null) {
+                val ownerCode = isCodeWorking(code).getOrElse { trowable ->
+                    return Result.failure(trowable)
                 }
-                .onFailure {
-                    return Result.failure(it)
-                }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
 
+                return linkSellerWithOwner(ownerCode)
+            }
 
-    private suspend fun isOwner(): Result<Boolean> {
-        return try {
-            val uid = firebaseUserUid
-                ?: return Result.failure(
-                    Exception("Usuário não autenticado.")
-                )
-
-            val document = firestore
-                .collection("owners")
-                .document(uid)
-                .get()
-                .await()
-
-            Result.success(document.exists())
-
+            return Result.success(false)
         } catch (e: FirebaseFirestoreException) {
             when (e.code) {
                 FirebaseFirestoreException.Code.UNAVAILABLE -> {
@@ -158,34 +133,54 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                     Result.failure(e)
                 }
             }
-        } catch (e: Exception) {
+        }  catch (e: Exception) {
             Result.failure(e)
         }
     }
 
 
+    private suspend fun currentUserIsOwner(): User?{
+        val uid = firebaseUserUid ?: return null
+
+
+        val userTest = firestore.collection("sellers")
+            .document(uid)
+            .get()
+            .await()
+
+        Log.d("OwnerCodeRepository", "userTest: ${userTest.toObject(User::class.java)}")
+
+
+        val document = firestore
+            .collection("owners")
+            .document(uid)
+            .get()
+            .await()
+
+        val owner = document.toObject(User::class.java)
+
+        return owner
+    }
+
+
     private suspend fun isCodeWorking(code: String): Result<OwnerCode> {
-        try {
-            val document = firestore
-                .collection("ownerCodes")
-                .document(code)
-                .get()
-                .await()
+        val document = firestore
+            .collection("ownerCodes")
+            .document(code)
+            .get()
+            .await()
 
-            if (!document.exists()) return Result.failure(Exception("Código não encontrado"))
-
-
-            val ownerCode = document.toObject(OwnerCode::class.java)
-                ?: return Result.failure(Exception("Código não encontrado"))
+        if (!document.exists()) return Result.failure(Exception("Código não encontrado"))
 
 
-            if (System.currentTimeMillis() >= ownerCode.expiresAt)
-                return Result.failure(Exception("Código expirado."))
+        val ownerCode = document.toObject(OwnerCode::class.java)
+            ?: return Result.failure(Exception("Código não encontrado"))
 
-            return Result.success(ownerCode)
-        } catch (e: Exception) {
-            return Result.failure(e)
-        }
+
+        if (System.currentTimeMillis() >= ownerCode.expiresAt)
+            return Result.failure(Exception("Código expirado."))
+
+        return Result.success(ownerCode)
     }
 
 
@@ -196,9 +191,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
         return try {
 
             val sellerUid = firebaseUserUid
-                ?: return Result.failure(
-                    Exception("Usuário não autenticado.")
-                )
+                ?: return Result.failure(Exception("Usuário não autenticado."))
 
             firestore
                 .collection("sellers")
@@ -244,8 +237,8 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 .update("ownerId", null)
                 .await()
 
-            userDao.updateOwnerId(sellerUid, null)
 
+            userDao.updateOwnerId(sellerUid, null)
 
             Result.success(true)
         } catch (e: Exception) {
