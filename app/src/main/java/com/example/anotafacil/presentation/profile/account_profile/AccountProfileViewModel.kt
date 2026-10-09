@@ -11,12 +11,12 @@ import com.example.anotafacil.ui.validation.EmailValidator
 import com.example.anotafacil.ui.validation.NameValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.seconds
 
 @HiltViewModel
 class AccountProfileViewModel @Inject constructor(
@@ -27,31 +27,36 @@ class AccountProfileViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ProfileDetailUiState())
     val uiState = _uiState.asStateFlow()
 
+    private val _uiEvent = MutableSharedFlow<ProfileDetailUiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
     init {
-        getUserData()
+        getUserInfo()
     }
 
 
-    fun getUserData() {
+    fun getUserInfo() {
         viewModelScope.launch {
-            userRepository.getCurrentUser()
-                .onSuccess {
-                    Log.d("AccountProfileViewModel", "Dados do usuário: $it")
-                    _uiState.update { uiState ->
-                        uiState.copy(
-                            name = FieldState(field = it.name),
-                            email = FieldState(field = it.email),
-                            user = it
+            userRepository.observeCurrentUser().collect {
+                it.onSuccess { user ->
+                    Log.d("AccountProfileViewModel", "Dados do usuário: $user")
+                    _uiState.update { state ->
+                        state.copy(
+                            name = FieldState(field = user.name),
+                            email = FieldState(field = user.email),
+                            user = user
                         )
                     }
                 }
-                .onFailure { error ->
-                    Log.d(
-                        "AccountProfileViewModel",
-                        "Falha ao buscar dados do usuário.: ${error.message}"
+                    .onFailure { throwable ->
+                        Log.e("AccountProfileViewModel", "ERRO: ${throwable.message}")
+                        _uiEvent.emit(
+                            ProfileDetailUiEvent.UiMessage(
+                                message = throwable.message
+                            )
                     )
                 }
+            }
         }
     }
 
@@ -106,42 +111,36 @@ class AccountProfileViewModel @Inject constructor(
     }
 
 
-
     fun saveChanges() {
         viewModelScope.launch {
             with(_uiState.value) {
-                println("Saving changes...: ${name.isValid}, ${email.isValid}")
-                if (!name.isValid || !email.isValid) {
-                    Log.d(
-                        "AccountProfileViewModel",
-                        "Formulário inválido. Não é possível salvar alterações."
-                    )
-                    return@launch
-                }
 
                 userRepository.saveChanges(
                     newUserName = if (wasNameChanged) user?.copy(name = name.field) else null,
                     newUserEmail = if (wasEmailChanged) user?.copy(email = email.field) else null
                 )
-                .onSuccess { text ->
-                    _uiState.update {
-                        it.copy(
-                            wasNameChanged = false,
-                            wasEmailChanged = false,
-                            emailSentMessage = text
+                    .onSuccess { text ->
+                        _uiEvent.emit(
+                            ProfileDetailUiEvent.UiMessage(message = text)
+                        )
+                        _uiState.update {
+                            it.copy(
+                                wasNameChanged = false,
+                                wasEmailChanged = false,
+                            )
+                        }
+                    }
+                    .onFailure { throwable ->
+                        _uiEvent.emit(
+                            ProfileDetailUiEvent.UiMessage(
+                                message = throwable.message
+                            )
                         )
                     }
-                }
-                .onFailure { error ->
-                    Log.d(
-                        "AccountProfileViewModel",
-                        "Falha ao salvar alterações.: ${error.message}"
-                    )
-                }
+
             }
         }
     }
-
 
     fun deleteAccount() {
         _uiState.update { it.copy(isDeleting = true) }
@@ -154,13 +153,14 @@ class AccountProfileViewModel @Inject constructor(
                     signOut()
                 }
                 .onFailure { error ->
-                    _uiState.update {
-                        it.copy(
-                            isDeleting = false,
-                            error = error.message
+                    _uiEvent.emit(
+                        ProfileDetailUiEvent.UiMessage(
+                            message = error.message
                         )
-                    }
+                    )
                 }
+
+            _uiState.update { it.copy(isDeleting = false) }
         }
     }
 
@@ -177,12 +177,15 @@ class AccountProfileViewModel @Inject constructor(
                     }
                 }
                 .onFailure { error ->
-                    Log.d("AccountProfileViewModel", "Falha ao fazer logout.: ${error.message}")
+                    _uiEvent.emit(
+                        ProfileDetailUiEvent.UiMessage(
+                            message = error.message ?: "Erro ao sair"
+                        )
+                    )
                 }
         }
     }
 }
-
 
 
 data class ProfileDetailUiState(
@@ -194,5 +197,8 @@ data class ProfileDetailUiState(
     val wasNameChanged: Boolean = false,
     val wasEmailChanged: Boolean = false,
     val successfullyDeleted: Boolean = false,
-    val emailSentMessage: String? = null
 )
+
+sealed interface ProfileDetailUiEvent {
+    data class UiMessage(val message: String?) : ProfileDetailUiEvent
+}

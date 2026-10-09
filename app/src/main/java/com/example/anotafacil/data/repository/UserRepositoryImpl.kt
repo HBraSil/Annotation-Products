@@ -1,7 +1,6 @@
 package com.example.anotafacil.data.repository
 
 import android.util.Log
-import com.example.anotafacil.AccountStatus
 import com.example.anotafacil.data.dao.UserDao
 import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.data.entity.toDomain
@@ -64,10 +63,22 @@ class UserRepositoryImpl @Inject constructor(
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val currentSeller: SharedFlow<User?> =
+    private val currentSeller: SharedFlow<Result<User>> =
         currentUserUid.flatMapLatest { uid ->
-            if (uid == null) flowOf(null)
-            else observeRemoteSeller(uid)
+
+            if (uid == null) return@flatMapLatest flowOf(Result.failure(Exception("Usuário não está logado")))
+
+            val user = userDao.getUserDao(uid) ?: return@flatMapLatest flowOf(
+                Result.failure(
+                    Exception("Usuário não encontrado no banco local")
+                )
+            )
+            Log.d("TESTE", "User from local database: $user")
+
+            when (user.role) {
+                UserRole.OWNER -> observeRemoteOwner(uid)
+                UserRole.SELLER -> observeRemoteSeller(uid)
+            }
         }
             .shareIn(
                 scope = repositoryScope,
@@ -76,54 +87,48 @@ class UserRepositoryImpl @Inject constructor(
             )
 
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val currentOwner: SharedFlow<AccountStatus> =
-        currentUserUid.flatMapLatest { uid ->
-            if (uid == null) flowOf(AccountStatus.NotAuthenticated)
-            else observeRemoteOwner(uid)
-        }
-            .shareIn(
-                scope = repositoryScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                replay = 1
-            )
-
-
-    private fun observeRemoteSeller(uid: String): Flow<User?> {
-        Log.d("observeRemoteSeller", "Observing remote seller with uid: $uid")
+    fun observeRemoteSeller(uid: String): Flow<Result<User>> {
+        Log.d("TESTE", "CAIU SELLER: $uid")
         return firestore
             .collection("sellers")
             .document(uid)
             .snapshots()
             .map { documentSnapshot ->
-                if (!documentSnapshot.exists()) return@map null
+                if (!documentSnapshot.exists()) return@map Result.failure(Exception("Vendedor não encontrado"))
 
-                val seller = documentSnapshot.toObject(User::class.java) ?: return@map null
+                val seller =
+                    documentSnapshot.toObject(User::class.java) ?: return@map Result.failure(
+                        Exception("Erro ao parsear dados do vendedor")
+                    )
 
                 if (seller.ownerId != null) saveUserLocally(user = seller)
 
-                seller
+                Result.success(seller)
             }
             .catch {
-                emit(null)
+                emit(Result.failure(Exception("Erro ao obter informações do vendedor")))
             }
     }
 
 
-    private fun observeRemoteOwner(uid: String): Flow<AccountStatus> {
+    private fun observeRemoteOwner(uid: String): Flow<Result<User>> {
+        Log.d("TESTE", "CAIU OWNER: $uid")
         return firestore
             .collection("owners")
             .document(uid)
             .snapshots()
             .map { document ->
-                if (document.exists()) {
-                    AccountStatus.Active
-                } else {
-                    AccountStatus.OwnerDeleted
-                }
+                if (!document.exists()) return@map Result.failure(Exception("Proprietário não encontrado"))
+
+                val owner = document.toObject(User::class.java)
+                    ?: return@map Result.failure(Exception("Erro ao parsear dados do proprietário"))
+
+                if (owner.ownerId != null) saveUserLocally(user = owner)
+
+                Result.success(owner)
             }
             .catch { throwable ->
-                emit(AccountStatus.Error(throwable.message))
+                emit(Result.failure(Exception(throwable.message)))
             }
     }
 
@@ -162,14 +167,17 @@ class UserRepositoryImpl @Inject constructor(
 
 
     override fun observeSellerConnectionWithOwner(): Flow<SellerConnectionState>  {
-        return currentSeller.map { seller ->
-            if (seller == null) return@map SellerConnectionState.NotFound
+        return currentSeller.map { resultSeller ->
+            val seller = resultSeller.getOrNull()
+                ?: return@map SellerConnectionState.Error("Erro ao obter informações do vendedor")
+            Log.d("TESTE", "Seller em observeSellerConnectionWithOwner: $seller")
 
             if (seller.ownerId != null) return@map SellerConnectionState.Connected
 
             val localSellerUser = userDao.getUserDao(seller.uid)
 
 
+            Log.d("TESTE", "Seller depois de localSellerUser: $localSellerUser")
             if (localSellerUser?.ownerId != null) SellerConnectionState.Disconnected
             else SellerConnectionState.NotConnected
         }
@@ -182,13 +190,14 @@ class UserRepositoryImpl @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun loadSellerAndOwnerInfo(): Flow<HomeResult> {
         return try {
-            currentSeller.flatMapLatest { seller ->
+            currentSeller.flatMapLatest { resultSeller ->
 
-                val seller = seller ?: return@flatMapLatest flowOf(HomeResult.NotAuthenticated)
-                Log.d("UserRepository", "Seller: $seller")
+                val seller = resultSeller.getOrNull()
+                    ?: return@flatMapLatest flowOf(HomeResult.Error("Erro ao obter informações do vendedor"))
+                Log.d("TESTE", "seller dentro de LoadSellerAndOwnerInfo: $seller")
 
                 val ownerId = seller.ownerId ?: return@flatMapLatest flowOf(HomeResult.NotConnected)
-                Log.d("UserRepository", "ownerId: $ownerId")
+                Log.d("TESTE", "ownerId dentro de LoadSellerAndOwnerInfo: $ownerId")
 
 
                 observeOwnerInfo(ownerId).map { ownerResult ->
@@ -196,7 +205,6 @@ class UserRepositoryImpl @Inject constructor(
                         is HomeResult.Success -> {
                             val owner = ownerResult.users.owner
 
-                            Log.d("UserRepository", "Owner: $owner")
                             HomeResult.Success(
                                 SellerHomeUsers(
                                     seller = seller,
@@ -240,12 +248,25 @@ class UserRepositoryImpl @Inject constructor(
             val user = userDao.getUserDao(uid ?: firebaseUserUid)
                 ?: return Result.failure(Exception("Usuário não encontrado no banco local"))
 
-            Log.d("UserRepository", "User from local database: $user")
             Result.success(user.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+    override fun observeCurrentUser(): Flow<Result<User>> {
+        return currentSeller.map { resultSeller ->
+            Log.d("TESTE", "Result seller observeCurrentUser: $resultSeller")
+            if (resultSeller.isFailure) return@map Result.failure(Exception(resultSeller.exceptionOrNull()))
+
+            val seller = resultSeller.getOrNull()
+                ?: return@map Result.failure(Exception("Erro ao obter informações do vendedor"))
+            Log.d("TESTE", "observeCurrentUser fim: $seller")
+            Result.success(seller)
+        }
+    }
+
+
 
 
     override suspend fun becomeOwner(): Result<Boolean> {
@@ -253,28 +274,22 @@ class UserRepositoryImpl @Inject constructor(
         val firebaseUser = auth.currentUser
             ?: return Result.failure(Exception("Usuário não autenticado"))
 
-        Log.d("UserRepository", "Firebase user: ${firebaseUser.uid}")
-
 
         return try {
             val documentReference = firestore.collection("sellers")
                 .document(firebaseUser.uid)
 
-            Log.d("UserRepository", "Document reference: $documentReference")
 
 
             val seller = documentReference.get().await().toObject(User::class.java)
                 ?: return Result.failure(Exception("Erro ao converter usuário"))
 
-            Log.d("UserRepository", "Seller: $seller")
 
             val owner = seller.copy(
                 uid = firebaseUser.uid,
                 ownerId = null,
                 role = UserRole.OWNER
             )
-
-            Log.d("UserRepository", "Owner result: $owner")
 
             firestore
                 .collection("owners")
@@ -289,8 +304,6 @@ class UserRepositoryImpl @Inject constructor(
                 uid = firebaseUser.uid,
                 userRole = UserRole.OWNER
             )
-
-            Log.d("UserRepository", "User ${firebaseUser.uid} has become an owner: ${userDao.getUserDao(firebaseUser.uid)}")
 
 
             Result.success(true)
@@ -317,7 +330,15 @@ class UserRepositoryImpl @Inject constructor(
     override suspend fun saveChanges(newUserName: User?, newUserEmail: User?): Result<String?> {
         var messageRequestEmailSent: String? = null
 
-        if (newUserName != null) saveNewName(newUserName)
+        if (newUserName != null) {
+            saveNewName(newUserName)
+                .onSuccess {
+                    messageRequestEmailSent = "Nome alterado com sucesso"
+                }
+                .onFailure {
+                    return Result.failure(it)
+                }
+        }
         if (newUserEmail != null) {
             requestEmailChange(newUserEmail.email)
                 .onSuccess {
@@ -384,7 +405,7 @@ class UserRepositoryImpl @Inject constructor(
 
             userDataStore.savePendingEmail(newEmail)
 
-            Result.success("Um e-mail de verificação foi enviado para o seu e-mail.")
+            Result.success("Uma messagem de verificação foi enviado para o seu e-mail.")
         } catch (e: FirebaseAuthRecentLoginRequiredException) {
             Result.failure(e)
         } catch (e: FirebaseAuthException) {
@@ -451,6 +472,10 @@ class UserRepositoryImpl @Inject constructor(
 
     override suspend fun clearData(): Result<Boolean> {
         return try {
+            val firebaseUserUid =
+                auth.currentUser?.uid ?: return Result.failure(Exception("Usuário não está logado"))
+            userDao.updateOwnerId(uid = firebaseUserUid, ownerId = null)
+
             val sellerCleared = appDatabase.clearSellerData()
             if (sellerCleared.isFailure) return Result.failure(Exception(sellerCleared.exceptionOrNull()))
 

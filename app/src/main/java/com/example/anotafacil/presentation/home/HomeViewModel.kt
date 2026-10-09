@@ -13,7 +13,6 @@ import com.example.anotafacil.domain.usecase.UploadDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -22,6 +21,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -33,8 +33,8 @@ class HomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(HomeState())
     val uiState = _uiState.asStateFlow()
 
-    private val _uiEvent = MutableSharedFlow<UiEvent>()
-    val uiEvent = _uiEvent.asSharedFlow()
+    private val _homeEvent = MutableSharedFlow<HomeEvent>()
+    val uiEvent = _homeEvent.asSharedFlow()
 
     init {
         searchCity()
@@ -54,20 +54,20 @@ class HomeViewModel @Inject constructor(
                         }
 
                         is HomeResult.NotFound -> {
-                            _uiEvent.emit (
-                                UiEvent.ShowMessage(result.message)
+                            _homeEvent.emit(
+                                HomeEvent.ShowMessage(result.message)
                             )
                         }
 
                         is HomeResult.NotAuthenticated -> {
-                            _uiEvent.emit (
-                                UiEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
+                            _homeEvent.emit(
+                                HomeEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
                             )
                         }
 
                         is HomeResult.ErrorToParse -> {
-                            _uiEvent.emit (
-                                UiEvent.ShowMessage("Não foi possível carregar os dados. Tente novamente.")
+                            _homeEvent.emit(
+                                HomeEvent.ShowMessage("Não foi possível carregar os dados. Tente novamente.")
                             )
                         }
 
@@ -96,20 +96,20 @@ class HomeViewModel @Inject constructor(
                         }
 
                         is HomeResult.NotFound -> {
-                            _uiEvent.emit (
-                                UiEvent.UserNotAuthenticated(result.message)
+                            _homeEvent.emit(
+                                HomeEvent.UserNotAuthenticated(result.message)
                             )
                         }
 
                         is HomeResult.NotAuthenticated -> {
-                            _uiEvent.emit (
-                                UiEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
+                            _homeEvent.emit(
+                                HomeEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
                             )
                         }
 
                         is HomeResult.Error -> {
-                            _uiEvent.emit (
-                                UiEvent.ShowMessage(result.message)
+                            _homeEvent.emit(
+                                HomeEvent.ShowMessage(result.message)
                             )
                         }
                         else -> {}
@@ -147,18 +147,18 @@ class HomeViewModel @Inject constructor(
             downloadAllUserDataUseCase()
                 .onSuccess { result ->
                     if(result) {
-                        _uiEvent.emit(
-                            UiEvent.ShowMessage("Sucesso ao atualizar")
+                        _homeEvent.emit(
+                            HomeEvent.ShowMessage("Sucesso ao atualizar")
                         )
                     } else {
-                        _uiEvent.emit(
-                            UiEvent.ShowMessage("Erro ao atualizar dados")
+                        _homeEvent.emit(
+                            HomeEvent.ShowMessage("Erro ao atualizar dados")
                         )
                     }
                 }
                 .onFailure { throwable ->
-                    _uiEvent.emit(
-                        UiEvent.ShowMessage(throwable.message ?: "Erro ao atualizar dados")
+                    _homeEvent.emit(
+                        HomeEvent.ShowMessage(throwable.message ?: "Erro ao atualizar dados")
                     )
                 }
 
@@ -185,8 +185,8 @@ class HomeViewModel @Inject constructor(
                     it.copy(success = true)
                 }
             } else {
-                _uiEvent.emit(
-                    UiEvent.ShowMessage("Erro ao adicionar cidade")
+                _homeEvent.emit(
+                    HomeEvent.ShowMessage("Erro ao adicionar cidade")
                 )
             }
         }
@@ -201,8 +201,8 @@ class HomeViewModel @Inject constructor(
                     Log.d("HomeViewModel", "verifyingAndDeletingOwnerFromSeller: $it -- DELETADO")
                 }
                 .onFailure { throwable ->
-                    _uiEvent.emit(
-                        UiEvent.ShowMessage(throwable.message)
+                    _homeEvent.emit(
+                        HomeEvent.ShowMessage(throwable.message)
                     )
                 }
         }
@@ -231,13 +231,13 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             uploadDataUseCase()
                 .onSuccess {
-                    _uiEvent.emit(
-                        UiEvent.ShowMessage("Dados sincronizados com sucesso")
+                    _homeEvent.emit(
+                        HomeEvent.ShowMessage("Dados sincronizados com sucesso")
                     )
                 }
                 .onFailure { throwable ->
-                    _uiEvent.emit(
-                        UiEvent.ShowMessage(throwable.message)
+                    _homeEvent.emit(
+                        HomeEvent.ShowMessage(throwable.message)
                     )
                 }
 
@@ -259,8 +259,8 @@ data class HomeState(
     val sellerCanDisconnect: Boolean = false
 )
 
-sealed interface UiEvent {
-    data class ShowMessage(val message: String?) : UiEvent
+sealed interface HomeEvent {
+    data class ShowMessage(val message: String?) : HomeEvent
 
-    data class UserNotAuthenticated(val message: String?) : UiEvent
+    data class UserNotAuthenticated(val message: String?) : HomeEvent
 }

@@ -12,7 +12,10 @@ interface UserRepository {
 
     fun observeSellerConnectionWithOwner(): Flow<SellerConnectionState>
 
+
     suspend fun getCurrentUser(uid: String? = null): Result<User>
+
+    fun observeCurrentUser(): Flow<Result<User>>
 
     suspend fun becomeOwner(): Result<Boolean>
 

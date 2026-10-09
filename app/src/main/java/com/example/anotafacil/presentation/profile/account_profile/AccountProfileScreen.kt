@@ -51,9 +51,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.presentation.profile.account_profile.AccountProfileViewModel
+import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiEvent
 import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiState
 import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
 import com.example.anotafacil.ui.components.EasyNotesTextField
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 
 
 @Composable
@@ -66,6 +69,7 @@ fun AccountProfileScreen(
 
     AccountProfileContent(
         uiState = uiState,
+        uiEvent = accountProfileViewModel.uiEvent,
         onUpdateName = accountProfileViewModel::updateName,
         onUpdateEmail = accountProfileViewModel::updateEmail,
         goToLoginScreen = goToLoginScreen,
@@ -81,6 +85,7 @@ fun AccountProfileScreen(
 @Composable
 fun AccountProfileContent(
     uiState: ProfileDetailUiState = ProfileDetailUiState(),
+    uiEvent: Flow<ProfileDetailUiEvent>,
     onUpdateName: (String) -> Unit = {},
     onUpdateEmail: (String) -> Unit = {},
     goToLoginScreen: () -> Unit = {},
@@ -95,12 +100,17 @@ fun AccountProfileContent(
     }
     val snackbarHostState = remember { SnackbarHostState() }
 
-    LaunchedEffect(uiState.emailSentMessage) {
-        uiState.emailSentMessage?.let {
-            snackbarHostState.showSnackbar(
-                message = it,
-                duration = SnackbarDuration.Long
-            )
+
+    LaunchedEffect(Unit) {
+        uiEvent.collect {
+            when (it) {
+                is ProfileDetailUiEvent.UiMessage -> {
+                    snackbarHostState.showSnackbar(
+                        message = it.message ?: "Erro ao salvar alterações",
+                        duration = SnackbarDuration.Long
+                    )
+                }
+            }
         }
     }
 
@@ -225,34 +235,6 @@ fun AccountProfileContent(
                 )
 
                 // Campo E-mail Comercial (Sem Card)
-                /*OutlinedTextField(
-                    value = uiState.email.field,
-                    onValueChange = onUpdateEmail,
-                    singleLine = true,
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Editar E-mail",
-                            tint = MaterialTheme.colorScheme.secondary
-                        )
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.onPrimary,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledBorderColor = MaterialTheme.colorScheme.onPrimary,
-                        focusedLabelColor = MaterialTheme.colorScheme.primary,
-                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                        *//*disabledTextColor = textDark,
-                        unfocusedTextColor = textDark,
-                        disabledLabelColor = textMuted,
-                        unfocusedLabelColor = textMuted*//*
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )*/
                 EasyNotesTextField(
                     value = uiState.email.field,
                     onValueChange = onUpdateEmail,
@@ -295,11 +277,10 @@ fun AccountProfileContent(
                 onConfirmClick = {
                     when (showAccountConfirmationDialog.first) {
                         1 -> saveChanges()
-                        2 -> {
-                            showAccountConfirmationDialog = Pair(first = 0, second = null)
-                            deleteAccount()
-                        }
+                        2 -> deleteAccount()
                     }
+
+                    showAccountConfirmationDialog = Pair(first = 0, second = null)
                 }
             )
         }
@@ -394,5 +375,5 @@ private fun DeletingDataOverlay(
 @Preview
 @Composable
 fun ProfileScreenPreview() {
-    AccountProfileContent()
+    AccountProfileContent(uiEvent = flow {})
 }

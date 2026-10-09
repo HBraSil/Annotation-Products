@@ -48,7 +48,6 @@ class SyncDownloader @Inject constructor(
             val cities = cityDao.getAll()
 
             for (city in cities) {
-                Log.d("TESTESyncManager", "Downloading city: ${city.name}: caiu aqui")
                 val success = downloadCityData(
                     ownerId = ownerId,
                     cityId = city.id

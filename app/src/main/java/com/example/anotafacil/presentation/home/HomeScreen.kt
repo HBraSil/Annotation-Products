@@ -173,7 +173,7 @@ fun SellerHomeScreen(
 fun HomeContent(
     modifier: Modifier = Modifier,
     uiState: HomeState,
-    uiEvent: Flow<UiEvent>,
+    uiEvent: Flow<HomeEvent>,
     innerPadding: PaddingValues = PaddingValues(),
     isOwner: Boolean = false,
     onSearchChange: (String) -> Unit = {},
@@ -184,7 +184,7 @@ fun HomeContent(
     onSignOutSellerClick: () -> Unit = {},
     goToAccountProfile: () -> Unit = {},
     onDisconnectUserClick: () -> Unit = {},
-    goToLogin: () -> Unit
+    goToLogin: () -> Unit,
 ) {
     val pullState = rememberPullToRefreshState()
     var showAddCityDialog by rememberSaveable { mutableStateOf(false) }
@@ -198,11 +198,11 @@ fun HomeContent(
     LaunchedEffect(Unit) {
         uiEvent.collect { event ->
             when(event) {
-                is UiEvent.ShowMessage -> {
+                is HomeEvent.ShowMessage -> {
                     Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
                 }
 
-                is UiEvent.UserNotAuthenticated -> {
+                is HomeEvent.UserNotAuthenticated -> {
                     userNotAuthenticated = event.message
                 }
             }
@@ -333,19 +333,6 @@ fun HomeContent(
                 }
             )
         }
-
-  /*      showErrorDialog?.let {
-            AnnotationProductsConfirmationDialog(
-                title = it,
-                subtitle = it,
-                onDismissRequest = {},
-                onConfirmClick = {
-                    showErrorDialog = null
-                    goToRoleSection()
-                }
-            )
-        }*/
-
 
         userNotAuthenticated?.let {
             AnnotationProductsConfirmationDialog(
