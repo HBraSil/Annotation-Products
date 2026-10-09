@@ -6,6 +6,7 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
 import com.example.anotafacil.data.entity.UserEntity
+import com.example.anotafacil.domain.model.UserRole
 
 
 @Dao
@@ -21,6 +22,9 @@ interface UserDao {
 
     @Query("UPDATE user SET email = :email WHERE uid = :uid")
     suspend fun updateEmail(uid: String, email: String)
+
+    @Query("UPDATE user SET role = :userRole WHERE uid = :uid")
+    suspend fun updateRole(uid: String, userRole: UserRole)
 
     @Query("SELECT * FROM user WHERE uid = :uid")
     suspend fun getUserDao(uid: String): UserEntity?

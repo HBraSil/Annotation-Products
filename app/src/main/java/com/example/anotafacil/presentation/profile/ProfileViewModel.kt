@@ -49,7 +49,7 @@ class ProfileViewModel @Inject constructor(
 
     private fun getOwner() {
         viewModelScope.launch {
-            userRepository.getOwner().collect { result ->
+            userRepository.observeOwnerInfo().collect { result ->
                 when (result) {
                     is HomeResult.Success -> {
                         _uiState.update { it.copy(user = result.users.owner) }

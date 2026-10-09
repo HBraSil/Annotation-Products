@@ -85,7 +85,7 @@ class MainActivity : ComponentActivity() {
                         mainActivityViewModel = mainActivityViewModel,
                         startDestination = startDestination,
                         dismissEmailChangedDialog = appForegroundManager::dismissEmailChangedDialog,
-                        dismissDisconnectDialog = mainActivityViewModel::confirmSellerDisconnected
+                        confirmSellerDisconnect = mainActivityViewModel::confirmSellerDisconnect
                     )
                 }
             }

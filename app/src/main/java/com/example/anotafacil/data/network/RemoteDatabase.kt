@@ -18,7 +18,7 @@ class RemoteDatabase @Inject constructor(
             val firebaseUserUid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuário não autenticado"))
 
-            Log.d("RemoteDatabase", "firebaseUserUid: $firebaseUserUid, getUserRole: $getUserEntity")
+            Log.d("RemoteDatabase", "firebaseUserUid: $firebaseUserUid, getUserRoleEntity: ${getUserEntity(firebaseUserUid)}")
             val userEntity = getUserEntity(firebaseUserUid)
                 ?: return Result.failure(Exception("Tipo de usuário não encontrado"))
 
@@ -34,6 +34,7 @@ class RemoteDatabase @Inject constructor(
                 .await()
 
             if (!document.exists()) {
+                Log.d("RemoteDatabase", "Usuário não encontrado fio aqui")
                 return Result.failure(Exception("Usuário não encontrado"))
             }
 

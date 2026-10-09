@@ -26,41 +26,58 @@ class SyncManager @Inject constructor(
 ) {
 
     suspend fun upload(): Result<Boolean> {
-
-        val remoteUser = remoteDb.getUserData { uid ->
-            val currentUser = userRepository.getCurrentUser(uid).getOrNull()
-
-            currentUser?.let {
-                return@getUserData it.toEntity()
-            }
-        }.getOrElse {
-            return Result.failure(it)
-        }
-
-        val ownerUid = when(remoteUser.role) {
-            UserRole.OWNER -> remoteUser.uid
-            UserRole.SELLER -> remoteUser.ownerId
-        }
-
-        return if (ownerUid != null) {
-            Log.d("SyncManager", "Uploading data for owner: ${remoteUser.name} -- ${remoteUser.uid} -- ${remoteUser.ownerId}")
-            Result.success(syncUploader.upload(ownerUid))
-        }
-        else Result.failure(Exception("Você não está mais conectado a um proprietário"))
-    }
-
-    suspend fun downloadAll(): Result<Boolean> {
-
         if (!networkChecker.hasInternetConnection()) {
             return Result.failure(Exception("Sem conexão com a internet"))
         }
-
 
         return try {
             val remoteUser = remoteDb.getUserData { uid ->
                 val currentUser = userRepository.getCurrentUser(uid).getOrNull()
 
-                currentUser?.let { return@getUserData it.toEntity() }
+                currentUser?.let {
+                    Log.d("SyncManager", "getUserData upload: $it")
+                    return@getUserData it.toEntity()
+                }
+            }.getOrElse {
+                return Result.failure(it)
+            }
+
+            val ownerUid = when (remoteUser.role) {
+                UserRole.OWNER -> remoteUser.uid
+                UserRole.SELLER -> remoteUser.ownerId
+            }
+
+            if (ownerUid == null) {
+                return Result.failure(Exception("Você não está mais conectado a um proprietário"))
+            }
+
+            Result.success(syncUploader.upload(ownerUid))
+        } catch (e: FirebaseFirestoreException) {
+            if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) {
+                return Result.failure(Exception("Sem conexão com a internet"))
+            }
+            Result.failure(Exception("Erro ao acessar o banco de dados remoto: ${e.message}"))
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+
+    }
+
+
+
+    suspend fun downloadAll(): Result<Boolean> {
+        if (!networkChecker.hasInternetConnection()) {
+            return Result.failure(Exception("Sem conexão com a internet"))
+        }
+
+        return try {
+            val remoteUser = remoteDb.getUserData { uid ->
+                val currentUser = userRepository.getCurrentUser(uid).getOrNull()
+
+                currentUser?.let {
+                    Log.d("SyncManager", "getUserData: $it")
+                    return@getUserData it.toEntity()
+                }
             }.getOrElse {
                 return Result.failure(it)
             }
@@ -86,13 +103,20 @@ class SyncManager @Inject constructor(
     }
 
     suspend fun downloadCity(cityId: Uuid): Result<Boolean> {
+        if (!networkChecker.hasInternetConnection()) {
+            return Result.failure(Exception("Sem conexão com a internet"))
+        }
+
 
         return try {
 
             val remoteUser = remoteDb.getUserData { uid ->
                 val currentUser = userRepository.getCurrentUser(uid).getOrNull()
 
-                currentUser?.let { return@getUserData it.toEntity() }
+                currentUser?.let {
+                    Log.d("SyncManager", "getUserData download: $it")
+                    return@getUserData it.toEntity()
+                }
             }.getOrElse {
                 return Result.failure(it)
             }

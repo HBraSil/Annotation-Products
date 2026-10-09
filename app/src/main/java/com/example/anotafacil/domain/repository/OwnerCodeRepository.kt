@@ -14,6 +14,6 @@ interface OwnerCodeRepository {
 
     fun getSellersConnected(): Flow<Result<List<User>>>
 
-    suspend fun disconnectSeller(sellerUid: String): Result<Boolean>
+    suspend fun disconnectOwnerFromSeller(sellerUid: String): Result<Boolean>
 
 }

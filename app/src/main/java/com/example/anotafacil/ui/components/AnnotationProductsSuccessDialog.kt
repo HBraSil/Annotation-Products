@@ -116,5 +116,5 @@ fun AnnotationProductsStatusDialog(
 @Preview(showBackground = true)
 @Composable
 fun PreviewAnnotationProductsStatusDialog() {
-    AnnotationProductsStatusDialog("",)
+    AnnotationProductsStatusDialog("")
 }

@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.MoreVert
@@ -71,6 +70,8 @@ import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import com.example.anotafacil.ui.components.AnnotationProductsSearchBar
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 import com.hilquias.anotafacil.R
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 
 
 @Composable
@@ -84,11 +85,12 @@ fun OwnerHomeScreen(
 
     LaunchedEffect(Unit) {
         Log.d("OwnerHomeScreen", "LaunchedEffect caiu aqui")
-        homeViewModel.loadOwnerUser()
+        homeViewModel.loadOwnerInfo()
     }
 
     HomeContent(
         uiState = homeUiState,
+        uiEvent = homeViewModel.uiEvent,
         innerPadding = innerPadding,
         isOwner = true,
         onSearchChange = homeViewModel::updateSearchQuery,
@@ -96,7 +98,8 @@ fun OwnerHomeScreen(
         onCityClick = onCityClick,
         closeSuccessDialog = homeViewModel::closeSuccessDialog,
         refreshHome = homeViewModel::downloadAllUserData,
-        onDisconnectUserClick = onDisconnectUser
+        onDisconnectUserClick = onDisconnectUser,
+        goToLogin = onDisconnectUser
     )
 }
 
@@ -108,18 +111,13 @@ fun SellerHomeScreen(
     onCityClick: (City) -> Unit,
     onSignOutSellerClick: () -> Unit,
     goToAccountProfile: () -> Unit,
-    goToRoleSection: () -> Unit
 ) {
     val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
 
 
-    LaunchedEffect(homeUiState.sellerCanDisconnect) {
-        if (homeUiState.sellerCanDisconnect) goToRoleSection()
-    }
 
     LaunchedEffect(Unit) {
-        Log.d("SellerHomeScreen", "LaunchedEffect caiu aqui")
-        homeViewModel.loadSellerData()
+        homeViewModel.loadSellerAndOwnerInfo()
     }
 
 
@@ -151,6 +149,7 @@ fun SellerHomeScreen(
         HomeContent(
             modifier = Modifier.padding(paddingValues),
             uiState = homeUiState,
+            uiEvent = homeViewModel.uiEvent,
             onSearchChange = homeViewModel::updateSearchQuery,
             addCity = homeViewModel::addCity,
             onCityClick = onCityClick,
@@ -161,7 +160,8 @@ fun SellerHomeScreen(
                 homeViewModel.signOutSeller()
             },
             goToAccountProfile = goToAccountProfile,
-            onDisconnectUserClick = homeViewModel::verifyingIfSellerCanDisconnect
+            onDisconnectUserClick = homeViewModel::verifyingIfSellerCanDisconnect,
+            goToLogin = onSignOutSellerClick
         )
 
     }
@@ -173,6 +173,7 @@ fun SellerHomeScreen(
 fun HomeContent(
     modifier: Modifier = Modifier,
     uiState: HomeState,
+    uiEvent: Flow<UiEvent>,
     innerPadding: PaddingValues = PaddingValues(),
     isOwner: Boolean = false,
     onSearchChange: (String) -> Unit = {},
@@ -182,31 +183,32 @@ fun HomeContent(
     refreshHome: () -> Unit = {},
     onSignOutSellerClick: () -> Unit = {},
     goToAccountProfile: () -> Unit = {},
-    onDisconnectUserClick: () -> Unit = {}
+    onDisconnectUserClick: () -> Unit = {},
+    goToLogin: () -> Unit
 ) {
     val pullState = rememberPullToRefreshState()
     var showAddCityDialog by rememberSaveable { mutableStateOf(false) }
     var signOutSellerDialog by rememberSaveable { mutableStateOf(false) }
     var disconnectSellerDialog by rememberSaveable { mutableStateOf(false) }
-    var showStatusDialog by rememberSaveable { mutableStateOf<String?>(null) }
+    var userNotAuthenticated by rememberSaveable { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
 
-    LaunchedEffect(uiState.userDisconnectedMessage) {
-        uiState.userDisconnectedMessage?.let {
-              showStatusDialog = it
+
+    LaunchedEffect(Unit) {
+        uiEvent.collect { event ->
+            when(event) {
+                is UiEvent.ShowMessage -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
+
+                is UiEvent.UserNotAuthenticated -> {
+                    userNotAuthenticated = event.message
+                }
+            }
         }
     }
 
-    LaunchedEffect(uiState.message) {
-        uiState.message?.let {
-            Toast.makeText(
-                context,
-                it,
-                Toast.LENGTH_LONG
-            ).show()
-        }
-    }
 
     Column(
         modifier = modifier
@@ -227,8 +229,7 @@ fun HomeContent(
                 uiState = uiState,
                 onEditProfileClick = goToAccountProfile,
                 onDisconnectSellerClick = { disconnectSellerDialog = true },
-                onExitClick = { signOutSellerDialog = true }
-            )
+                onExitClick = { signOutSellerDialog = true }            )
         }
 
 
@@ -320,6 +321,7 @@ fun HomeContent(
                 }
             )
         }
+
         if (disconnectSellerDialog) {
             AnnotationProductsConfirmationDialog(
                 title = "Tem certeza que deseja desconectar do proprietário?",
@@ -332,22 +334,30 @@ fun HomeContent(
             )
         }
 
-
-/*        showStatusDialog?.let {
-            AnnotationProductsStatusDialog(
-                text = it,
-                confirmButtonText = "Sair",
-                icon = Icons.Default.Close,
-                iconColor = MaterialTheme.colorScheme.error,
-                containerIconColor = MaterialTheme.colorScheme.errorContainer,
-                confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
-                confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
-                confirmClick = {
-                    onDisconnectUserClick()
-                    showStatusDialog = null
-                },
+  /*      showErrorDialog?.let {
+            AnnotationProductsConfirmationDialog(
+                title = it,
+                subtitle = it,
+                onDismissRequest = {},
+                onConfirmClick = {
+                    showErrorDialog = null
+                    goToRoleSection()
+                }
             )
         }*/
+
+
+        userNotAuthenticated?.let {
+            AnnotationProductsConfirmationDialog(
+                title = it,
+                subtitle = it,
+                onDismissRequest = {},
+                onConfirmClick = {
+                    userNotAuthenticated = null
+                    goToLogin()
+                }
+            )
+        }
     }
 
     if (showAddCityDialog) {
@@ -651,7 +661,9 @@ private fun HomeScreenPreview() {
         HomeContent(
             uiState = HomeState(
                 ownerUser = User(name = "João"),
-            )
+            ),
+            uiEvent = flowOf(),
+            goToLogin = {}
         )
     }
 }

@@ -115,7 +115,7 @@ class AuthViewModel @Inject constructor(
                     _uiState.update { it.copy(success = true) }
                 }
                 .onFailure { throwable ->
-                    _uiState.update { it.copy(error = throwable.message) }
+                    _uiState.update { it.copy(error = throwable.message, isLoading = false) }
                 }
 
             delay(500.milliseconds)

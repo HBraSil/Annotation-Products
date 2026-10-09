@@ -23,7 +23,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.anotafacil.domain.exception.HomeResult
+import com.example.anotafacil.domain.exception.SellerConnectionState
 import com.example.anotafacil.presentation.MainActivityViewModel
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
@@ -71,12 +71,12 @@ enum class Screens(val route: String) {
 
 @Composable
 fun ProductsAnnotationApp(
-    sellerConnection: HomeResult,
+    sellerConnection: SellerConnectionState,
     showEmailChangedDialog: Boolean,
     mainActivityViewModel: MainActivityViewModel = hiltViewModel(),
     startDestination: String,
     dismissEmailChangedDialog: () -> Unit,
-    dismissDisconnectDialog: () -> Unit
+    confirmSellerDisconnect: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -89,14 +89,14 @@ fun ProductsAnnotationApp(
             onConfirmClick = {
                 dismissEmailChangedDialog()
                 navController.navigate(Screens.LOGIN.route) {
-                    popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                    popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                 }
             }
         )
     }
 
 
-    if (sellerConnection == HomeResult.Disconnected) {
+    if (sellerConnection == SellerConnectionState.Disconnected) {
         AnnotationProductsStatusDialog(
             text = "Você foi desconectado do proprietário",
             confirmButtonText = "Sair",
@@ -106,9 +106,9 @@ fun ProductsAnnotationApp(
             confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
             confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
             confirmClick = {
-                dismissDisconnectDialog()
-                navController.navigate(Screens.LOGIN.route) {
-                    popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                confirmSellerDisconnect()
+                navController.navigate(Screens.ROLE_SECTION.route) {
+                    popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                 }
             }
         )
@@ -159,7 +159,7 @@ fun ProductsAnnotationApp(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screens.LOGIN.route,
+        startDestination = startDestination,
     ) {
         composable(route = Screens.LOGIN.route) {
             LaunchedEffect(Unit) {
@@ -189,6 +189,8 @@ fun ProductsAnnotationApp(
         }
 
         composable(route = Screens.ROLE_SECTION.route) {
+            Log.d("RoleSection", "in role section")
+
             LaunchedEffect(Unit){
                 lastRoute(Screens.ROLE_SECTION.route)
             }
@@ -208,7 +210,7 @@ fun ProductsAnnotationApp(
                 },
                 goToHome = {
                     navController.navigate(Screens.OWNER_HOME.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { inclusive = false }
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -267,11 +269,6 @@ fun ProductsAnnotationApp(
                 },
                 goToAccountProfile = {
                     navController.navigate(Screens.ACCOUNT_PROFILE.route)
-                },
-                goToRoleSection = {
-                    navController.navigate(Screens.ROLE_SECTION.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-                    }
                 }
             )
         }

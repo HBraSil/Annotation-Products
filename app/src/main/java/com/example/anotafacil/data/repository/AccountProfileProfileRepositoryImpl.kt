@@ -1,5 +1,6 @@
 package com.example.anotafacil.data.repository
 
+import android.util.Log
 import com.example.anotafacil.data.dao.UserDao
 import com.example.anotafacil.data.entity.toDomain
 import com.example.anotafacil.data.network.AppDatabase
@@ -7,6 +8,7 @@ import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.AccountProfileRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.functions.FirebaseFunctions
+import com.google.firebase.functions.FirebaseFunctionsException
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -43,6 +45,14 @@ class AccountProfileProfileRepositoryImpl @Inject constructor(
             appDatabase.clearAllData()
             Result.success(true)
         } catch (e: Exception) {
+            Log.e("DeleteAccount", "Erro ao excluir conta", e)
+
+            if (e is FirebaseFunctionsException) {
+                Log.e("DeleteAccount", "Código: ${e.code}")
+                Log.e("DeleteAccount", "Mensagem: ${e.message}")
+                Log.e("DeleteAccount", "Detalhes: ${e.details}")
+            }
+
             Result.failure(e)
         }
     }

@@ -45,10 +45,10 @@ class GoogleSignInUtils @Inject constructor(
 
             Result.failure(Exception("Credencial inválida"))
         } catch (e: NoCredentialException) {
-            Log.d("GoogleSignInUtils", "NoCredentialException: ${e.stackTrace}")
+            Log.d("GoogleSignInUtils", "NoCredentialException: ${e.stackTrace} : ${e.message} : ${e.errorMessage} : ${e.cause} : ${e.localizedMessage}")
             Result.failure(e)
         } catch (e: GetCredentialException) {
-            Log.d("GoogleSignInUtils", "GetCredentialException: ${e.stackTrace}")
+            Log.d("GoogleSignInUtils", "GetCredentialException: ${e.stackTrace} : ${e.message} : ${e.cause} : ${e.localizedMessage} : ${e.errorMessage}")
             Result.failure(e)
         }
     }

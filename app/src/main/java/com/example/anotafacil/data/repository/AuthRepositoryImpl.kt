@@ -1,9 +1,11 @@
 package com.example.anotafacil.data.repository
 
 import android.util.Log
+import com.example.anotafacil.data.dao.UserDao
 import com.example.anotafacil.data.util.GoogleSignInUtils
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.User
+import com.example.anotafacil.domain.model.toEntity
 import com.example.anotafacil.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
@@ -12,6 +14,7 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
+    private val userDao: UserDao,
     private val firebaseAuth: FirebaseAuth,
     private val firestore: FirebaseFirestore,
     private val googleSignInUtils: GoogleSignInUtils,
@@ -52,6 +55,8 @@ class AuthRepositoryImpl @Inject constructor(
                             .document(uid)
                             .set(newUser)
                             .await()
+
+                        userDao.saveUserDao(newUser.toEntity())
                     }
 
                     Result.success(true)

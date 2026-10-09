@@ -81,7 +81,6 @@ class CustomersViewModel @Inject constructor(
             refreshCustomersUseCase(cityId)
                 .onSuccess { success ->
                     if (success) {
-                    println("EEEEEEEEEEEEEEIIIIIIIIIIIII - ccessCAUIIU")
                         _customerUiState.update {
                             it.copy(message = "Dados atualizados com sucesso")
                         }
@@ -145,6 +144,7 @@ class CustomersViewModel @Inject constructor(
 
         }
     }
+
 
     private fun getMonthlySalesSummary() {
         viewModelScope.launch {

@@ -2,7 +2,6 @@ package com.example.anotafacil.data.repository
 
 import android.util.Log
 import com.example.anotafacil.data.dao.UserDao
-import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.OwnerCode
 import com.example.anotafacil.domain.model.User
@@ -14,18 +13,18 @@ import com.google.firebase.firestore.snapshots
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.security.SecureRandom
 
 class OwnerCodeRepositoryImpl @Inject constructor(
-    auth: FirebaseAuth,
+    private val auth: FirebaseAuth,
     private val userDao: UserDao,
     private val firestore: FirebaseFirestore,
     private val networkChecker: NetworkChecker
 ) : OwnerCodeRepository {
 
-    private val firebaseUserUid = auth.currentUser?.uid
 
     override suspend fun generateCode(): Result<OwnerCode> {
         if (!networkChecker.hasInternetConnection()) {
@@ -33,6 +32,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
         }
 
         return try {
+            val firebaseUserUid = auth.currentUser?.uid ?: return Result.failure(Exception("Usuário não autenticado"))
             val random = SecureRandom()
 
             var code: String
@@ -53,7 +53,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
             val now = System.currentTimeMillis()
 
             val ownerCode = OwnerCode(
-                ownerId = firebaseUserUid ?: "",
+                ownerId = firebaseUserUid,
                 code = code,
                 createdAt = now,
                 expiresAt = now + 2 * 60 * 1000
@@ -83,6 +83,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
         }
 
         return try {
+            val firebaseUserUid = auth.currentUser?.uid ?: return Result.failure(Exception("Usuário não autenticado"))
             Log.d("OwnerCodeRepository", "Generating code for user: $firebaseUserUid")
 
             val now = System.currentTimeMillis()
@@ -140,11 +141,11 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
 
     private suspend fun currentUserIsOwner(): User?{
-        val uid = firebaseUserUid ?: return null
+        val firebaseUserUid = auth.currentUser?.uid ?: return null
 
 
         val userTest = firestore.collection("sellers")
-            .document(uid)
+            .document(firebaseUserUid)
             .get()
             .await()
 
@@ -153,7 +154,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
         val document = firestore
             .collection("owners")
-            .document(uid)
+            .document(firebaseUserUid)
             .get()
             .await()
 
@@ -190,12 +191,12 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
         return try {
 
-            val sellerUid = firebaseUserUid
+            val firebaseUserUid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuário não autenticado."))
 
             firestore
                 .collection("sellers")
-                .document(sellerUid)
+                .document(firebaseUserUid)
                 .update("ownerId", ownerCode.ownerId)
                 .await()
 
@@ -213,12 +214,13 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
 
     override fun getSellersConnected(): Flow<Result<List<User>>> {
+        val firebaseUserUid = auth.currentUser?.uid ?: return emptyFlow()
+
         return firestore
             .collection("sellers")
             .whereEqualTo("ownerId", firebaseUserUid)
             .snapshots()
             .map { snapshot ->
-                Log.d("HellersViewModel", "Repository caiu aqui gertSelt")
                 Result.success(
                     snapshot.toObjects(User::class.java)
                 )
@@ -229,7 +231,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun disconnectSeller(sellerUid: String): Result<Boolean> {
+    override suspend fun disconnectOwnerFromSeller(sellerUid: String): Result<Boolean> {
         return try {
             firestore
                 .collection("sellers")
@@ -237,8 +239,6 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 .update("ownerId", null)
                 .await()
 
-
-            userDao.updateOwnerId(sellerUid, null)
 
             Result.success(true)
         } catch (e: Exception) {

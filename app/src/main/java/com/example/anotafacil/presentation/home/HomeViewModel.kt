@@ -1,8 +1,8 @@
 package com.example.anotafacil.presentation.home
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.exception.HomeResult
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
@@ -11,18 +11,17 @@ import com.example.anotafacil.domain.repository.UserRepository
 import com.example.anotafacil.domain.usecase.DownloadAllUserDataUseCase
 import com.example.anotafacil.domain.usecase.UploadDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlin.time.Duration.Companion.milliseconds
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -30,18 +29,22 @@ class HomeViewModel @Inject constructor(
     private val cityRepository: CityRepository,
     private val uploadDataUseCase: UploadDataUseCase,
     private val downloadAllUserDataUseCase: DownloadAllUserDataUseCase,
-    private val networkChecker: NetworkChecker
 ): ViewModel() {
     private val _uiState = MutableStateFlow(HomeState())
     val uiState = _uiState.asStateFlow()
 
+    private val _uiEvent = MutableSharedFlow<UiEvent>()
+    val uiEvent = _uiEvent.asSharedFlow()
 
-    init { searchCity() }
+    init {
+        searchCity()
+        downloadAllUserData()
+    }
 
 
-    fun loadOwnerUser() {
+    fun loadOwnerInfo() {
         viewModelScope.launch {
-            userRepository.getOwner()
+            userRepository.observeOwnerInfo()
                 .collect { result ->
                     when (result) {
                         is HomeResult.Success -> {
@@ -51,21 +54,21 @@ class HomeViewModel @Inject constructor(
                         }
 
                         is HomeResult.NotFound -> {
-                            _uiState.update {
-                                it.copy(message = "Proprietário não encontrado")
-                            }
+                            _uiEvent.emit (
+                                UiEvent.ShowMessage(result.message)
+                            )
                         }
 
-                        is HomeResult.Disconnected -> {
-                            _uiState.update {
-                                it.copy(userDisconnectedMessage = "Você foi desconectado do proprietário")
-                            }
+                        is HomeResult.NotAuthenticated -> {
+                            _uiEvent.emit (
+                                UiEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
+                            )
                         }
 
-                        is HomeResult.Error -> {
-                            _uiState.update {
-                                it.copy(message = result.message)
-                            }
+                        is HomeResult.ErrorToParse -> {
+                            _uiEvent.emit (
+                                UiEvent.ShowMessage("Não foi possível carregar os dados. Tente novamente.")
+                            )
                         }
 
                         else -> {}
@@ -75,13 +78,11 @@ class HomeViewModel @Inject constructor(
     }
 
 
-    fun loadSellerData() {
+    fun loadSellerAndOwnerInfo() {
         _uiState.update { it.copy(isSyncing = true) }
 
         viewModelScope.launch {
-            var menssage: String? = null
-
-            userRepository.getSellerData()
+            userRepository.loadSellerAndOwnerInfo()
                 .collect { result ->
                     when (result) {
                         is HomeResult.Success -> {
@@ -95,31 +96,27 @@ class HomeViewModel @Inject constructor(
                         }
 
                         is HomeResult.NotFound -> {
-                            menssage = "Vendedor não encontrado"
+                            _uiEvent.emit (
+                                UiEvent.UserNotAuthenticated(result.message)
+                            )
                         }
 
-                        is HomeResult.Disconnected -> {
-                            _uiState.update {
-                                it.copy(userDisconnectedMessage = "Você foi desconectado do proprietário")
-                            }
+                        is HomeResult.NotAuthenticated -> {
+                            _uiEvent.emit (
+                                UiEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
+                            )
+                        }
+
+                        is HomeResult.Error -> {
+                            _uiEvent.emit (
+                                UiEvent.ShowMessage(result.message)
+                            )
                         }
                         else -> {}
                     }
 
-
-                    menssage?.let { text ->
-                        _uiState.update {
-                            it.copy(
-                                message = text
-                            )
-                        }
-                    }
-
-                    delay(400.milliseconds)
-                    _uiState.update { it.copy(message = null, userDisconnectedMessage = null, isSyncing = false) }
+                    _uiState.update { it.copy(isSyncing = false) }
                 }
-
-
         }
     }
 
@@ -150,26 +147,22 @@ class HomeViewModel @Inject constructor(
             downloadAllUserDataUseCase()
                 .onSuccess { result ->
                     if(result) {
-                        _uiState.update {
-                            it.copy(
-                                message = "Sucesso ao atualizar"
-                            )
-                        }
+                        _uiEvent.emit(
+                            UiEvent.ShowMessage("Sucesso ao atualizar")
+                        )
                     } else {
-                        _uiState.update {
-                            it.copy(message = "Erro ao atualizar")
-                        }
+                        _uiEvent.emit(
+                            UiEvent.ShowMessage("Erro ao atualizar dados")
+                        )
                     }
                 }
                 .onFailure { throwable ->
-                    _uiState.update {
-                        it.copy(message = throwable.message)
-                    }
+                    _uiEvent.emit(
+                        UiEvent.ShowMessage(throwable.message ?: "Erro ao atualizar dados")
+                    )
                 }
 
-
-            delay(400.milliseconds)
-            _uiState.update { it.copy(isSyncing = false, message = null) }
+            _uiState.update { it.copy(isSyncing = false) }
         }
     }
 
@@ -189,12 +182,12 @@ class HomeViewModel @Inject constructor(
 
             if(result > 0) {
                 _uiState.update {
-                    it.copy(success = true, message = null)
+                    it.copy(success = true)
                 }
             } else {
-                _uiState.update {
-                    it.copy(success = false, message = "Erro ao adicionar cidade")
-                }
+                _uiEvent.emit(
+                    UiEvent.ShowMessage("Erro ao adicionar cidade")
+                )
             }
         }
     }
@@ -203,20 +196,15 @@ class HomeViewModel @Inject constructor(
 
     fun verifyingIfSellerCanDisconnect() {
         viewModelScope.launch {
-            userRepository.verifyingIfSellerCanDisconnect()
+            userRepository.verifyingAndDeletingOwnerFromSeller()
                 .onSuccess {
-                    _uiState.update {
-                        it.copy(sellerCanDisconnect = true)
-                    }
+                    Log.d("HomeViewModel", "verifyingAndDeletingOwnerFromSeller: $it -- DELETADO")
                 }
                 .onFailure { throwable ->
-                    _uiState.update {
-                        it.copy(message = throwable.message)
-                    }
+                    _uiEvent.emit(
+                        UiEvent.ShowMessage(throwable.message)
+                    )
                 }
-
-            delay(400.milliseconds)
-            _uiState.update { it.copy(message = null) }
         }
     }
 
@@ -238,28 +226,22 @@ class HomeViewModel @Inject constructor(
 
 
     fun syncCloudClick() {
-        if (!networkChecker.hasInternetConnection()) {
-            _uiState.update { it.copy(message = "Sem conexão com internet") }
-            return
-        }
-
         _uiState.update { it.copy(isUploading = true) }
 
         viewModelScope.launch {
             uploadDataUseCase()
                 .onSuccess {
-                    _uiState.update {
-                        it.copy(message = "Dados enviados com sucesso")
-                    }
+                    _uiEvent.emit(
+                        UiEvent.ShowMessage("Dados sincronizados com sucesso")
+                    )
                 }
                 .onFailure { throwable ->
-                    _uiState.update {
-                        it.copy(message = throwable.message)
-                    }
+                    _uiEvent.emit(
+                        UiEvent.ShowMessage(throwable.message)
+                    )
                 }
 
-            delay(400.milliseconds)
-            _uiState.update { it.copy(isUploading = false, message = null) }
+            _uiState.update { it.copy(isUploading = false) }
         }
     }
 }
@@ -271,9 +253,14 @@ data class HomeState(
     val searchQuery: String = "",
     val cities: List<City> = emptyList(),
     val success: Boolean = false,
-    val message: String? = null,
     val isSyncing: Boolean = false,
     val isUploading: Boolean = false,
     val userDisconnectedMessage: String? = null,
     val sellerCanDisconnect: Boolean = false
 )
+
+sealed interface UiEvent {
+    data class ShowMessage(val message: String?) : UiEvent
+
+    data class UserNotAuthenticated(val message: String?) : UiEvent
+}

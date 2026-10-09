@@ -53,7 +53,6 @@ abstract class AppDatabase : RoomDatabase() {
 
 
     suspend fun clearSellerData(): Result<Boolean> {
-        if (hasPendingData()) return Result.failure(Exception("Há dados pendentes. Salve antes de desconectar-se!"))
 
         return withContext(Dispatchers.IO) {
             try {

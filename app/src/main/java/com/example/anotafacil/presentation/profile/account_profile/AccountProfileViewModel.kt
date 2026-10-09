@@ -147,8 +147,6 @@ class AccountProfileViewModel @Inject constructor(
         _uiState.update { it.copy(isDeleting = true) }
 
         viewModelScope.launch {
-            delay(3.seconds)
-            _uiState.update { it.copy(isDeleting = false, successfullyDeleted = true) }
             val result = accountProfileRepository.deleteAccount()
 
             result

@@ -1,9 +1,10 @@
 package com.example.anotafacil.presentation
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.datastore.LastScreenDatastore
-import com.example.anotafacil.domain.exception.HomeResult
+import com.example.anotafacil.domain.exception.SellerConnectionState
 import com.example.anotafacil.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,9 +28,9 @@ class MainActivityViewModel @Inject constructor(
         initialValue = null
     )
 
-    private val _sellerConnection = MutableStateFlow<HomeResult>(HomeResult.NotConnected)
+    private val _sellerConnection = MutableStateFlow<SellerConnectionState>(SellerConnectionState.NotConnected)
 
-    val sellerConnection: StateFlow<HomeResult> = _sellerConnection.asStateFlow()
+    val sellerConnection: StateFlow<SellerConnectionState> = _sellerConnection.asStateFlow()
 
 
     init {
@@ -40,8 +41,10 @@ class MainActivityViewModel @Inject constructor(
     private fun observeSellerConnection() {
         viewModelScope.launch {
             userRepository
-                .observeSellerConnection()
-                .collect { _sellerConnection.value = it }
+                .observeSellerConnectionWithOwner()
+                .collect {
+                    _sellerConnection.value = it
+                }
         }
     }
 
@@ -52,11 +55,10 @@ class MainActivityViewModel @Inject constructor(
         }
     }
 
-    fun confirmSellerDisconnected() {
+    fun confirmSellerDisconnect() {
         viewModelScope.launch {
-            _sellerConnection.update { HomeResult.NotConnected }
-            userRepository.verifyingIfSellerCanDisconnect()
-            userRepository.signOut()
+            _sellerConnection.update { SellerConnectionState.NotConnected }
+            userRepository.clearData()
         }
     }
 }

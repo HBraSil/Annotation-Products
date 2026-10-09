@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -89,10 +90,7 @@ fun AccountProfileContent(
 ) {
     var showAccountConfirmationDialog by remember {
         mutableStateOf<Pair<Int, String?>>(
-            Pair(
-                0,
-                null
-            )
+            Pair(0, null)
         )
     }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -297,17 +295,22 @@ fun AccountProfileContent(
                 onConfirmClick = {
                     when (showAccountConfirmationDialog.first) {
                         1 -> saveChanges()
-                        2 -> deleteAccount()
+                        2 -> {
+                            showAccountConfirmationDialog = Pair(first = 0, second = null)
+                            deleteAccount()
+                        }
                     }
                 }
             )
         }
 
     }
+        if(uiState.isDeleting) {
+            DeletingDataOverlay(
+                modifier = Modifier.statusBarsPadding()
+            )
+        }
 
-    if(uiState.isDeleting) {
-        DeletingDataOverlay()
-    }
 
 }
 
@@ -372,9 +375,11 @@ fun FooterActions(
 
 
 @Composable
-private fun DeletingDataOverlay() {
+private fun DeletingDataOverlay(
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.6f)),
         contentAlignment = Alignment.Center

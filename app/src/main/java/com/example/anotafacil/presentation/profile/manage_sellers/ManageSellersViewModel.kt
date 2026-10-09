@@ -82,7 +82,7 @@ class ManageSellersViewModel @Inject constructor(
 
     fun disconnectSeller(sellerUid: String) {
         viewModelScope.launch {
-            ownerCodeRepository.disconnectSeller(sellerUid = sellerUid)
+            ownerCodeRepository.disconnectOwnerFromSeller(sellerUid = sellerUid)
                 .onSuccess {
                     if (it) {
                         _uiState.update { uiState ->
