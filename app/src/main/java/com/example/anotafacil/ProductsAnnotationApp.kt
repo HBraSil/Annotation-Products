@@ -24,6 +24,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.anotafacil.domain.exception.SellerConnectionState
+import com.example.anotafacil.domain.model.WhichScreenToGo
 import com.example.anotafacil.presentation.MainActivityViewModel
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
@@ -195,12 +196,36 @@ fun ProductsAnnotationApp(
                 lastRoute(Screens.ROLE_SECTION.route)
             }
 
-            RoleSectionScreen {
-                when (it) {
-                    0 -> navController.navigate(Screens.SUBSCRIPTION.route)
-                    1 -> navController.navigate(Screens.CODE_VERIFICATION.route)
+            RoleSectionScreen (
+                whichScreenToGo = {
+                        when (it) {
+                            WhichScreenToGo.SELLER_HOME -> {
+                                navController.navigate(Screens.SELLER_HOME.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+
+                            WhichScreenToGo.OWNER_HOME -> {
+                                navController.navigate(Screens.OWNER_HOME.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
+
+                            WhichScreenToGo.LOGIN -> {}
+                            else -> {}
+                        }
+                    },
+                onChoiceClick = {
+                    when (it) {
+                        0 -> navController.navigate(Screens.SUBSCRIPTION.route)
+                        1 -> navController.navigate(Screens.CODE_VERIFICATION.route)
+                    }
                 }
-            }
+            )
         }
 
         composable(route = Screens.SUBSCRIPTION.route) {

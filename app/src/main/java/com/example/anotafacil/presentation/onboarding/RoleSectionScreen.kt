@@ -29,8 +29,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,20 +42,76 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.domain.model.WhichScreenToGo
 import com.hilquias.anotafacil.R
 
 
 @Composable
 fun RoleSectionScreen(
+    loadingViewModel: LoadingViewModel = hiltViewModel(),
+    whichScreenToGo: (WhichScreenToGo) -> Unit = {},
     onChoiceClick: (Int) -> Unit = {}
 ) {
+    val uiState by loadingViewModel.uiState.collectAsState()
 
+    LaunchedEffect(uiState.goTo) {
+        when (uiState.goTo) {
+            WhichScreenToGo.ROLE_SECTION -> loadingViewModel.cancelLoading()
+
+            WhichScreenToGo.SELLER_HOME -> whichScreenToGo(WhichScreenToGo.SELLER_HOME)
+
+            WhichScreenToGo.OWNER_HOME -> whichScreenToGo(WhichScreenToGo.OWNER_HOME)
+
+            WhichScreenToGo.LOGIN -> whichScreenToGo(WhichScreenToGo.LOGIN)
+
+            WhichScreenToGo.ERROR -> loadingViewModel.cancelLoading()
+
+            else -> {}
+        }
+    }
+
+    Surface (
+        modifier = Modifier.fillMaxSize(),
+    ) {
+        if (uiState.isLoading) {
+            LoadingMainScreen()
+        } else {
+            ContentRoleSectionScreen(
+                onChoiceClick = onChoiceClick
+            )
+        }
+    }
+}
+
+
+@Composable
+fun LoadingMainScreen() {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.primary),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        CircularProgressIndicator(
+            color = MaterialTheme.colorScheme.primaryContainer
+        )
+    }
+}
+
+
+@Composable
+fun ContentRoleSectionScreen(
+    selectedProfileIndex: Int? = null,
+    onChoiceClick: (Int) -> Unit,
+) {
     var selectedProfileIndex by remember { mutableStateOf<Int?>(null) }
 
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.BottomCenter,
-    ) {
+    ){
         Image(
             painter = painterResource(R.drawable.background_image_initial_screen),
             contentDescription = null,

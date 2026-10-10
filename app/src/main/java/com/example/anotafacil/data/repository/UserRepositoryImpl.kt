@@ -11,12 +11,15 @@ import com.example.anotafacil.domain.exception.SellerConnectionState
 import com.example.anotafacil.domain.model.SellerHomeUsers
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.model.UserRole
+import com.example.anotafacil.domain.model.WhichScreenToGo
 import com.example.anotafacil.domain.repository.UserRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthException
 import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreException
+import com.google.firebase.firestore.Source
 import com.google.firebase.firestore.snapshots
 import jakarta.inject.Inject
 import kotlinx.coroutines.CoroutineScope
@@ -36,6 +39,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.tasks.await
+import kotlin.coroutines.cancellation.CancellationException
 
 class UserRepositoryImpl @Inject constructor(
     private val appDatabase: AppDatabase,
@@ -481,6 +485,58 @@ class UserRepositoryImpl @Inject constructor(
 
             Result.success(true)
 
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+    override suspend fun resolveInitialDestination(): Result<WhichScreenToGo> {
+        return try {
+            val uid = auth.currentUser?.uid
+                ?: return Result.success(WhichScreenToGo.LOGIN)
+
+            val ownerDocument = firestore
+                .collection("owners")
+                .document(uid)
+                .get(Source.SERVER)
+                .await()
+
+            if (ownerDocument.exists()) {
+                return Result.success(WhichScreenToGo.OWNER_HOME)
+            }
+
+            val sellerDocument = firestore
+                .collection("sellers")
+                .document(uid)
+                .get(Source.SERVER)
+                .await()
+
+            if (!sellerDocument.exists()) {
+                return Result.failure(
+                    IllegalStateException(
+                        "Conta autenticada sem documento de usuário."
+                    )
+                )
+            }
+
+            val ownerId = sellerDocument.getString("ownerId")
+
+            Result.success(
+                if (ownerId.isNullOrBlank()) {
+                    WhichScreenToGo.ROLE_SECTION
+                } else {
+                    WhichScreenToGo.SELLER_HOME
+                }
+            )
+        }catch (e: FirebaseFirestoreException) {
+            if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) {
+                return Result.success(WhichScreenToGo.ERROR)
+            }
+
+            Result.failure(e)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Result.failure(e)
         }

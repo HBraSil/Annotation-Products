@@ -3,6 +3,7 @@ package com.example.anotafacil.domain.repository
 import com.example.anotafacil.domain.exception.HomeResult
 import com.example.anotafacil.domain.exception.SellerConnectionState
 import com.example.anotafacil.domain.model.User
+import com.example.anotafacil.domain.model.WhichScreenToGo
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
@@ -28,4 +29,6 @@ interface UserRepository {
     suspend fun checkEmailChange(): Result<Boolean>
 
     suspend fun signOut(): Result<Boolean>
+
+    suspend fun resolveInitialDestination(): Result<WhichScreenToGo>
 }
