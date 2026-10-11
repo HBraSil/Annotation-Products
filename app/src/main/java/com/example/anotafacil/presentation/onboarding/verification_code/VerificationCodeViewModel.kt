@@ -35,13 +35,14 @@ class VerificationCodeViewModel @Inject constructor(
 
             ownerCodeRepository.verifyCode(code)
                 .onSuccess { result ->
-                    if (!result)
+                    if (!result) {
                         _uiState.update {
                             it.copy(errorMessage = "Você já é proprietário. Não é possível entrar como vendedor")
                         }
-                    else
-                        _uiState.update { it.copy(success = true) }
+                        return@onSuccess
+                    }
 
+                    _uiState.update { it.copy(success = true) }
                 }.onFailure { throwable ->
                     _uiState.update { it.copy(errorMessage = throwable.message) }
                 }

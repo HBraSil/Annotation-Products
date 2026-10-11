@@ -12,6 +12,7 @@ import com.google.firebase.firestore.FirebaseFirestoreException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.Uuid
 
 
@@ -92,15 +93,21 @@ class SyncManager @Inject constructor(
             }
 
             Result.success(syncDownloader.downloadAll(ownerUid))
+        } catch (e: CancellationException) {
+            Log.d("Cancellation", "CAIU AQUI loadSellerAndOwnerInfo DOWNLOAD: ${e.message}")
+            throw e
         } catch (e: FirebaseFirestoreException) {
             if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) {
                 return Result.failure(Exception("Sem conexão com a internet"))
             }
+
             Result.failure(Exception("Erro ao acessar o banco de dados remoto: ${e.message}"))
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
+
+
 
     suspend fun downloadCity(cityId: Uuid): Result<Boolean> {
         if (!networkChecker.hasInternetConnection()) {

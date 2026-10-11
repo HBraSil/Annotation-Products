@@ -15,12 +15,14 @@ sealed interface HomeResult {
 
     data class Error(val message: String? = null) : HomeResult
 
-    data object Connected : HomeResult
+    data object CancellationException : HomeResult
 
     data object NotConnected : HomeResult
 
     data object NotAuthenticated : HomeResult
 }
+
+
 
 sealed interface SellerConnectionState {
 

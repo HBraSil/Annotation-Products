@@ -225,6 +225,9 @@ class UserRepositoryImpl @Inject constructor(
                     }
                 }
             }
+        } catch (e: CancellationException) {
+            Log.d("Cancellation", "CAIU AQUI loadSellerAndOwnerInfo: ${e.message}")
+            throw e
         } catch (throwable: Throwable) {
             flowOf(HomeResult.Error(message = throwable.message))
         }
@@ -536,7 +539,7 @@ class UserRepositoryImpl @Inject constructor(
 
             Result.failure(e)
         } catch (e: CancellationException) {
-            throw e
+            Result.failure(e)
         } catch (e: Exception) {
             Result.failure(e)
         }

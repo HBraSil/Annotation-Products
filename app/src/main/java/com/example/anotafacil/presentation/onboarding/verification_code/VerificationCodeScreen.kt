@@ -341,7 +341,7 @@ private fun BottomButtons(
 
             Button(
                 onClick = onVerifyCode,
-                enabled = uiState.code.length <= 6 && !uiState.isLoading,
+                enabled = uiState.code.length >= 6 && !uiState.isLoading,
                 modifier = Modifier.weight(1.2f).height(56.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(

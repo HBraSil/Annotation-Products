@@ -90,7 +90,7 @@ fun LoadingMainScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.primary),
+            .background(MaterialTheme.colorScheme.onPrimary),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -102,10 +102,7 @@ fun LoadingMainScreen() {
 
 
 @Composable
-fun ContentRoleSectionScreen(
-    selectedProfileIndex: Int? = null,
-    onChoiceClick: (Int) -> Unit,
-) {
+fun ContentRoleSectionScreen(onChoiceClick: (Int) -> Unit) {
     var selectedProfileIndex by remember { mutableStateOf<Int?>(null) }
 
     Box(

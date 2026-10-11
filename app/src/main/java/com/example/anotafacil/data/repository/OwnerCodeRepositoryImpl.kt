@@ -17,10 +17,10 @@ import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.security.SecureRandom
+import kotlin.coroutines.cancellation.CancellationException
 
 class OwnerCodeRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
-    private val userDao: UserDao,
     private val firestore: FirebaseFirestore,
     private val networkChecker: NetworkChecker
 ) : OwnerCodeRepository {
@@ -241,7 +241,9 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
 
             Result.success(true)
-        } catch (e: Exception) {
+        } catch (e: CancellationException) {
+            throw e
+        }  catch (e: Exception) {
             Result.failure(e)
         }
     }

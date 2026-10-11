@@ -215,7 +215,13 @@ fun ProductsAnnotationApp(
                                 }
                             }
 
-                            WhichScreenToGo.LOGIN -> {}
+                            WhichScreenToGo.LOGIN -> {
+                                navController.navigate(Screens.LOGIN.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        inclusive = true
+                                    }
+                                }
+                            }
                             else -> {}
                         }
                     },

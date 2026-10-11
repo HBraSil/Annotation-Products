@@ -12,6 +12,7 @@ import com.example.anotafacil.domain.usecase.DownloadAllUserDataUseCase
 import com.example.anotafacil.domain.usecase.UploadDataUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
@@ -35,6 +37,8 @@ class HomeViewModel @Inject constructor(
 
     private val _homeEvent = MutableSharedFlow<HomeEvent>()
     val uiEvent = _homeEvent.asSharedFlow()
+
+    private var downloadJob: Job? = null
 
     init {
         searchCity()
@@ -112,6 +116,10 @@ class HomeViewModel @Inject constructor(
                                 HomeEvent.ShowMessage(result.message)
                             )
                         }
+
+                        is HomeResult.CancellationException -> {
+
+                        }
                         else -> {}
                     }
 
@@ -141,9 +149,11 @@ class HomeViewModel @Inject constructor(
 
 
     fun downloadAllUserData() {
-        _uiState.update { it.copy(isSyncing = true) }
+        downloadJob?.cancel()
 
-        viewModelScope.launch {
+
+        downloadJob = viewModelScope.launch {
+            _uiState.update { it.copy(isSyncing = true) }
             downloadAllUserDataUseCase()
                 .onSuccess { result ->
                     if(result) {
@@ -157,6 +167,12 @@ class HomeViewModel @Inject constructor(
                     }
                 }
                 .onFailure { throwable ->
+                    if (throwable is CancellationException) {
+                        Log.d("Cancellation", "CAIU AQUI downloadAllUserData: ${throwable.message}")
+                        throw throwable
+                    }
+
+                    Log.d("Cancellation", "CAIU AQUI downloadAllUserData: ${throwable.message}")
                     _homeEvent.emit(
                         HomeEvent.ShowMessage(throwable.message ?: "Erro ao atualizar dados")
                     )
@@ -195,6 +211,8 @@ class HomeViewModel @Inject constructor(
 
 
     fun verifyingIfSellerCanDisconnect() {
+
+        downloadJob?.cancel()
         viewModelScope.launch {
             userRepository.verifyingAndDeletingOwnerFromSeller()
                 .onSuccess {
@@ -203,6 +221,7 @@ class HomeViewModel @Inject constructor(
                 .onFailure { throwable ->
                     _homeEvent.emit(
                         HomeEvent.ShowMessage(throwable.message)
+
                     )
                 }
         }
