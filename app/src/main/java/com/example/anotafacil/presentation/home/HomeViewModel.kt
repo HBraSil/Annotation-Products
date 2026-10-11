@@ -229,6 +229,7 @@ class HomeViewModel @Inject constructor(
 
 
     fun signOutSeller() {
+        downloadJob?.cancel()
         viewModelScope.launch {
             userRepository.signOut()
         }

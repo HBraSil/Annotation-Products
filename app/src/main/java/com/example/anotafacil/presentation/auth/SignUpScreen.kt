@@ -75,6 +75,7 @@ fun SignUpScreen(
         onNameChange = authViewModel::updateName,
         onEmailChange = authViewModel::updateEmail,
         onPasswordChange = authViewModel::updatePassword,
+        onConfirmPasswordChange = authViewModel::updatePasswordConfirm,
         onBackClick = onBackClick,
         onSignUpSubmit = authViewModel::signUpWithEmailAndPassword,
     )
@@ -88,11 +89,13 @@ fun SignUpContent(
     onNameChange: (String) -> Unit = {},
     onEmailChange: (String) -> Unit = {},
     onPasswordChange: (String) -> Unit = {},
+    onConfirmPasswordChange: (String) -> Unit = {},
     onBackClick: () -> Unit = {},
     onSignUpSubmit: () -> Unit,
 ) {
 
     var isPasswordVisible by rememberSaveable { mutableStateOf(false) }
+    var isConfirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
     val context = LocalContext.current
 
 
@@ -249,6 +252,35 @@ fun SignUpContent(
                         onTogglePasswordVisibility = { isPasswordVisible = !isPasswordVisible },
                         supportingText = {
                             uiState.password.fieldError?.let {
+                                Text(
+                                    text = it,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    )
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Text(
+                        text = "Confirmar Senha",
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    EasyNotesTextField(
+                        value = uiState.confirmPassword.field,
+                        onValueChange = onConfirmPasswordChange,
+                        placeholder = "Confirme a senha",
+                        leadingIcon = Icons.Outlined.Lock,
+                        isPassword = true,
+                        isPasswordVisible = isConfirmPasswordVisible,
+                        onTogglePasswordVisibility = { isConfirmPasswordVisible = !isConfirmPasswordVisible },
+                        supportingText = {
+                            uiState.confirmPassword.fieldError?.let {
                                 Text(
                                     text = it,
                                     style = MaterialTheme.typography.bodySmall,

@@ -160,7 +160,7 @@ fun ProductsAnnotationApp(
 ) {
     NavHost(
         navController = navController,
-        startDestination = startDestination,
+        startDestination = Screens.SELLER_HOME.route,
     ) {
         composable(route = Screens.LOGIN.route) {
             LaunchedEffect(Unit) {

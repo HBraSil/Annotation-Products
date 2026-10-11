@@ -76,6 +76,23 @@ class AuthViewModel @Inject constructor(
     }
 
 
+    fun updatePasswordConfirm(confirmPassword: String) {
+        val password = _uiState.value.password.field
+        val isConfirmPasswordValid =
+            PasswordValidator.isValidConfirmPassword(password, confirmPassword)
+
+        _uiState.update {
+            it.copy(
+                confirmPassword = FieldState(
+                    field = confirmPassword,
+                    fieldError = isConfirmPasswordValid,
+                    isValid = isConfirmPasswordValid == null
+                )
+            )
+        }
+    }
+
+
     fun updateLoginButton() {
         with(_uiState.value) {
             _uiState.update {
@@ -148,6 +165,7 @@ class AuthViewModel @Inject constructor(
 data class AuthUiState(
     val email: FieldState = FieldState(),
     val password: FieldState = FieldState(),
+    val confirmPassword: FieldState = FieldState(),
     val name: FieldState = FieldState(),
     val isLoading: Boolean = false,
     val error: String? = null,
