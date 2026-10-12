@@ -151,6 +151,8 @@ fun ProductsAnnotationApp(
     }
 }
 
+
+
 @Composable
 fun ProductsAnnotationApp(
     startDestination: String,
@@ -160,7 +162,7 @@ fun ProductsAnnotationApp(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screens.SELLER_HOME.route,
+        startDestination = startDestination,
     ) {
         composable(route = Screens.LOGIN.route) {
             LaunchedEffect(Unit) {

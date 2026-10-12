@@ -56,6 +56,7 @@ class AuthRepositoryImpl @Inject constructor(
                             .set(newUser)
                             .await()
 
+                        Log.d("AuthRepository", "Usuário criado no Firestore: $newUser")
                         userDao.saveUserDao(newUser.toEntity())
                     }
 

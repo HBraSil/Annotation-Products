@@ -75,7 +75,17 @@ class HomeViewModel @Inject constructor(
                             )
                         }
 
-                        else -> {}
+                        is HomeResult.Error -> {
+                            _homeEvent.emit(
+                                HomeEvent.ShowMessage(result.message)
+                            )
+                        }
+
+                        else -> {
+                            _homeEvent.emit(
+                                HomeEvent.ShowMessage("Não foi possível carregar os dados. Tente novamente.")
+                            )
+                        }
                     }
                 }
         }

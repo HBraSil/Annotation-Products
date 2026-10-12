@@ -33,11 +33,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -67,22 +70,25 @@ class UserRepositoryImpl @Inject constructor(
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val currentSeller: SharedFlow<Result<User>> =
+    private val currentUser: SharedFlow<Result<User?>> =
         currentUserUid.flatMapLatest { uid ->
 
-            if (uid == null) return@flatMapLatest flowOf(Result.failure(Exception("Usuário não está logado")))
+            if (uid == null) return@flatMapLatest flowOf(Result.success(null))
 
-            val user = userDao.getUserDao(uid) ?: return@flatMapLatest flowOf(
-                Result.failure(
-                    Exception("Usuário não encontrado no banco local")
-                )
-            )
-            Log.d("TESTE", "User from local database: $user")
+            Log.d("currentUser", "DENTRO DE currentSeller -- antes de getUserDao")
 
-            when (user.role) {
-                UserRole.OWNER -> observeRemoteOwner(uid)
-                UserRole.SELLER -> observeRemoteSeller(uid)
-            }
+            userDao.observeUserDao(uid)
+                .filterNotNull()
+                .flatMapLatest { user ->
+                    Log.d("currentUser", "DENTRO DE currentSeller -- $user")
+
+                    when (user.role) {
+                        UserRole.OWNER -> observeRemoteOwner(uid)
+                        UserRole.SELLER -> observeRemoteSeller(uid)
+                    }
+                }
+
+
         }
             .shareIn(
                 scope = repositoryScope,
@@ -91,14 +97,14 @@ class UserRepositoryImpl @Inject constructor(
             )
 
 
-    fun observeRemoteSeller(uid: String): Flow<Result<User>> {
+    fun observeRemoteSeller(uid: String): Flow<Result<User?>> {
         Log.d("TESTE", "CAIU SELLER: $uid")
         return firestore
             .collection("sellers")
             .document(uid)
             .snapshots()
             .map { documentSnapshot ->
-                if (!documentSnapshot.exists()) return@map Result.failure(Exception("Vendedor não encontrado"))
+                if (!documentSnapshot.exists()) return@map Result.success(null)
 
                 val seller =
                     documentSnapshot.toObject(User::class.java) ?: return@map Result.failure(
@@ -110,6 +116,7 @@ class UserRepositoryImpl @Inject constructor(
                 Result.success(seller)
             }
             .catch {
+                Log.e("UserRepository", "Error observing seller: ${it.message}")
                 emit(Result.failure(Exception("Erro ao obter informações do vendedor")))
             }
     }
@@ -171,10 +178,11 @@ class UserRepositoryImpl @Inject constructor(
 
 
     override fun observeSellerConnectionWithOwner(): Flow<SellerConnectionState>  {
-        return currentSeller.map { resultSeller ->
+        return currentUser.map { resultSeller ->
+            Log.d("observeSellerConnectionWithOwner", "Seller em observeSellerConnectionWithOwner: $resultSeller")
             val seller = resultSeller.getOrNull()
-                ?: return@map SellerConnectionState.Error("Erro ao obter informações do vendedor")
-            Log.d("TESTE", "Seller em observeSellerConnectionWithOwner: $seller")
+                ?: return@map SellerConnectionState.Error("Erro ao obter informações do vend querido")
+            Log.d("observeSellerConnectionWithOwner", "Seller em observeSellerConnectionWithOwner: $seller")
 
             if (seller.ownerId != null) return@map SellerConnectionState.Connected
 
@@ -194,14 +202,12 @@ class UserRepositoryImpl @Inject constructor(
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun loadSellerAndOwnerInfo(): Flow<HomeResult> {
         return try {
-            currentSeller.flatMapLatest { resultSeller ->
+            currentUser.flatMapLatest { resultSeller ->
 
                 val seller = resultSeller.getOrNull()
-                    ?: return@flatMapLatest flowOf(HomeResult.Error("Erro ao obter informações do vendedor"))
-                Log.d("TESTE", "seller dentro de LoadSellerAndOwnerInfo: $seller")
+                    ?: return@flatMapLatest emptyFlow()
 
                 val ownerId = seller.ownerId ?: return@flatMapLatest flowOf(HomeResult.NotConnected)
-                Log.d("TESTE", "ownerId dentro de LoadSellerAndOwnerInfo: $ownerId")
 
 
                 observeOwnerInfo(ownerId).map { ownerResult ->
@@ -261,18 +267,19 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeCurrentUser(): Flow<Result<User>> {
-        return currentSeller.map { resultSeller ->
+        return currentUser.flatMapLatest { resultSeller ->
             Log.d("TESTE", "Result seller observeCurrentUser: $resultSeller")
-            if (resultSeller.isFailure) return@map Result.failure(Exception(resultSeller.exceptionOrNull()))
+            if (resultSeller.isFailure) return@flatMapLatest flowOf(Result.failure(Exception(resultSeller.exceptionOrNull())))
 
             val seller = resultSeller.getOrNull()
-                ?: return@map Result.failure(Exception("Erro ao obter informações do vendedor"))
-            Log.d("TESTE", "observeCurrentUser fim: $seller")
-            Result.success(seller)
+                ?: return@flatMapLatest emptyFlow()
+
+
+            flowOf(Result.success(seller))
         }
     }
-
 
 
 

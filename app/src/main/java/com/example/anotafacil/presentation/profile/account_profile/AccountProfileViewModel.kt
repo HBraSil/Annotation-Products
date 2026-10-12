@@ -11,6 +11,7 @@ import com.example.anotafacil.ui.validation.EmailValidator
 import com.example.anotafacil.ui.validation.NameValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -29,6 +30,8 @@ class AccountProfileViewModel @Inject constructor(
 
     private val _uiEvent = MutableSharedFlow<ProfileDetailUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
+
+    private var downloadJob: Job? = null
 
     init {
         getUserInfo()

@@ -7,6 +7,7 @@ import androidx.room.Query
 import androidx.room.Update
 import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.domain.model.UserRole
+import kotlinx.coroutines.flow.Flow
 
 
 @Dao
@@ -28,6 +29,9 @@ interface UserDao {
 
     @Query("SELECT * FROM user WHERE uid = :uid")
     suspend fun getUserDao(uid: String): UserEntity?
+
+    @Query("SELECT * FROM user WHERE uid = :uid")
+    fun observeUserDao(uid: String): Flow<UserEntity?>
 
     @Query("DELETE FROM user")
     suspend fun deleteUserDao()
