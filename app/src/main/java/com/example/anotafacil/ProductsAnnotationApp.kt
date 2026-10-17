@@ -98,6 +98,7 @@ fun ProductsAnnotationApp(
 
 
     if (sellerConnection == SellerConnectionState.Disconnected) {
+        Log.d("ProductsAnnotationApp", "SellerDisconnected")
         AnnotationProductsStatusDialog(
             text = "Você foi desconectado do proprietário",
             confirmButtonText = "Sair",

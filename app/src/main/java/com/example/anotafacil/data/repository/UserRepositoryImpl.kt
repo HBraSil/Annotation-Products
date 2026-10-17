@@ -41,6 +41,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -70,25 +71,22 @@ class UserRepositoryImpl @Inject constructor(
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val currentUser: SharedFlow<Result<User?>> =
+    private val currentUser: Flow<Result<User?>> =
         currentUserUid.flatMapLatest { uid ->
 
+            Log.d("currentUserUid", "valor de uid do seller atual: $uid")
             if (uid == null) return@flatMapLatest flowOf(Result.success(null))
 
-            Log.d("currentUser", "DENTRO DE currentSeller -- antes de getUserDao")
 
             userDao.observeUserDao(uid)
                 .filterNotNull()
+                .take(1)
                 .flatMapLatest { user ->
-                    Log.d("currentUser", "DENTRO DE currentSeller -- $user")
-
                     when (user.role) {
                         UserRole.OWNER -> observeRemoteOwner(uid)
                         UserRole.SELLER -> observeRemoteSeller(uid)
                     }
                 }
-
-
         }
             .shareIn(
                 scope = repositoryScope,
@@ -104,12 +102,15 @@ class UserRepositoryImpl @Inject constructor(
             .document(uid)
             .snapshots()
             .map { documentSnapshot ->
+                Log.d("observeRemoteSeller", "CAIU SELLER antes do if: $documentSnapshot")
                 if (!documentSnapshot.exists()) return@map Result.success(null)
+                Log.d("observeRemoteSeller", "CAIU SELLER deposi do if: $documentSnapshot")
 
                 val seller =
                     documentSnapshot.toObject(User::class.java) ?: return@map Result.failure(
                         Exception("Erro ao parsear dados do vendedor")
                     )
+                Log.d("observeRemoteSeller", "CAIU SELLER depois de seller val: $seller")
 
                 if (seller.ownerId != null) saveUserLocally(user = seller)
 
@@ -162,6 +163,7 @@ class UserRepositoryImpl @Inject constructor(
                     val owner = documentSnapshot.toObject(User::class.java)
                         ?: return@map HomeResult.ErrorToParse
 
+                    Log.d("TESTE", "DENTRO DE observeOwnerInfo: $owner")
                     saveUserLocally(user = owner)
 
                     HomeResult.Success(
@@ -189,7 +191,7 @@ class UserRepositoryImpl @Inject constructor(
             val localSellerUser = userDao.getUserDao(seller.uid)
 
 
-            Log.d("TESTE", "Seller depois de localSellerUser: $localSellerUser")
+            Log.d("observeSellerConnectionWithOwner", "Seller depois de localSellerUser: $localSellerUser")
             if (localSellerUser?.ownerId != null) SellerConnectionState.Disconnected
             else SellerConnectionState.NotConnected
         }
@@ -204,9 +206,10 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             currentUser.flatMapLatest { resultSeller ->
 
-                val seller = resultSeller.getOrNull()
-                    ?: return@flatMapLatest emptyFlow()
+                Log.d("loadSellerAndOwnerInfo", "Result seller loadSellerAndOwnerInfo: $resultSeller")
+                val seller = resultSeller.getOrNull() ?: return@flatMapLatest emptyFlow()
 
+                Log.d("loadSellerAndOwnerInfo", "seller loadSellerAndOwnerInfo: $seller")
                 val ownerId = seller.ownerId ?: return@flatMapLatest flowOf(HomeResult.NotConnected)
 
 
@@ -215,6 +218,7 @@ class UserRepositoryImpl @Inject constructor(
                         is HomeResult.Success -> {
                             val owner = ownerResult.users.owner
 
+                            Log.d("loadSellerAndOwnerInfo", "DENTRO DE loadSellerAndOwnerInfo: $owner")
                             HomeResult.Success(
                                 SellerHomeUsers(
                                     seller = seller,
@@ -484,7 +488,7 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun clearData(): Result<Boolean> {
+    override suspend fun  clearData(): Result<Boolean> {
         return try {
             val firebaseUserUid =
                 auth.currentUser?.uid ?: return Result.failure(Exception("Usuário não está logado"))

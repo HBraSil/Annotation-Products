@@ -43,6 +43,7 @@ class MainActivityViewModel @Inject constructor(
             userRepository
                 .observeSellerConnectionWithOwner()
                 .collect {
+                    Log.d("MainActivityViewModel", "SellerConnectionState: $it")
                     _sellerConnection.value = it
                 }
         }

@@ -114,9 +114,8 @@ fun SellerHomeScreen(
 ) {
     val homeUiState by homeViewModel.uiState.collectAsStateWithLifecycle()
 
-
-
     LaunchedEffect(Unit) {
+        Log.d("SellerHomeScreen", "LaunchedEffect caiu aqui")
         homeViewModel.loadSellerAndOwnerInfo()
     }
 

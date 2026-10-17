@@ -96,10 +96,12 @@ class HomeViewModel @Inject constructor(
         _uiState.update { it.copy(isSyncing = true) }
 
         viewModelScope.launch {
+            Log.d("ViewmodelloadSellerAndOwnerInfo", "DENTRO loadSellerAndOwnerInfo no viewmodel")
             userRepository.loadSellerAndOwnerInfo()
                 .collect { result ->
                     when (result) {
                         is HomeResult.Success -> {
+                            Log.d("ViewmodelloadSellerAndOwnerInfo", "DENTRO loadSellerAndOwnerInfo no viewmodel: ${result.users.seller}  e   depois: ${result.users.owner}")
                             _uiState.update {
                                 it.copy(
                                     sellerUser = result.users.seller,
@@ -110,27 +112,33 @@ class HomeViewModel @Inject constructor(
                         }
 
                         is HomeResult.NotFound -> {
+                            Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no NotFound: ${result.message}")
                             _homeEvent.emit(
                                 HomeEvent.UserNotAuthenticated(result.message)
                             )
                         }
 
                         is HomeResult.NotAuthenticated -> {
+                            Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no NotAuthenticated")
                             _homeEvent.emit(
                                 HomeEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
                             )
                         }
 
                         is HomeResult.Error -> {
+                            Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no Error: ${result.message}")
                             _homeEvent.emit(
                                 HomeEvent.ShowMessage(result.message)
                             )
                         }
 
                         is HomeResult.CancellationException -> {
+                            Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no CancellationException")
+                        }
+                        else -> {
+                            Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no Else")
 
                         }
-                        else -> {}
                     }
 
                     _uiState.update { it.copy(isSyncing = false) }

@@ -30,7 +30,7 @@ interface UserDao {
     @Query("SELECT * FROM user WHERE uid = :uid")
     suspend fun getUserDao(uid: String): UserEntity?
 
-    @Query("SELECT * FROM user WHERE uid = :uid")
+    @Query("SELECT * FROM user WHERE uid = :uid LIMIT 1")
     fun observeUserDao(uid: String): Flow<UserEntity?>
 
     @Query("DELETE FROM user")

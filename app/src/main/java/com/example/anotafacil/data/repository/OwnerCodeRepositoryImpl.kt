@@ -1,7 +1,6 @@
 package com.example.anotafacil.data.repository
 
 import android.util.Log
-import com.example.anotafacil.data.dao.UserDao
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.OwnerCode
 import com.example.anotafacil.domain.model.User
@@ -67,6 +66,14 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
             Result.success(ownerCode)
 
+        } catch (e: FirebaseFirestoreException) {
+            if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) {
+                return Result.failure(
+                    Exception("Sem conexão com o servidor. Verifique sua internet.")
+                )
+            }
+
+            Result.failure(e)
         } catch (e: Exception) {
             Log.e(
                 "OwnerCodeRepository",
