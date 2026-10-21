@@ -33,12 +33,14 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
@@ -75,28 +77,50 @@ class UserRepositoryImpl @Inject constructor(
         currentUserUid.flatMapLatest { uid ->
 
             Log.d("currentUserUid", "valor de uid do seller atual: $uid")
-            if (uid == null) return@flatMapLatest flowOf(Result.success(null))
+            if (uid == null) {
+                Log.d("CURRENT_USER_TRACE", "Emitindo Success(null): UID nulo")
+
+                return@flatMapLatest flowOf(Result.success(null))
+            }
 
 
             userDao.observeUserDao(uid)
                 .filterNotNull()
-                .take(1)
+                .distinctUntilChangedBy { user -> user.role }
                 .flatMapLatest { user ->
+                    Log.d(
+                        "CURRENT_USER_TRACE",
+                        "Usuário do Room: uid=${user.uid}, role=${user.role}"
+                    )
+
                     when (user.role) {
                         UserRole.OWNER -> observeRemoteOwner(uid)
+                            .onEach {
+                                Log.d(
+                                    "CURRENT_USER_TRACE",
+                                    "Emissão de observeRemoteOwner: $it"
+                                )
+                            }
+
                         UserRole.SELLER -> observeRemoteSeller(uid)
+                            .onEach {
+                                Log.d(
+                                    "CURRENT_USER_TRACE",
+                                    "Emissão de observeRemoteSeller: $it"
+                                )
+                            }
                     }
                 }
         }
-            .shareIn(
-                scope = repositoryScope,
-                started = SharingStarted.WhileSubscribed(5_000),
-                replay = 1
+            .stateIn(
+                repositoryScope,
+                SharingStarted.WhileSubscribed(),
+                Result.success(null)
             )
 
 
     fun observeRemoteSeller(uid: String): Flow<Result<User?>> {
-        Log.d("TESTE", "CAIU SELLER: $uid")
+        Log.d("u", "CAIU SELLER: $uid")
         return firestore
             .collection("sellers")
             .document(uid)
@@ -184,14 +208,14 @@ class UserRepositoryImpl @Inject constructor(
             Log.d("observeSellerConnectionWithOwner", "Seller em observeSellerConnectionWithOwner: $resultSeller")
             val seller = resultSeller.getOrNull()
                 ?: return@map SellerConnectionState.Error("Erro ao obter informações do vend querido")
-            Log.d("observeSellerConnectionWithOwner", "Seller em observeSellerConnectionWithOwner: $seller")
+            Log.d("observeSellerConnection", "Seller em observeSellerConnectionWithOwner: $seller")
 
             if (seller.ownerId != null) return@map SellerConnectionState.Connected
 
             val localSellerUser = userDao.getUserDao(seller.uid)
 
 
-            Log.d("observeSellerConnectionWithOwner", "Seller depois de localSellerUser: $localSellerUser")
+            Log.d("observeSellerConnection", "Seller depois de localSellerUser: $localSellerUser")
             if (localSellerUser?.ownerId != null) SellerConnectionState.Disconnected
             else SellerConnectionState.NotConnected
         }
@@ -273,15 +297,15 @@ class UserRepositoryImpl @Inject constructor(
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun observeCurrentUser(): Flow<Result<User>> {
-        return currentUser.flatMapLatest { resultSeller ->
-            Log.d("TESTE", "Result seller observeCurrentUser: $resultSeller")
-            if (resultSeller.isFailure) return@flatMapLatest flowOf(Result.failure(Exception(resultSeller.exceptionOrNull())))
+        return currentUser.map { resultSeller ->
+            Log.d("observeCurrentUser", "Result seller observeCurrentUser: $resultSeller")
+            if (resultSeller.isFailure) return@map Result.failure(resultSeller.exceptionOrNull()!!)
 
             val seller = resultSeller.getOrNull()
-                ?: return@flatMapLatest emptyFlow()
+                ?: return@map Result.failure(Exception("Erro ao obter informações do vendedor"))
 
 
-            flowOf(Result.success(seller))
+            Result.success(seller)
         }
     }
 
@@ -488,7 +512,7 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
-    override suspend fun  clearData(): Result<Boolean> {
+    override suspend fun clearData(): Result<Boolean> {
         return try {
             val firebaseUserUid =
                 auth.currentUser?.uid ?: return Result.failure(Exception("Usuário não está logado"))

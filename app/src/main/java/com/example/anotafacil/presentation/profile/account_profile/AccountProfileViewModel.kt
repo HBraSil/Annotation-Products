@@ -31,8 +31,6 @@ class AccountProfileViewModel @Inject constructor(
     private val _uiEvent = MutableSharedFlow<ProfileDetailUiEvent>()
     val uiEvent = _uiEvent.asSharedFlow()
 
-    private var downloadJob: Job? = null
-
     init {
         getUserInfo()
     }

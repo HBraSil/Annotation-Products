@@ -348,7 +348,7 @@ fun HomeContent(
 
     if (showAddCityDialog) {
         ModalAddCityScreen(
-            onBackClick = { showAddCityDialog = false },
+            onCloseModal = { showAddCityDialog = false },
             onSaveClick = { cityName ->
                 addCity(cityName)
             }

@@ -87,14 +87,14 @@ fun AnimatedBottomBar(
                 clip = false
             )
             .background(
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape
             )
 
     ) {
         AnimatedNavigationBar(
             selectedIndex = selectedIndex,
-            barColor = MaterialTheme.colorScheme.onPrimary,
+            barColor = Color.Transparent,
             ballColor = MaterialTheme.colorScheme.primary,
             cornerRadius = ShapeCornerRadius(180f, 180f, 180f, 180f),
             ballAnimation = Parabolic(tween()),

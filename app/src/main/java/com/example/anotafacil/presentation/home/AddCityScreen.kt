@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Place
@@ -15,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,37 +26,42 @@ import com.example.anotafacil.ui.components.AnnotationProductsTextField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (String) -> Unit) {
+fun ModalAddCityScreen(
+    onCloseModal: () -> Unit,
+    onSaveClick: (String) -> Unit
+) {
 
     var cityName by remember { mutableStateOf("") }
 
     ModalBottomSheet(
-        onDismissRequest = onBackClick,
+        onDismissRequest = onCloseModal,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         dragHandle = null,
         modifier = Modifier.statusBarsPadding().imePadding()
     ) {
         Scaffold(
             topBar = {
-                CenterAlignedTopAppBar(
+                TopAppBar(
                     title = {},
                     navigationIcon = {
                         IconButton(
-                            onClick = onBackClick,
-                            colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = MaterialTheme.colorScheme.secondary
-                            )
+                            onClick = onCloseModal,
+                            modifier = Modifier
+                                .padding(start = 12.dp, top = 15.dp)
+                                .shadow(2.dp, CircleShape)
+                                .background(MaterialTheme.colorScheme.onPrimary, CircleShape)
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
                                 contentDescription = "Voltar",
-                                tint = MaterialTheme.colorScheme.onPrimary
+                                tint = MaterialTheme.colorScheme.onBackground
                             )
                         }
                     },
                     colors = TopAppBarDefaults.topAppBarColors(
                         containerColor = MaterialTheme.colorScheme.onPrimary
-                    )
+                    ),
+
                 )
             },
             containerColor = MaterialTheme.colorScheme.onPrimary,
@@ -138,5 +145,5 @@ fun ModalAddCityScreen(onBackClick: () -> Unit, onSaveClick: (String) -> Unit) {
 @Preview
 @Composable
 fun ModalAddCityScreenPreview() {
-    ModalAddCityScreen(onBackClick = {}, onSaveClick = {},)
+    ModalAddCityScreen(onCloseModal = {}, onSaveClick = {},)
 }
