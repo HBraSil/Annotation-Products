@@ -6,13 +6,17 @@ import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -119,15 +123,25 @@ fun ProductsAnnotationApp(
 
     val backStackEntry = navController.currentBackStackEntryAsState()
     val backStackRoute = backStackEntry.value?.destination?.route
-    Scaffold(
-        bottomBar = {
+    Scaffold { innerPadding ->
+        Box(modifier = Modifier.fillMaxSize()) {
+            ProductsAnnotationApp(
+                startDestination = startDestination,
+                navController = navController,
+                innerPadding = innerPadding,
+                lastRoute = {
+                    Log.d("ProductsAnnotationApp", "lastRoute: $it")
+                    mainActivityViewModel.lastRoute(it)
+                }
+            )
+
             if (
                 backStackRoute == Screens.OWNER_HOME.route ||
                 backStackRoute == Screens.SALES_OVERVIEW.route ||
-                backStackRoute == Screens.PROFILE.route ||
-                backStackRoute == Screens.PRICE_DEFINITION.route
+                backStackRoute == Screens.PROFILE.route
             ) {
                 AnimatedBottomBar(
+                    modifier = Modifier.align(Alignment.BottomCenter),
                     currentRoute = backStackRoute,
                     onItemClick = { route ->
                         navController.navigate(route) {
@@ -139,16 +153,6 @@ fun ProductsAnnotationApp(
                 )
             }
         }
-    ) { innerPadding ->
-        ProductsAnnotationApp(
-            startDestination = startDestination,
-            navController = navController,
-            innerPadding = innerPadding,
-            lastRoute = {
-                Log.d("ProductsAnnotationApp", "lastRoute: $it")
-                mainActivityViewModel.lastRoute(it)
-            }
-        )
     }
 }
 
@@ -455,6 +459,7 @@ fun ProductsAnnotationApp(
 
         composable(route = Screens.PROFILE.route) {
             ProfileScreen(
+                paddingValues = innerPadding,
                 goToAccountProfile = {
                     navController.navigate(Screens.ACCOUNT_PROFILE.route)
                 },

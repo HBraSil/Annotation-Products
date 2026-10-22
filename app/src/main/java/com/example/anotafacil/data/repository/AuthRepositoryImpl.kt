@@ -28,6 +28,7 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             googleSignInUtils.doGoogleSingIn().fold(
                 onSuccess = {
+                    if (it == null) return Result.failure(Exception())
                     val authResult = firebaseAuth.signInWithCredential(it).await()
 
                     val firebaseUser = authResult.user

@@ -47,6 +47,7 @@ data class BottomBarItem(
 
 @Composable
 fun AnimatedBottomBar(
+    modifier: Modifier = Modifier,
     currentRoute: String? = "",
     onItemClick: (String) -> Unit = {},
 ) {
@@ -77,7 +78,7 @@ fun AnimatedBottomBar(
     }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .navigationBarsPadding()
             .padding(horizontal = 40.dp)
             .padding(bottom = 20.dp)

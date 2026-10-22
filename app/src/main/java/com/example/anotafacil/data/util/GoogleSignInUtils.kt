@@ -21,7 +21,7 @@ class GoogleSignInUtils @Inject constructor(
     @param:ApplicationContext private val context: Context
 ) {
 
-    suspend fun doGoogleSingIn(): Result<AuthCredential> {
+    suspend fun doGoogleSingIn(): Result<AuthCredential?> {
         val credentialManager = CredentialManager.create(context)
         Log.d("GoogleSignInUtils", "credentialManager: $credentialManager")
         val request = GetCredentialRequest.Builder()
@@ -46,10 +46,10 @@ class GoogleSignInUtils @Inject constructor(
             Result.failure(Exception("Credencial inválida"))
         } catch (e: NoCredentialException) {
             Log.d("GoogleSignInUtils", "NoCredentialException: ${e.stackTrace} : ${e.message} : ${e.errorMessage} : ${e.cause} : ${e.localizedMessage}")
-            Result.failure(e)
+            Result.failure(Exception("Não foi possível encontrar sua conta Google"))
         } catch (e: GetCredentialException) {
             Log.d("GoogleSignInUtils", "GetCredentialException: ${e.stackTrace} : ${e.message} : ${e.cause} : ${e.localizedMessage} : ${e.errorMessage}")
-            Result.failure(e)
+            Result.success(null)
         }
     }
 

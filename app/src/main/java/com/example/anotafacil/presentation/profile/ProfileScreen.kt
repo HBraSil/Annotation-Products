@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -70,6 +71,7 @@ import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 
 @Composable
 fun ProfileScreen(
+    paddingValues: PaddingValues,
     profileViewModel: ProfileViewModel = hiltViewModel(),
     goToAccountProfile: () -> Unit = {},
     onPriceTableClick: () -> Unit = {},
@@ -78,7 +80,9 @@ fun ProfileScreen(
     onDisconnectOwner: () -> Unit = {},
 ) {
     val uiState by profileViewModel.uiState.collectAsState()
+
     ProfileContent(
+        paddingValues = paddingValues,
         uiState = uiState,
         onPriceTableClick = onPriceTableClick,
         onManageSellersClick = onManageSellersClick,
@@ -96,6 +100,7 @@ fun ProfileScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileContent(
+    paddingValues: PaddingValues = PaddingValues(),
     uiState: ProfileUiState,
     onPriceTableClick: () -> Unit = {},
     onManageSellersClick: () -> Unit = {},
@@ -124,127 +129,119 @@ fun ProfileContent(
         }
     }
 
-    Scaffold(
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Text(
-                        text = "Meu Perfil",
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = Color.Transparent
-                )
-            )
-        },
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 16.dp)
-                .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            Spacer(modifier = Modifier.height(4.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(paddingValues)
+            .padding(horizontal = 16.dp)
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(4.dp))
 
-            UserHeaderCard(
-                name = uiState.user?.name ?: "Sem nome",
-                email = uiState.user?.email ?: "email@gmail.com",
-                role = uiState.user?.role?.name ?: "No role",
-                goToAccountProfile = goToAccountProfile
-            )
+        Text(
+            text = "Meu Perfil",
+            fontWeight = FontWeight.Bold
+        )
 
-            Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(4.dp))
 
-            Text(
-                text = "GESTÃO COMERCIAL",
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF94A3B8),
-                modifier = Modifier.padding(top = 8.dp, start = 4.dp)
-            )
+        UserHeaderCard(
+            name = uiState.user?.name ?: "Sem nome",
+            email = uiState.user?.email ?: "email@gmail.com",
+            role = uiState.user?.role?.name ?: "No role",
+            goToAccountProfile = goToAccountProfile
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = "GESTÃO COMERCIAL",
+            fontSize = 12.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color(0xFF94A3B8),
+            modifier = Modifier.padding(top = 8.dp, start = 4.dp)
+        )
 
 
-            ManagementOptionCard(
-                title = "Tabela de Preços",
-                subtitle = "Definir preços dos produtos",
-                icon = Icons.Default.LocalOffer,
-                iconContainerColor = MaterialTheme.colorScheme.surface.copy(0.2f),
-                iconTintColor = MaterialTheme.colorScheme.primaryContainer.copy(0.8f),
-                onClick = onPriceTableClick
-            )
+        ManagementOptionCard(
+            title = "Tabela de Preços",
+            subtitle = "Definir preços dos produtos",
+            icon = Icons.Default.LocalOffer,
+            iconContainerColor = MaterialTheme.colorScheme.surface.copy(0.2f),
+            iconTintColor = MaterialTheme.colorScheme.primaryContainer.copy(0.8f),
+            onClick = onPriceTableClick
+        )
 
-            ManagementOptionCard(
-                title = "Equipe & Códigos de Acesso",
-                subtitle = "Gerar código de acesso e gerenciar vendedores",
-                icon = Icons.Default.Group,
-                iconContainerColor = MaterialTheme.colorScheme.secondary.copy(0.2f),
-                iconTintColor = MaterialTheme.colorScheme.onSecondary,
-                onClick = onManageSellersClick
-            )
+        ManagementOptionCard(
+            title = "Equipe & Códigos de Acesso",
+            subtitle = "Gerar código de acesso e gerenciar vendedores",
+            icon = Icons.Default.Group,
+            iconContainerColor = MaterialTheme.colorScheme.secondary.copy(0.2f),
+            iconTintColor = MaterialTheme.colorScheme.onSecondary,
+            onClick = onManageSellersClick
+        )
 
-            ManagementOptionCard(
-                title = "Enviar Dados",
-                icon = Icons.Default.Cloud,
-                iconContainerColor = MaterialTheme.colorScheme.onSecondary.copy(0.2f, blue = 0.8f),
-                iconTintColor = MaterialTheme.colorScheme.primary,
-                showTrailingIcon = false,
-                onClick = onSyncCloudClick,
-                subtitleContent = {
-                    val syncDataSubtitleComponentColor = if (uiState.hasInternetConnection != null)
-                        MaterialTheme.colorScheme.surface
-                    else
-                        MaterialTheme.colorScheme.secondary.copy(0.4f)
+        ManagementOptionCard(
+            title = "Enviar Dados",
+            icon = Icons.Default.Cloud,
+            iconContainerColor = MaterialTheme.colorScheme.onSecondary.copy(0.2f, blue = 0.8f),
+            iconTintColor = MaterialTheme.colorScheme.primary,
+            showTrailingIcon = false,
+            onClick = onSyncCloudClick,
+            subtitleContent = {
+                val syncDataSubtitleComponentColor = if (uiState.hasInternetConnection != null)
+                    MaterialTheme.colorScheme.surface
+                else
+                    MaterialTheme.colorScheme.secondary.copy(0.4f)
 
 
-                    if (uiState.isSyncing) {
-                        LoadingDots( color = MaterialTheme.colorScheme.onSecondary)
-                    } else {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .size(6.dp)
-                                    .clip(CircleShape)
-                                    .background(syncDataSubtitleComponentColor)
-                            )
-                            Text(
-                                text = uiState.hasInternetConnection ?: "Sem conexão com internet" ,
-                                fontSize = 12.sp,
-                                color = syncDataSubtitleComponentColor
-                            )
-                        }
+                if (uiState.isSyncing) {
+                    LoadingDots( color = MaterialTheme.colorScheme.onSecondary)
+                } else {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(syncDataSubtitleComponentColor)
+                        )
+                        Text(
+                            text = uiState.hasInternetConnection ?: "Sem conexão com internet" ,
+                            fontSize = 12.sp,
+                            color = syncDataSubtitleComponentColor
+                        )
                     }
                 }
+            }
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        LogoutButton(
+            onLogoutClick = { signOutConfirm = true }
+        )
+
+
+        /*showStatusDialog?.let {
+            AnnotationProductsStatusDialog(
+                text = it,
+                confirmButtonText = "Sair",
+                icon = Icons.Default.Close,
+                iconColor = MaterialTheme.colorScheme.error,
+                containerIconColor = MaterialTheme.colorScheme.errorContainer,
+                confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
+                confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
+                confirmClick = {
+                    onDisconnectOwnerClick()
+                    showStatusDialog = null
+                },
             )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            LogoutButton(
-                onLogoutClick = { signOutConfirm = true }
-            )
-
-
-            /*showStatusDialog?.let {
-                AnnotationProductsStatusDialog(
-                    text = it,
-                    confirmButtonText = "Sair",
-                    icon = Icons.Default.Close,
-                    iconColor = MaterialTheme.colorScheme.error,
-                    containerIconColor = MaterialTheme.colorScheme.errorContainer,
-                    confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
-                    confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
-                    confirmClick = {
-                        onDisconnectOwnerClick()
-                        showStatusDialog = null
-                    },
-                )
-            }*/
-        }
+        }*/
 
         if (signOutConfirm) {
             AnnotationProductsConfirmationDialog(
@@ -254,6 +251,8 @@ fun ProfileContent(
                 onConfirmClick = onSignOutClick
             )
         }
+
+        Spacer(modifier = Modifier.height(100.dp))
     }
 }
 
