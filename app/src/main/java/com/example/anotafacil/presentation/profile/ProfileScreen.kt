@@ -30,7 +30,10 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.LocalOffer
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -226,33 +229,17 @@ fun ProfileContent(
             onLogoutClick = { signOutConfirm = true }
         )
 
+        Spacer(modifier = Modifier.height(90.dp))
+    }
 
-        /*showStatusDialog?.let {
-            AnnotationProductsStatusDialog(
-                text = it,
-                confirmButtonText = "Sair",
-                icon = Icons.Default.Close,
-                iconColor = MaterialTheme.colorScheme.error,
-                containerIconColor = MaterialTheme.colorScheme.errorContainer,
-                confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
-                confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
-                confirmClick = {
-                    onDisconnectOwnerClick()
-                    showStatusDialog = null
-                },
-            )
-        }*/
-
-        if (signOutConfirm) {
-            AnnotationProductsConfirmationDialog(
-                title = "Tem certeza que deseja sair?",
-                subtitle = null,
-                onDismissRequest = { signOutConfirm = false },
-                onConfirmClick = onSignOutClick
-            )
-        }
-
-        Spacer(modifier = Modifier.height(100.dp))
+    if (signOutConfirm) {
+        AnnotationProductsConfirmationDialog(
+            title = "Tem certeza que deseja sair?",
+            subtitle = null,
+            icon = Icons.Default.QuestionMark,
+            onDismissRequest = { signOutConfirm = false },
+            onConfirmClick = onSignOutClick
+        )
     }
 }
 
@@ -394,7 +381,6 @@ private fun LogoutButton(
     Column(
         modifier = modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Button(
             onClick = onLogoutClick,
@@ -403,10 +389,9 @@ private fun LogoutButton(
                 .height(52.dp),
             shape = RoundedCornerShape(12.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = Color(0xFFFEF2F2),
-                contentColor = Color(0xFFEF4444)
+                containerColor = MaterialTheme.colorScheme.errorContainer,
+                contentColor = MaterialTheme.colorScheme.error,
             ),
-            elevation = null
         ) {
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),

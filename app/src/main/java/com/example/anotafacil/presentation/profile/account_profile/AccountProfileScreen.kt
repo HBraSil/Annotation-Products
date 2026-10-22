@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -266,6 +267,7 @@ fun AccountProfileContent(
         showAccountConfirmationDialog.second?.let {
             AnnotationProductsConfirmationDialog(
                 title = it,
+                icon = if (showAccountConfirmationDialog.first == 1) Icons.Default.QuestionMark else Icons.Default.Delete,
                 onDismissRequest = {
                     showAccountConfirmationDialog = Pair(first = 0, second = null)
                 },

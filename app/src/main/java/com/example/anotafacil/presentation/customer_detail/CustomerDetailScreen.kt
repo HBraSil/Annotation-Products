@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
@@ -267,6 +268,7 @@ fun CustomerDetailContent(
     if (uiState.showConfirmationDialog && uiState.buttonConfirmationType != null) {
         AnnotationProductsConfirmationDialog(
             title = if(uiState.buttonConfirmationType == ConfirmationAction.PARTIAL_PAYMENT) "Quitar parte da dívida?" else "Quitar a dívida total?",
+            icon = Icons.Default.QuestionMark,
             onDismissRequest = onDismiss,
             onConfirmClick = onPartialPaymentConfirm,
         )

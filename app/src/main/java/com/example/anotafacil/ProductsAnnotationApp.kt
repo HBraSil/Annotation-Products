@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChangeHistory
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -90,6 +91,7 @@ fun ProductsAnnotationApp(
         AnnotationProductsConfirmationDialog(
             title = "Alteração de e-mail",
             subtitle = "Seu e-mail foi alterado. Você precisará fazer login novamente.",
+            icon = Icons.Default.ChangeHistory,
             onDismissRequest = {},
             onConfirmClick = {
                 dismissEmailChangedDialog()

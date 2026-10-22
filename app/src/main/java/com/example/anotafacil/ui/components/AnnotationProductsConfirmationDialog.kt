@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 
@@ -34,11 +35,10 @@ fun AnnotationProductsConfirmationDialog(
     modifier: Modifier = Modifier,
     title: String,
     subtitle: String? = "Esta ação não pode ser desfeita.",
+    icon: ImageVector,
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit,
 ) {
-
-
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             modifier = modifier
@@ -58,7 +58,7 @@ fun AnnotationProductsConfirmationDialog(
             ) {
                 // Ícone de Lixeira (Outline)
                 Icon(
-                    imageVector = Icons.Outlined.Delete,
+                    imageVector = icon,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error,
                     modifier = Modifier.size(32.dp)
@@ -131,6 +131,8 @@ fun AnnotationProductsConfirmationDialog(
 fun DeleteClientConfirmationDialogPreview() {
     AnnotationProductsConfirmationDialog(
         title = "Excluir Cliente?",
+        subtitle = "Esta ação não pode ser desfeita.",
+        icon = Icons.Outlined.Delete,
         onDismissRequest = {},
         onConfirmClick = {}
     )

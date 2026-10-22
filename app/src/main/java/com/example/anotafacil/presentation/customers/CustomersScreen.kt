@@ -259,6 +259,7 @@ fun ClientManagementContent(
         if (customerUiState.showModalDeleteCustomer != null) {
             AnnotationProductsConfirmationDialog(
                 title = "Excluir Cliente?",
+                icon = Icons.Default.Delete,
                 onDismissRequest = { onCustomerUiEvent(CustomersUiEvent.OnDismissModalDeleteCustomer) },
                 onConfirmClick = { onCustomerUiEvent(CustomersUiEvent.OnDeleteCustomerClick) },
                 modifier = Modifier.fillMaxWidth()

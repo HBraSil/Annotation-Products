@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -174,6 +175,7 @@ fun ManageSellersContent(
         if (uiState.showDisconnectionConfirmationDialog) {
             AnnotationProductsConfirmationDialog(
                 title = "Tem certeza que deseja desconectar esse vendedor?",
+                icon = Icons.Default.QuestionMark,
                 onDismissRequest = { onShowDisconnectionConfirmationDialog(false) },
                 onConfirmClick = { disconnectSeller(sellerUid) }
             )

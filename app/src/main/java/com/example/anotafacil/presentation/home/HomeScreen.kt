@@ -21,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LinkOff
+import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.LocationOn
@@ -285,6 +286,7 @@ fun HomeContent(
                         ) {
                             SyncAnimation()
                         }
+
                     } else {
                         if (uiState.cities.isEmpty()) {
                             AnnotationProductsNothingToShow(
@@ -313,6 +315,7 @@ fun HomeContent(
             AnnotationProductsConfirmationDialog(
                 title = "Tem certeza que deseja sair do app?",
                 subtitle = null,
+                icon = Icons.AutoMirrored.Filled.Logout,
                 onDismissRequest = { signOutSellerDialog = false },
                 onConfirmClick = {
                     onSignOutSellerClick()
@@ -325,6 +328,7 @@ fun HomeContent(
             AnnotationProductsConfirmationDialog(
                 title = "Tem certeza que deseja desconectar do proprietário?",
                 subtitle = null,
+                icon = Icons.AutoMirrored.Filled.Logout,
                 onDismissRequest = { disconnectSellerDialog = false },
                 onConfirmClick = {
                     onDisconnectUserClick()
@@ -337,6 +341,7 @@ fun HomeContent(
             AnnotationProductsConfirmationDialog(
                 title = it,
                 subtitle = it,
+                icon = Icons.AutoMirrored.Filled.Logout,
                 onDismissRequest = {},
                 onConfirmClick = {
                     userNotAuthenticated = null
