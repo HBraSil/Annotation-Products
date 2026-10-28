@@ -22,6 +22,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.Uuid
 
 class SyncDownloader @Inject constructor(
@@ -95,27 +96,31 @@ class SyncDownloader @Inject constructor(
     }
 
 
+
     suspend fun downloadCityData(
         ownerId: String,
         cityId: Uuid
     ): Boolean {
+        return try {
+            val customersSuccess = downloadCustomers(ownerId, cityId)
+            if (!customersSuccess) return false
 
-        val customersSuccess = downloadCustomers(ownerId, cityId)
-        if (!customersSuccess) return false
+            val productsSuccess = downloadProducts(ownerId)
+            if (!productsSuccess) return false
 
-        val productsSuccess = downloadProducts(ownerId)
-        if (!productsSuccess) return false
+            val purchasesSuccess = downloadPurchases(ownerId, cityId)
+            if (!purchasesSuccess) return false
 
-        val purchasesSuccess = downloadPurchases(ownerId, cityId)
-        if (!purchasesSuccess) return false
+            val paymentsSuccess = downloadPayments(ownerId, cityId)
 
-        val paymentsSuccess = downloadPayments(ownerId, cityId)
-
-
-        return paymentsSuccess
+            paymentsSuccess
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e("SyncDebug", "Erro durante downloadCityData", e)
+            false
+        }
     }
-
-
 
 
 
@@ -123,8 +128,6 @@ class SyncDownloader @Inject constructor(
         ownerId: String,
         cityId: Uuid
     ): Boolean {
-
-
         val snapshot = firestore
             .collection("owners")
             .document(ownerId)
@@ -134,22 +137,34 @@ class SyncDownloader @Inject constructor(
             .await()
 
         for (document in snapshot.documents) {
-
             val customerId = Uuid.parse(document.id)
 
+            val localCustomer = customerDao.getCustomer(customerId).first()
+
+
+            val deletedAt = document.getTimestamp("deletedAt")
+
+            if (deletedAt != null) {
+                Log.d("CustomerSync", "name: $deletedAt")
+                customerDao.softDeleteCustomer(
+                    customerId = customerId,
+                    deletedAt = deletedAt.toDate().time
+                )
+                continue
+            }
+
+
+            if (localCustomer?.deletedAt != null) {
+                Log.d("CustomerSync", "name: ${localCustomer.name}")
+                continue
+            }
+
             val name = document.getString("name") ?: continue
+            val lastPurchaseDate = document.getString("lastPurchaseDate")
+            val owes = document.getDouble("owes")
+            val extraInfo = document.getString("extraInfo")
 
-            val lastPurchaseDate =
-                document.getString("lastPurchaseDate")
-
-            val owes =
-                document.getDouble("owes")
-
-            val extraInfo =
-                document.getString("extraInfo")
-
-            val localCustomer =
-                customerDao.getCustomer(customerId).first()
+            Log.d("CustomerSync", "name: $name")
 
             when {
                 localCustomer == null -> {
@@ -187,6 +202,7 @@ class SyncDownloader @Inject constructor(
 
         return true
     }
+
 
 
 
@@ -363,7 +379,39 @@ class SyncDownloader @Inject constructor(
             }
 
             return true
+    }
 
+
+    private suspend fun downloadCustomerDeletions(
+        ownerId: String,
+        cityId: Uuid
+    ): Boolean {
+        return try {
+            val snapshot = firestore
+                .collection("owners")
+                .document(ownerId)
+                .collection("customerDeletions")
+                .whereEqualTo("cityId", cityId.toString())
+                .get()
+                .await()
+
+            for (document in snapshot.documents) {
+                val customerId = Uuid.parse(document.id)
+
+                customerDao.deleteCustomer(customerId)
+            }
+
+            true
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Log.e(
+                "CustomerSync",
+                "Erro ao processar exclusões de clientes",
+                e
+            )
+            false
+        }
     }
 
 }

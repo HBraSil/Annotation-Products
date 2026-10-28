@@ -119,6 +119,7 @@ class CustomersViewModel @Inject constructor(
         }
     }
 
+
     private fun getCustomersList() {
         viewModelScope.launch {
             cityIdFlow
@@ -193,9 +194,11 @@ class CustomersViewModel @Inject constructor(
 
     private fun updateExtraInfo(extraInfo: String) = _customerUiState.update { it.copy(extraInfo = extraInfo) }
 
+
     private fun showModalCreateCustomer() = _customerUiState.update {
         it.copy(showModalCreateCustomer = true)
     }
+
 
     private fun showModalDeleteCustomer(id: Uuid?) = _customerUiState.update {
         it.copy(showModalDeleteCustomer = id)
@@ -214,23 +217,49 @@ class CustomersViewModel @Inject constructor(
     }
 
 
+
     private fun onDismissModalDeleteCustomer() = _customerUiState.update {
         it.copy(showModalDeleteCustomer = null)
     }
 
 
+
     private fun deleteCustomer() {
+        val customerId = _customerUiState.value.showModalDeleteCustomer
+            ?: return
+
+        _customerUiState.update {
+            it.copy(
+                showModalDeleteCustomer = null,
+                isDeletingCustomer = true
+            )
+        }
+
         viewModelScope.launch {
-            val customerId = _customerUiState.value.showModalDeleteCustomer
             val result = customerRepository.deleteCustomer(customerId)
 
-            if (result > 0) {
-                _customerUiState.update {
-                    it.copy(showModalDeleteCustomer = null)
+            result
+                .onSuccess {
+                    _customerUiState.update {
+                        it.copy(
+                            isDeletingCustomer = false,
+                            showModalDeleteCustomer = null
+                        )
+                    }
                 }
-            }
+                .onFailure { exception ->
+                    _customerUiState.update {
+                        it.copy(
+                            message = exception.message
+                                ?: "Não foi possível excluir o cliente.",
+                            isDeletingCustomer = false
+                        )
+                    }
+                }
         }
     }
+
+
 
 
     private fun saveCustomer() {
@@ -295,6 +324,7 @@ data class CustomersUiState(
     val isLoading: Boolean = false,
     val success: Boolean = false,
     val message: String? = null,
+    val isDeletingCustomer: Boolean = false,
     val name: String = "",
     val searchQuery: String = "",
     val extraInfo: String? = null,

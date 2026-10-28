@@ -295,7 +295,6 @@ fun HomeContent(
                             )
                         } else {
                             uiState.cities.forEach { city ->
-                                Log.d("HomeScreen", "${city.name} -> ${city.customerCount}")
                                 CityCard(
                                     city = city,
                                     onClick = { onCityClick(city) },

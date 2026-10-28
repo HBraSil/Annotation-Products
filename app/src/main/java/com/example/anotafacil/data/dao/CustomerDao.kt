@@ -14,7 +14,7 @@ import kotlin.uuid.Uuid
 @Dao
 interface CustomerDao {
 
-    @Query("SELECT * FROM customer WHERE cityId = :cityId")
+    @Query("SELECT * FROM customer WHERE cityId = :cityId AND deletedAt IS NULL")
     fun getAll(cityId: Uuid?): Flow<List<CustomerEntity>>
 
 
@@ -37,6 +37,7 @@ interface CustomerDao {
     SELECT *
     FROM customer
     WHERE cityId = :cityId
+    AND deletedAt IS NULL
 """)
     suspend fun getCustomersByCity(
         cityId: Uuid
@@ -75,4 +76,15 @@ interface CustomerDao {
 
     @Query("DELETE FROM customer")
     suspend fun deleteAll()
+
+
+    @Query("""
+    UPDATE customer
+    SET deletedAt = :deletedAt
+    WHERE id = :customerId
+""")
+    suspend fun softDeleteCustomer(
+        customerId: Uuid,
+        deletedAt: Long
+    ): Int
 }

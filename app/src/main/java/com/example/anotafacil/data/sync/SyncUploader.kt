@@ -98,11 +98,17 @@ class SyncUploader @Inject constructor(
 
 
     private suspend fun uploadCustomers(ownerId: String): Boolean {
-        val pendingCustomers = customerDao.getCustomersBySyncStatus(SyncStatus.PENDING)
+        val pendingCustomers = customerDao
+            .getCustomersBySyncStatus(SyncStatus.PENDING)
+            .filter {
+                it.deletedAt == null
+            }
+
 
         var success = true
 
         for (customer in pendingCustomers) {
+            Log.d("PENDINGCUSTOMERS", "customer: $customer")
             try {
                 firestore
                     .collection("owners")
@@ -115,7 +121,8 @@ class SyncUploader @Inject constructor(
                             "lastPurchaseDate" to customer.lastPurchaseDate,
                             "owes" to customer.owes,
                             "extraInfo" to customer.extraInfo,
-                            "cityId" to customer.cityId.toString()
+                            "cityId" to customer.cityId.toString(),
+                            "deletedAt" to customer.deletedAt
                         )
                     )
                     .await()

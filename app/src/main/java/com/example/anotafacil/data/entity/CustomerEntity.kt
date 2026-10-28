@@ -26,7 +26,8 @@ data class CustomerEntity(
     val owes: Double?,
     val extraInfo: String?,
     val cityId: Uuid,
-    val syncStatus: SyncStatus = SyncStatus.PENDING
+    val syncStatus: SyncStatus = SyncStatus.PENDING,
+    val deletedAt: Long? = null
 )
 
 fun CustomerEntity.toDomain() = Customer(

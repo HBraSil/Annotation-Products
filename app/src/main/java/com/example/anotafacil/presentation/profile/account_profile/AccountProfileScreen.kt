@@ -12,11 +12,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Delete
@@ -45,7 +43,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -56,6 +53,7 @@ import com.example.anotafacil.presentation.profile.account_profile.AccountProfil
 import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiEvent
 import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiState
 import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.EasyNoteDeletingDataOverlay
 import com.example.anotafacil.ui.components.EasyNotesTextField
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -283,13 +281,14 @@ fun AccountProfileContent(
         }
 
     }
-        if(uiState.isDeleting) {
-            DeletingDataOverlay(
-                modifier = Modifier.statusBarsPadding()
-            )
-        }
 
 
+    if(uiState.isDeleting) {
+        EasyNoteDeletingDataOverlay(
+            modifier = Modifier.statusBarsPadding(),
+            text = "Excluindo todos os seus dados..."
+        )
+    }
 }
 
 
@@ -352,22 +351,6 @@ fun FooterActions(
 }
 
 
-@Composable
-private fun DeletingDataOverlay(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black.copy(alpha = 0.6f)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "Excluindo todos os seus dados...",
-            color = Color.White
-        )
-    }
-}
 
 @Preview
 @Composable

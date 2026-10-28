@@ -25,7 +25,7 @@ interface CustomerRepository {
 
     suspend fun saveCartItems(cartItems: List<CartItem>): List<Long>
 
-    suspend fun deleteCustomer(customerId: Uuid?): Int
+    suspend fun deleteCustomer(customerId: Uuid?): Result<Unit>
 
     fun getAllPurchases(customerId: Uuid?): Flow<List<PurchaseWithItemsDomain>>
 

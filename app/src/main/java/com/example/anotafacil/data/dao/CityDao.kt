@@ -51,6 +51,7 @@ interface CityDao {
     FROM city
     LEFT JOIN customer
         ON customer.cityId = city.id
+        AND customer.deletedAt IS NULL
     WHERE city.name LIKE '%' || :query || '%'
     GROUP BY city.id, city.name, city.syncStatus
     ORDER BY city.name

@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.ui.components.AnnotationProductsFab
+import com.example.anotafacil.ui.components.EasyNoteDeletingDataOverlay
 import com.example.anotafacil.ui.util.currencyFormatter
 import kotlin.uuid.Uuid
 
@@ -79,6 +80,7 @@ fun OwnerCustomersScreen(
     ClientManagementContent(
         customerUiState = customerUiState,
         currentCity = customerUiState.currentCity ?: City(),
+        allowDeleteCustomer = true,
         onBackClick = onBackClick,
         goToCustomerDetailScreen = goToCustomerDetailScreen,
         onCustomerUiEvent = customersViewModel::customersEvent,
@@ -120,6 +122,7 @@ fun SellerCustomersScreen(
 fun ClientManagementContent(
     customerUiState: CustomersUiState = CustomersUiState(),
     currentCity: City = City(),
+    allowDeleteCustomer: Boolean = false,
     onBackClick: () -> Unit = {},
     goToCustomerDetailScreen: (Uuid?) -> Unit = {},
     onCustomerUiEvent: (CustomersUiEvent) -> Unit = {},
@@ -231,9 +234,11 @@ fun ClientManagementContent(
                     customerUiState.customers.forEach { customer ->
                         CardCustomers(
                             customer = customer,
+                            allowDeleteCustomer = allowDeleteCustomer,
                             onCustomerUiEvent = {
-                                CustomersUiEvent.OnShowModalDeleteCustomer(customer.id)
-                            },
+                                onCustomerUiEvent(
+                                    CustomersUiEvent.OnShowModalDeleteCustomer(customer.id)
+                                )},
                             goToCustomerDetailScreen = {
                                 goToCustomerDetailScreen(customer.id)
                             }
@@ -263,6 +268,13 @@ fun ClientManagementContent(
                 onDismissRequest = { onCustomerUiEvent(CustomersUiEvent.OnDismissModalDeleteCustomer) },
                 onConfirmClick = { onCustomerUiEvent(CustomersUiEvent.OnDeleteCustomerClick) },
                 modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        if (customerUiState.isDeletingCustomer) {
+            EasyNoteDeletingDataOverlay(
+                modifier = Modifier.statusBarsPadding(),
+                text = "Excluindo cliente..."
             )
         }
     }
@@ -468,6 +480,7 @@ fun MetricCard(
 @Composable
 fun CardCustomers(
     customer: Customer,
+    allowDeleteCustomer: Boolean,
     onCustomerUiEvent: () -> Unit,
     goToCustomerDetailScreen: () -> Unit
 ) {
@@ -523,15 +536,17 @@ fun CardCustomers(
                 }
             }
 
-            IconButton(
-                onClick = onCustomerUiEvent,
-                modifier = Modifier.size(44.dp).weight(1f)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Excluir",
-                    tint = Color.LightGray
-                )
+            if (allowDeleteCustomer) {
+                IconButton(
+                    onClick = onCustomerUiEvent,
+                    modifier = Modifier.size(44.dp).weight(1f)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Delete,
+                        contentDescription = "Excluir",
+                        tint = Color.LightGray
+                    )
+                }
             }
         }
     }
