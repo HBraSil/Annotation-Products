@@ -12,12 +12,13 @@ data class CityEntity(
     val id: Uuid,
     val name: String,
     val customerCount: Int = 0,
+    val ownerId: String = "",
     val syncStatus: SyncStatus = SyncStatus.PENDING
 )
-
 
 fun CityEntity.toCity() = City(
     id = id,
     name = name,
-    customerCount = customerCount
+    customerCount = customerCount,
+    ownerId = ownerId
 )

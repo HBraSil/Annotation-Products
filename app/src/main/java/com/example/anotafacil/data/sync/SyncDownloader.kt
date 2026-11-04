@@ -46,7 +46,7 @@ class SyncDownloader @Inject constructor(
             }
 
 
-            val cities = cityDao.getAll()
+            val cities = cityDao.getAll(ownerId)
 
             for (city in cities) {
                 val success = downloadCityData(
@@ -78,19 +78,27 @@ class SyncDownloader @Inject constructor(
             val cityId = Uuid.parse(document.id)
             val name = document.getString("name") ?: continue
 
-            val localCity = cityDao.getCity(cityId)
+            val localCity = cityDao.getCity(cityId, ownerId)
 
             if (localCity == null) {
                 cityDao.insertCity(
                     CityEntity(
                         id = cityId,
                         name = name,
+                        ownerId = ownerId,
+                        syncStatus = SyncStatus.SYNCED
+                    )
+                )
+            } else if (localCity.name != name) {
+                cityDao.updateCity(
+                    localCity.copy(
+                        name = name,
+                        ownerId = ownerId,
                         syncStatus = SyncStatus.SYNCED
                     )
                 )
             }
         }
-
 
         return true
     }
@@ -346,7 +354,7 @@ class SyncDownloader @Inject constructor(
                 val name = document.getString("name") ?: continue
                 val price = document.getLong("price")?.toInt() ?: continue
 
-                val localProduct = productDao.getById(productId)
+                val localProduct = productDao.getById(productId, ownerId)
 
                 when {
                     localProduct == null -> {
@@ -356,6 +364,7 @@ class SyncDownloader @Inject constructor(
                                     id = productId,
                                     name = name,
                                     price = price,
+                                    ownerId = ownerId,
                                     syncStatus = SyncStatus.SYNCED
                                 )
                             )
@@ -367,6 +376,7 @@ class SyncDownloader @Inject constructor(
                             localProduct.copy(
                                 name = name,
                                 price = price,
+                                ownerId = ownerId,
                                 syncStatus = SyncStatus.SYNCED
                             )
                         )

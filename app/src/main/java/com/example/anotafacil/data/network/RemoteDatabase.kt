@@ -34,7 +34,7 @@ class RemoteDatabase @Inject constructor(
                 .await()
 
             if (!document.exists()) {
-                Log.d("RemoteDatabase", "Usuário não encontrado fio aqui")
+                Log.d("RemoteDatabase", "Document not found")
                 return Result.failure(Exception("Usuário não encontrado"))
             }
 

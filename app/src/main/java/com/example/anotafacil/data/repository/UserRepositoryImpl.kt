@@ -286,9 +286,11 @@ class UserRepositoryImpl @Inject constructor(
             val firebaseUserUid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuário não está logado"))
 
+            Log.d("UserRepository", "uid firebase: $firebaseUserUid ---  uid param: $uid")
             val user = userDao.getUserDao(uid ?: firebaseUserUid)
                 ?: return Result.failure(Exception("Usuário não encontrado no banco local"))
 
+            Log.d("UserRepository", "getCurrentUser: $user")
             Result.success(user.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
@@ -340,7 +342,6 @@ class UserRepositoryImpl @Inject constructor(
                 .await()
 
             documentReference.delete().await()
-
 
             userDao.updateRole(
                 uid = firebaseUser.uid,

@@ -8,9 +8,11 @@ data class City(
     val id: Uuid = Uuid.random(),
     val name: String = "",
     val customerCount: Int = 0,
+    val ownerId: String = "",
 )
 
 fun City.toCityEntity() = CityEntity(
     id = id,
-    name = name
+    name = name,
+    ownerId = ownerId
 )

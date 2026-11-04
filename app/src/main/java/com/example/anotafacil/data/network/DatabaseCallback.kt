@@ -19,22 +19,22 @@ class DatabaseCallback(
         super.onCreate(db)
         scope.launch {
             val databaseList = listOf(
-                ProductEntity(name = "Sabão", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Brilho", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Alvejante", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Amaciante", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Desinfetante", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Água Sanitária", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Metazil", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Detergente", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Sabão 2l", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Brilho 2l", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Alvejante 2l", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Amaciante 2l", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Desinfetante 2l", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Água Sanitária 2l", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Metazil 2l", price = 0, syncStatus = SyncStatus.SYNCED),
-                ProductEntity(name = "Detergente 2l", price = 0, syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Sabão", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Brilho", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Alvejante", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Amaciante", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Desinfetante", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Água Sanitária", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Metazil", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Detergente", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Sabão 2l", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Brilho 2l", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Alvejante 2l", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Amaciante 2l", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Desinfetante 2l", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Água Sanitária 2l", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Metazil 2l", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
+                ProductEntity(name = "Detergente 2l", price = 0, ownerId = "", syncStatus = SyncStatus.SYNCED),
             )
 
 

@@ -2,6 +2,7 @@ package com.example.anotafacil.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.migration.Migration
 import com.example.anotafacil.data.dao.ProductDao
 import com.example.anotafacil.data.network.AppDatabase
 import com.example.anotafacil.data.network.DatabaseCallback

@@ -5,6 +5,7 @@ import com.example.anotafacil.data.dao.UserDao
 import com.example.anotafacil.data.util.GoogleSignInUtils
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.User
+import com.example.anotafacil.domain.model.UserRole
 import com.example.anotafacil.domain.model.toEntity
 import com.example.anotafacil.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -44,22 +45,45 @@ class AuthRepositoryImpl @Inject constructor(
                         .get()
                         .await()
 
-                    if (!sellerUser.exists() && !ownerUser.exists()) {
-                        Log.d("AuthRepository", "Usuário não existe no Firestore, criando...: ${firebaseUser.displayName}, ${firebaseUser.email}")
-                        val newUser = User(
-                            uid = uid,
-                            name = firebaseUser.displayName ?: "",
-                            email = firebaseUser.email ?: "",
-                        )
+                    val newUser = User(uid = uid, name = firebaseUser.displayName ?: "", email = firebaseUser.email ?: "")
 
+                    val resolvedUser = when {
+                        ownerUser.exists() -> {
+                            val remoteOwner = ownerUser.toObject(User::class.java) ?: newUser
+                            remoteOwner.copy(
+                                uid = uid,
+                                name = remoteOwner.name.ifBlank { firebaseUser.displayName ?: "" },
+                                email = remoteOwner.email.ifBlank { firebaseUser.email ?: "" },
+                                role = UserRole.OWNER,
+                                ownerId = null
+                            )
+                        }
+
+                        sellerUser.exists() -> {
+                            val remoteSeller = sellerUser.toObject(User::class.java) ?: newUser
+                            remoteSeller.copy(
+                                uid = uid,
+                                name = remoteSeller.name.ifBlank { firebaseUser.displayName ?: "" },
+                                email = remoteSeller.email.ifBlank { firebaseUser.email ?: "" },
+                                role = UserRole.SELLER,
+                                ownerId = remoteSeller.ownerId
+                            )
+                        }
+
+                        else -> newUser.copy(
+                            role = UserRole.SELLER,
+                            ownerId = null
+                        )
+                    }
+
+                    if (!sellerUser.exists() && !ownerUser.exists()) {
                         firestore.collection("sellers")
                             .document(uid)
-                            .set(newUser)
+                            .set(resolvedUser)
                             .await()
-
-                        Log.d("AuthRepository", "Usuário criado no Firestore: $newUser")
-                        userDao.saveUserDao(newUser.toEntity())
                     }
+
+                    userDao.saveUserDao(resolvedUser.toEntity())
 
                     Result.success(true)
                 },

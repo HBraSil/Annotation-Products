@@ -3,7 +3,9 @@ package com.example.anotafacil.data.network
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import androidx.room.migration.Migration
 import androidx.room.withTransaction
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.anotafacil.data.dao.CityDao
 import com.example.anotafacil.data.dao.CustomerDao
 import com.example.anotafacil.data.dao.PaymentDao
@@ -32,11 +34,12 @@ import kotlinx.coroutines.withContext
         CartItemEntity::class,
         PaymentEntity::class
     ],
-    version = 8,
+    version = 10,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
+
     abstract fun userDao(): UserDao
     abstract fun cityDao(): CityDao
     abstract fun productDao(): ProductDao
@@ -52,7 +55,7 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
 
-    suspend fun clearSellerData(): Result<Boolean> {
+    suspend fun clearSellerData(ownerId: String = ""): Result<Boolean> {
 
         return withContext(Dispatchers.IO) {
             try {
@@ -60,8 +63,8 @@ abstract class AppDatabase : RoomDatabase() {
                     paymentDao().deleteAll()
                     purchaseDao().deleteAll()
                     customerDao().deleteAll()
-                    cityDao().deleteAll()
-                    productDao().deleteAll()
+                    cityDao().deleteAll(ownerId)
+                    productDao().deleteAll(ownerId)
                 }
 
                 Result.success(true)
@@ -72,10 +75,10 @@ abstract class AppDatabase : RoomDatabase() {
     }
 
 
-    suspend fun hasPendingData(): Boolean {
+    suspend fun hasPendingData(ownerId: String = ""): Boolean {
         return withContext(Dispatchers.IO) {
-             cityDao().getCitiesBySyncStatus(SyncStatus.PENDING).isNotEmpty() ||
-                    productDao().getProductsBySyncStatus(SyncStatus.PENDING).isNotEmpty() ||
+              cityDao().getCitiesBySyncStatus(SyncStatus.PENDING, ownerId).isNotEmpty() ||
+                    productDao().getProductsBySyncStatus(SyncStatus.PENDING, ownerId).isNotEmpty() ||
                     customerDao().getCustomersBySyncStatus(SyncStatus.PENDING).isNotEmpty() ||
                     purchaseDao().getPurchasesBySyncStatus(SyncStatus.PENDING).isNotEmpty() ||
                     paymentDao().getPaymentsBySyncStatus(SyncStatus.PENDING).isNotEmpty()

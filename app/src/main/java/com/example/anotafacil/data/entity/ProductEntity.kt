@@ -12,11 +12,13 @@ data class ProductEntity(
     val id: Uuid = Uuid.random(),
     var name: String = "",
     var price: Int = 0,
+    var ownerId: String = "",
     val syncStatus: SyncStatus = SyncStatus.PENDING
 )
 
 fun ProductEntity.toProductDomain() = Product(
     id = id,
     name = name,
-    price = price
+    price = price,
+    ownerId = ownerId
 )

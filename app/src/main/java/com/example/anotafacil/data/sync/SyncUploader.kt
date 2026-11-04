@@ -66,7 +66,7 @@ class SyncUploader @Inject constructor(
 
 
     private suspend fun uploadCities(ownerId: String): Boolean {
-        val pendingCities = cityDao.getCitiesBySyncStatus(SyncStatus.PENDING)
+        val pendingCities = cityDao.getCitiesBySyncStatus(SyncStatus.PENDING, ownerId)
 
         var success = true
 
@@ -82,7 +82,8 @@ class SyncUploader @Inject constructor(
 
                 val updatedRows = cityDao.updateSyncStatus(
                     cityId = city.id,
-                    status = SyncStatus.SYNCED
+                    status = SyncStatus.SYNCED,
+                    ownerId = ownerId
                 )
 
                 if (updatedRows != 1) success = false
@@ -144,7 +145,7 @@ class SyncUploader @Inject constructor(
 
     private suspend fun uploadProducts(ownerId: String): Boolean {
         val pendingProducts = productDao
-            .getProductsBySyncStatus(SyncStatus.PENDING)
+            .getProductsBySyncStatus(SyncStatus.PENDING, ownerId)
             .filter { it.price > 0 }
         pendingProducts.forEach {
             Log.d("SyncUploader", "product: $it")
@@ -169,7 +170,8 @@ class SyncUploader @Inject constructor(
 
                 val updatedRows = productDao.updateSyncStatus(
                     productId = product.id,
-                    status = SyncStatus.SYNCED
+                    status = SyncStatus.SYNCED,
+                    ownerId = ownerId
                 )
 
                 if (updatedRows != 1) {

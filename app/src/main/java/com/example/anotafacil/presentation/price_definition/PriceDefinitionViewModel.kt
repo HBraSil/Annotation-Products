@@ -38,6 +38,7 @@ class PriceDefinitionViewModel @Inject constructor(
         }
     }
 
+
     fun addManualProduct() {
         val productName = _uiState.value.manualProductName.trim()
 
@@ -56,19 +57,22 @@ class PriceDefinitionViewModel @Inject constructor(
         }
     }
 
+
     fun updateManualProductName(name: String) {
         _uiState.update { uiState ->
             uiState.copy(manualProductName = name)
         }
     }
 
+
     fun updateProductPrice(productId: Uuid, newPrice: String) {
+        val parsedPrice = newPrice.toIntOrNull() ?: 0
 
         _uiState.update { uiState ->
             uiState.copy(
                 items = uiState.items.map { product ->
                     if (product.id == productId)
-                        product.copy(price = newPrice.toInt())
+                        product.copy(price = parsedPrice)
                     else
                         product
                 }
@@ -112,7 +116,7 @@ class PriceDefinitionViewModel @Inject constructor(
                     uiState.copy(
                         originalItems = uiState.items,
                         isLoading = false,
-                        priceSaved = true,
+                        priceSaved = true
                     )
                 }
             }
@@ -130,5 +134,9 @@ data class PriceDefinitionUiState(
     val isLoading: Boolean = false
 ) {
     val hasChanges: Boolean
-        get() = items.size > originalItems.size
+        get() = items.size > originalItems.size ||
+            items.any { item ->
+                val originalItem = originalItems.firstOrNull { it.id == item.id }
+                originalItem != null && originalItem.price != item.price
+            }
 }
