@@ -48,7 +48,7 @@ import com.example.anotafacil.presentation.profile.ProfileScreen
 import com.example.anotafacil.presentation.profile.manage_sellers.ManageSellersScreen
 import com.example.anotafacil.presentation.sales_overview.SalesOverviewScreen
 import com.example.anotafacil.ui.components.AnimatedBottomBar
-import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 
 enum class Screens(val route: String) {
@@ -88,7 +88,7 @@ fun ProductsAnnotationApp(
 
 
     if (showEmailChangedDialog) {
-        AnnotationProductsConfirmationDialog(
+        EasyNoteConfirmationDialog(
             title = "Alteração de e-mail",
             subtitle = "Seu e-mail foi alterado. Você precisará fazer login novamente.",
             icon = Icons.Default.ChangeHistory,
@@ -454,7 +454,7 @@ fun ProductsAnnotationApp(
 
         composable(route = Screens.SALES_OVERVIEW.route) {
             SalesOverviewScreen(
-                onBackClick = {}
+                onBackClick = {},
             )
         }
 

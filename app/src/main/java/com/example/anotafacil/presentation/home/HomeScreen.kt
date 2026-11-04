@@ -21,7 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LinkOff
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.LocationOn
@@ -66,7 +65,7 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
-import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import com.example.anotafacil.ui.components.AnnotationProductsSearchBar
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
@@ -311,7 +310,7 @@ fun HomeContent(
 
 
         if (signOutSellerDialog) {
-            AnnotationProductsConfirmationDialog(
+            EasyNoteConfirmationDialog(
                 title = "Tem certeza que deseja sair do app?",
                 subtitle = null,
                 icon = Icons.AutoMirrored.Filled.Logout,
@@ -324,7 +323,7 @@ fun HomeContent(
         }
 
         if (disconnectSellerDialog) {
-            AnnotationProductsConfirmationDialog(
+            EasyNoteConfirmationDialog(
                 title = "Tem certeza que deseja desconectar do proprietário?",
                 subtitle = null,
                 icon = Icons.AutoMirrored.Filled.Logout,
@@ -337,7 +336,7 @@ fun HomeContent(
         }
 
         userNotAuthenticated?.let {
-            AnnotationProductsConfirmationDialog(
+            EasyNoteConfirmationDialog(
                 title = it,
                 subtitle = it,
                 icon = Icons.AutoMirrored.Filled.Logout,

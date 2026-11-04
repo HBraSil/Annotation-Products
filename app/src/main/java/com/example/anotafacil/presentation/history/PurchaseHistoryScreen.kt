@@ -21,11 +21,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
+import com.example.anotafacil.domain.formatter.toBrazilianDate
 import com.example.anotafacil.domain.model.Payment
 import com.example.anotafacil.domain.model.PurchaseWithItemsDomain
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
-import com.example.anotafacil.ui.util.currencyFormatter
-import com.example.anotafacil.ui.util.toBrazilianDate
 
 
 @Composable
@@ -220,7 +220,7 @@ fun PurchaseHistoryCard(purchase: PurchaseWithItemsDomain) {
 
                     // 3. O preço agora está seguro, pois o weight(1f) lá de cima deu prioridade para o que sobra
                     Text(
-                        text = currencyFormatter.format(purchase.purchase.totalAmount),
+                        text = brazilianCurrencyFormatter.format(purchase.purchase.totalAmount),
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyLarge,
                         fontWeight = FontWeight.Bold,
@@ -283,7 +283,7 @@ fun PaymentHistoryCard(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = if (isTotalPayment) "QUITADO" else currencyFormatter.format(payment.amount),
+                    text = if (isTotalPayment) "QUITADO" else brazilianCurrencyFormatter.format(payment.amount),
                     color = amountColor,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,

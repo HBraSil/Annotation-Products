@@ -61,7 +61,7 @@ fun AnimatedBottomBar(
         BottomBarItem(
             iconSelected = Icons.Default.QueryStats,
             iconUnselected = Icons.Outlined.QueryStats,
-            label = "Ver Análise",
+            label = "Relatório ",
             router = Screens.SALES_OVERVIEW.route
         ),
         BottomBarItem(

@@ -26,28 +26,22 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ChevronRight
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Group
-import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.LocalOffer
-import androidx.compose.material.icons.filled.Logout
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -69,8 +63,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
-import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
 
 @Composable
 fun ProfileScreen(
@@ -233,7 +226,7 @@ fun ProfileContent(
     }
 
     if (signOutConfirm) {
-        AnnotationProductsConfirmationDialog(
+        EasyNoteConfirmationDialog(
             title = "Tem certeza que deseja sair?",
             subtitle = null,
             icon = Icons.Default.QuestionMark,

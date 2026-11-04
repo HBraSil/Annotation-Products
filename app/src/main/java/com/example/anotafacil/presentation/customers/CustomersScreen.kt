@@ -50,15 +50,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
-import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
 import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.ui.components.AnnotationProductsFab
-import com.example.anotafacil.ui.components.EasyNoteDeletingDataOverlay
-import com.example.anotafacil.ui.util.currencyFormatter
+import com.example.anotafacil.ui.components.EasyNoteLoadingOverlay
 import kotlin.uuid.Uuid
 
 
@@ -209,7 +209,7 @@ fun ClientManagementContent(
 
                     MetricCard(
                         title = "Total Vendido",
-                        value = currencyFormatter.format(customerUiState.metric.totalAmount),
+                        value = brazilianCurrencyFormatter.format(customerUiState.metric.totalAmount),
                         icon = Icons.Default.AttachMoney,
                         modifier = Modifier.weight(1f)
                     )
@@ -262,7 +262,7 @@ fun ClientManagementContent(
         }
 
         if (customerUiState.showModalDeleteCustomer != null) {
-            AnnotationProductsConfirmationDialog(
+            EasyNoteConfirmationDialog(
                 title = "Excluir Cliente?",
                 icon = Icons.Default.Delete,
                 onDismissRequest = { onCustomerUiEvent(CustomersUiEvent.OnDismissModalDeleteCustomer) },
@@ -272,7 +272,7 @@ fun ClientManagementContent(
         }
 
         if (customerUiState.isDeletingCustomer) {
-            EasyNoteDeletingDataOverlay(
+            EasyNoteLoadingOverlay(
                 modifier = Modifier.statusBarsPadding(),
                 text = "Excluindo cliente..."
             )

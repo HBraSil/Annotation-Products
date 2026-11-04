@@ -8,5 +8,5 @@ interface ProductRepository {
 
     suspend fun getProductsWithDefinedPrice(): List<Product>
 
-    suspend fun updateProductPrice(productId: Uuid, newPrice: Int): Int
+    suspend fun saveProductChanges(product: Product): Boolean
 }

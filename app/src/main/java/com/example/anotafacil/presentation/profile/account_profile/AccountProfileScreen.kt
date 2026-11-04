@@ -1,6 +1,4 @@
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -52,8 +50,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.presentation.profile.account_profile.AccountProfileViewModel
 import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiEvent
 import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiState
-import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
-import com.example.anotafacil.ui.components.EasyNoteDeletingDataOverlay
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
+import com.example.anotafacil.ui.components.EasyNoteLoadingOverlay
 import com.example.anotafacil.ui.components.EasyNotesTextField
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -263,7 +261,7 @@ fun AccountProfileContent(
         }
 
         showAccountConfirmationDialog.second?.let {
-            AnnotationProductsConfirmationDialog(
+            EasyNoteConfirmationDialog(
                 title = it,
                 icon = if (showAccountConfirmationDialog.first == 1) Icons.Default.QuestionMark else Icons.Default.Delete,
                 onDismissRequest = {
@@ -284,8 +282,7 @@ fun AccountProfileContent(
 
 
     if(uiState.isDeleting) {
-        EasyNoteDeletingDataOverlay(
-            modifier = Modifier.statusBarsPadding(),
+        EasyNoteLoadingOverlay(
             text = "Excluindo todos os seus dados..."
         )
     }

@@ -15,6 +15,10 @@ interface ProductDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(product: List<ProductEntity>): List<Long>
 
+    @Insert
+    suspend fun insert(product: ProductEntity): Long
+
+
     @Query("""
     SELECT *
     FROM product
@@ -34,7 +38,7 @@ interface ProductDao {
         status: SyncStatus
     ): Int
 
-    @Query("SELECT * FROM product")
+    @Query("SELECT * FROM product ORDER BY name ASC")
     suspend fun getAllProducts(): List<ProductEntity>
 
     @Query(" SELECT * FROM product WHERE price > 0")

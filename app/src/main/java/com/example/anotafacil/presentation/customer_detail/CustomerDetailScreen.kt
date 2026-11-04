@@ -25,7 +25,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.History
@@ -33,14 +32,14 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
+import com.example.anotafacil.domain.formatter.toBrazilianDate
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
 import com.example.anotafacil.ui.components.AnnotationProductsFab
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
-import com.example.anotafacil.ui.util.currencyFormatter
-import com.example.anotafacil.ui.util.toBrazilianDate
+import com.example.anotafacil.ui.components.EasyNoteBrazilianCurrencyTextField
 import kotlin.uuid.Uuid
 
 @Composable
@@ -220,7 +219,7 @@ fun CustomerDetailContent(
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text("TOTAL", fontSize = 10.sp, color = MaterialTheme.colorScheme.secondary, fontWeight = FontWeight.Bold)
-                            Text(text = currencyFormatter.format(item.subtotal()), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(text = brazilianCurrencyFormatter.format(item.subtotal()), color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                     }
                 }
@@ -242,7 +241,7 @@ fun CustomerDetailContent(
                         modifier = Modifier.weight(2f)
                     )
                     Text(
-                        text = currencyFormatter.format(uiState.purchase.totalAmount),
+                        text = brazilianCurrencyFormatter.format(uiState.purchase.totalAmount),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.primary,
@@ -266,7 +265,7 @@ fun CustomerDetailContent(
     }
 
     if (uiState.showConfirmationDialog && uiState.buttonConfirmationType != null) {
-        AnnotationProductsConfirmationDialog(
+        EasyNoteConfirmationDialog(
             title = if(uiState.buttonConfirmationType == ConfirmationAction.PARTIAL_PAYMENT) "Quitar parte da dívida?" else "Quitar a dívida total?",
             icon = Icons.Default.QuestionMark,
             onDismissRequest = onDismiss,
@@ -285,9 +284,7 @@ fun CustomerDetailContent(
     if (uiState.errorPartialPayment) {
         Toast.makeText(context, "Valor inválido", Toast.LENGTH_SHORT).show()
         onDismissToast()
-
     }
-
 }
 
 
@@ -320,7 +317,7 @@ fun DebtAndPartialPayment(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = currencyFormatter.format(uiState.customer.owes ?: 0.0),
+                    text = brazilianCurrencyFormatter.format(uiState.customer.owes ?: 0.0),
                     fontSize = 32.sp,
                     color = MaterialTheme.colorScheme.onPrimary,
                     fontWeight = FontWeight.Black
@@ -406,27 +403,9 @@ fun DebtAndPartialPayment(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        OutlinedTextField(
-                            value = uiState.partialPaymentComponent,
-                            onValueChange = {
-                                onPartialPaymentChange(it.text)
-                            },
-                            placeholder = {
-                                Text(
-                                    "R$ 0,00",
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                            },
-                            modifier = Modifier.weight(1f),
-                            shape = RoundedCornerShape(10.dp),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            singleLine = true,
-                            colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                                unfocusedBorderColor = MaterialTheme.colorScheme.primary,
-                                focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                        EasyNoteBrazilianCurrencyTextField(
+                            text = uiState.partialPaymentComponent,
+                            onValueChange = onPartialPaymentChange
                         )
                         Button(
                             onClick = {

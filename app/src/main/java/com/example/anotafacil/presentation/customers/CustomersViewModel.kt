@@ -10,7 +10,7 @@ import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.CustomerRepository
 import com.example.anotafacil.domain.usecase.RefreshCustomersUseCase
-import com.example.anotafacil.ui.util.FormatDate
+import com.example.anotafacil.domain.formatter.FormatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay

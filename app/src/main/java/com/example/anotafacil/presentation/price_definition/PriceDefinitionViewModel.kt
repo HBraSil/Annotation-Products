@@ -1,7 +1,11 @@
 package com.example.anotafacil.presentation.price_definition
 
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
+import com.example.anotafacil.domain.formatter.parseBrazilianCurrencyInput
 import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.domain.repository.ProductRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -24,50 +28,92 @@ class PriceDefinitionViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val products = productRepository.getAllProducts().map { product ->
-                EditableProduct(
+                Product(
                     id = product.id,
                     name = product.name,
-                    priceText = if (product.price > 0) product.price.toString() else ""
+                    price = product.price
                 )
             }
-            _uiState.update { it.copy(items = products) }
+            _uiState.update { it.copy(items = products, originalItems = products) }
         }
     }
 
+    fun addManualProduct() {
+        val productName = _uiState.value.manualProductName.trim()
+
+        val toBrazilianInput = parseBrazilianCurrencyInput(_uiState.value.manuelProductPrice.text)
+        val product = Product(
+            name = productName,
+            price = toBrazilianInput.toInt(),
+        )
+
+        _uiState.update { uiState ->
+            uiState.copy(
+                items = listOf(product) + uiState.items,
+                manualProductName = "",
+                manuelProductPrice = TextFieldValue("R$ 0,00")
+            )
+        }
+    }
+
+    fun updateManualProductName(name: String) {
+        _uiState.update { uiState ->
+            uiState.copy(manualProductName = name)
+        }
+    }
 
     fun updateProductPrice(productId: Uuid, newPrice: String) {
+
         _uiState.update { uiState ->
             uiState.copy(
                 items = uiState.items.map { product ->
-                    if (product.id == productId) {
-                        product.copy(priceText = newPrice)
-                    } else {
+                    if (product.id == productId)
+                        product.copy(price = newPrice.toInt())
+                    else
                         product
-                    }
                 }
             )
         }
     }
+
+
+    fun updateManualProductPrice(newPrice: String) {
+
+        val toBrazilianInput = parseBrazilianCurrencyInput(newPrice)
+        val visualFormatText = brazilianCurrencyFormatter.format(toBrazilianInput)
+
+        _uiState.update { uiState ->
+            uiState.copy(
+                manuelProductPrice = TextFieldValue(
+                    visualFormatText,
+                    selection = TextRange(visualFormatText.length)
+                )
+            )
+        }
+    }
+
 
     fun dismissPriceSaved() {
         _uiState.update { it.copy(priceSaved = false) }
     }
 
     fun savePrices() {
+        _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
-            val updatedProducts = _uiState.value.items.map { product ->
-                Product(id = product.id, name = product.name, price = product.priceText.toIntOrNull() ?: 0)
+            var result = false
+
+            _uiState.value.items.forEach { product ->
+                if (product.price == 0) return@forEach
+                result = productRepository.saveProductChanges(product)
             }
 
-
-            var result = 0
-            updatedProducts.forEach { product ->
-                result = productRepository.updateProductPrice(product.id, product.price)
-            }
-
-            if (result > 0) {
+            if (result) {
                 _uiState.update { uiState ->
-                    uiState.copy(priceSaved = true)
+                    uiState.copy(
+                        originalItems = uiState.items,
+                        isLoading = false,
+                        priceSaved = true,
+                    )
                 }
             }
         }
@@ -75,12 +121,14 @@ class PriceDefinitionViewModel @Inject constructor(
 }
 
 data class PriceDefinitionUiState(
-    val items: List<EditableProduct> = emptyList(),
-    val priceSaved: Boolean = false
-)
-
-data class EditableProduct(
-    val id: Uuid,
-    val name: String,
-    val priceText: String
-)
+    val items: List<Product> = emptyList(),
+    val originalItems: List<Product> = emptyList(),
+    val manualProductName: String = "",
+    val manuelProductPrice: TextFieldValue = TextFieldValue("R$ 0,00"),
+    val itemPrice: String = "",
+    val priceSaved: Boolean = false,
+    val isLoading: Boolean = false
+) {
+    val hasChanges: Boolean
+        get() = items.size > originalItems.size
+}

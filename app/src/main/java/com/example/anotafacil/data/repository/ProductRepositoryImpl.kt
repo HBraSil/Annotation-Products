@@ -1,9 +1,11 @@
 package com.example.anotafacil.data.repository
 
 import com.example.anotafacil.data.dao.ProductDao
+import com.example.anotafacil.data.entity.ProductEntity
 import com.example.anotafacil.data.entity.toProductDomain
 import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.domain.model.SyncStatus
+import com.example.anotafacil.domain.model.toProductEntity
 import com.example.anotafacil.domain.repository.ProductRepository
 import javax.inject.Inject
 import kotlin.uuid.Uuid
@@ -19,10 +21,16 @@ class ProductRepositoryImpl @Inject constructor(
         return productDao.getProductsWithDefinedPrice().map { it.toProductDomain() }
     }
 
-    override suspend fun updateProductPrice(productId: Uuid, newPrice: Int): Int {
-        val product = productDao.getById(productId) ?: return 0
-        val updatedProduct = product.copy(price = newPrice, syncStatus = SyncStatus.PENDING)
+    override suspend fun saveProductChanges(product: Product): Boolean {
+        val productFromEntity = productDao.getById(product.id)
 
-        return productDao.updateProductPrice(updatedProduct)
+        if(productFromEntity == null){
+            val productEntity = product.toProductEntity()
+            return productDao.insert(productEntity) > 0
+        }
+
+        val updatedProduct = productFromEntity.copy(price = product.price, syncStatus = SyncStatus.PENDING)
+
+        return productDao.updateProductPrice(updatedProduct) > 0
     }
 }

@@ -13,7 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.anotafacil.ui.util.currencyFormatter
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
 import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.HorizontalAxis
 import com.patrykandpatrick.vico.compose.cartesian.axis.VerticalAxis
@@ -50,6 +50,9 @@ private val MONTHS = listOf(
 fun SalesChart(
     sales: List<Double>,
     modifier: Modifier = Modifier,
+    labels: List<String> = emptyList(),
+    valueFormatter: (Double) -> String = { brazilianCurrencyFormatter.format(it) },
+    axisFormatter: (Double) -> String = { "R$ ${it.toInt()}" },
 ) {
     val markerFormatter = remember {
         DefaultCartesianMarker.ValueFormatter { _, targets ->
@@ -58,7 +61,7 @@ fun SalesChart(
                     .points.first()
                     .entry.y
 
-            currencyFormatter.format(value)
+            valueFormatter(value)
         }
     }
 
@@ -88,7 +91,7 @@ fun SalesChart(
             indicatorComponent
         },
         indicatorSize = 8.dp,
-        valueFormatter =  markerFormatter,
+        valueFormatter = markerFormatter,
         labelPosition = DefaultCartesianMarker.LabelPosition.AroundPoint,
     )
 
@@ -110,6 +113,8 @@ fun SalesChart(
         }
     }
 
+    val maxValue = remember(sales) { (sales.maxOrNull() ?: 0.0) * 1.2 }
+
     LaunchedEffect(sales) {
         modelProducer.runTransaction {
             lineModel {
@@ -120,7 +125,6 @@ fun SalesChart(
             }
         }
     }
-
 
     CartesianChartHost(
         chart = rememberCartesianChart(
@@ -135,7 +139,7 @@ fun SalesChart(
                 ),
                 rangeProvider = CartesianLayerRangeProvider.fixed(
                     minY = 0.0,
-                    maxY = 2400.0
+                    maxY = if (maxValue <= 0.0) 1.0 else maxValue
                 )
             ),
 
@@ -146,10 +150,10 @@ fun SalesChart(
                     )
                 ),
                 valueFormatter = CartesianValueFormatter { _, value, _ ->
-                    "R$ ${value.toInt()}"
+                    axisFormatter(value)
                 },
                 itemPlacer = VerticalAxis.ItemPlacer.step(
-                    step = { 300.0 },
+                    step = { if (maxValue <= 0.0) 1.0 else (maxValue / 5.0) },
                     shiftTopLines = false
                 ),
             ),
@@ -161,7 +165,7 @@ fun SalesChart(
                     )
                 ),
                 valueFormatter = CartesianValueFormatter { _, value, _ ->
-                    MONTHS.getOrNull(value.toInt()) ?: ""
+                    labels.getOrNull(value.toInt()) ?: ""
                 },
                 itemPlacer = HorizontalAxis.ItemPlacer.aligned(
                     spacing = { 1 }
@@ -189,6 +193,15 @@ fun SalesChartPreview() {
             1750.0,
             1500.0,
             1900.0,
+        ),
+        labels = listOf(
+            "Fev/26",
+            "Mar/26",
+            "Abr",
+            "Mai",
+            "Jun",
+            "Jul",
+            "Ago/26",
         )
     )
 }

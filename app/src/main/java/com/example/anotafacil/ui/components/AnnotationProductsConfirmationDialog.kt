@@ -24,19 +24,21 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.window.Dialog
 
 
 @Composable
-fun AnnotationProductsConfirmationDialog(
+fun EasyNoteConfirmationDialog(
     modifier: Modifier = Modifier,
     title: String,
     subtitle: String? = "Esta ação não pode ser desfeita.",
+    confirmButtonText: String = "Confirmar",
+    cancelButtonText: String = "Cancelar",
     icon: ImageVector,
     onDismissRequest: () -> Unit,
+    onCancelButtonClick: () -> Unit = onDismissRequest,
     onConfirmClick: () -> Unit,
 ) {
     Dialog(onDismissRequest = onDismissRequest) {
@@ -101,7 +103,7 @@ fun AnnotationProductsConfirmationDialog(
                     )
                 ) {
                     Text(
-                        text = "Confirmar",
+                        text = confirmButtonText,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
                     )
@@ -111,11 +113,11 @@ fun AnnotationProductsConfirmationDialog(
 
                 // Botão Cancelar
                 TextButton(
-                    onClick = onDismissRequest,
+                    onClick = onCancelButtonClick,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Cancelar",
+                        text = cancelButtonText,
                         color = MaterialTheme.colorScheme.error,
                         fontWeight = FontWeight.Bold,
                         fontSize = 15.sp
@@ -129,7 +131,7 @@ fun AnnotationProductsConfirmationDialog(
 @Preview(showBackground = true)
 @Composable
 fun DeleteClientConfirmationDialogPreview() {
-    AnnotationProductsConfirmationDialog(
+    EasyNoteConfirmationDialog(
         title = "Excluir Cliente?",
         subtitle = "Esta ação não pode ser desfeita.",
         icon = Icons.Outlined.Delete,

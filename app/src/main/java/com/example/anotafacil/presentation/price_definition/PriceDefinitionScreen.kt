@@ -1,5 +1,7 @@
 package com.example.anotafacil.presentation.price_definition
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -7,6 +9,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Label
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircleOutline
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
@@ -15,8 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextOverflow
@@ -24,7 +27,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.domain.formatter.parseBrazilianCurrencyInput
+import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
+import com.example.anotafacil.ui.components.EasyNoteBrazilianCurrencyTextField
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
+import com.example.anotafacil.ui.components.EasyNoteLoadingOverlay
 import kotlin.uuid.Uuid
 
 
@@ -35,12 +43,44 @@ fun PriceDefinitionScreen(
 ) {
     val uiState by priceDefinitionViewModel.uiState.collectAsState()
 
+    var showLeaveDialog by remember { mutableStateOf(false) }
+
+    BackHandler {
+        if (uiState.hasChanges) showLeaveDialog = true
+        else onBackClick()
+    }
+
+
+    if (showLeaveDialog) {
+        EasyNoteConfirmationDialog(
+            title = "Há alterações pendentes",
+            subtitle = "Se você sair pederá todos os dados criados ou alterados",
+            confirmButtonText = "Salvar",
+            cancelButtonText = "Sair sem salvar",
+            icon = Icons.Outlined.Info,
+            onDismissRequest = { showLeaveDialog = false },
+            onCancelButtonClick = {
+                showLeaveDialog = false
+                onBackClick()
+            },
+            onConfirmClick = {
+                priceDefinitionViewModel.savePrices()
+                showLeaveDialog = false
+            }
+        )
+    }
     PriceDefinitionContent(
         uiState = uiState,
-        onBackClick = onBackClick,
         onSaveClick = priceDefinitionViewModel::savePrices,
         onPriceChange = priceDefinitionViewModel::updateProductPrice,
-        onDismiss = priceDefinitionViewModel::dismissPriceSaved
+        onDismiss = priceDefinitionViewModel::dismissPriceSaved,
+        addManualProduct = priceDefinitionViewModel::addManualProduct,
+        onManualProductPriceChange = priceDefinitionViewModel::updateManualProductPrice,
+        onManualProductNameChange = priceDefinitionViewModel::updateManualProductName,
+        onBackClick = {
+            if (uiState.hasChanges) showLeaveDialog = true
+            else onBackClick()
+        },
     )
 }
 
@@ -48,13 +88,17 @@ fun PriceDefinitionScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PriceDefinitionContent(
-    uiState: PriceDefinitionUiState,
-    onBackClick: () -> Unit,
-    onSaveClick: () -> Unit,
-    onPriceChange: (Uuid, String) -> Unit,
     modifier: Modifier = Modifier,
-    onDismiss: () -> Unit
+    uiState: PriceDefinitionUiState,
+    onSaveClick: () -> Unit = {},
+    onPriceChange: (Uuid, String) -> Unit = { _, _ -> },
+    onDismiss: () -> Unit = {},
+    addManualProduct: () -> Unit,
+    onManualProductPriceChange: (String) -> Unit = {},
+    onManualProductNameChange: (String) -> Unit = {},
+    onBackClick: () -> Unit = {},
 ) {
+
 
     Scaffold(
         topBar = {
@@ -79,15 +123,23 @@ fun PriceDefinitionContent(
                     }
                 },
                 actions = {
-                    TextButton(onClick = onSaveClick) {
-                        Text("Save", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                    TextButton(
+                        onClick = onSaveClick,
+                        enabled = uiState.hasChanges
+                    ) {
+                        Text(
+                            "Salvar",
+                            color = if (uiState.hasChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.onPrimary)
             )
         },
         containerColor = MaterialTheme.colorScheme.onPrimary,
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize().imePadding()
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -109,14 +161,19 @@ fun PriceDefinitionContent(
                 }
             }
 
+            item {
+                AddProductCard(
+                    uiState = uiState,
+                    addManualProduct = addManualProduct,
+                    onManualProductPriceChange = onManualProductPriceChange,
+                    onManualProductNameChange = onManualProductNameChange
+                )
+            }
+
 
             items(uiState.items, key = { it.id }) { item ->
                 InventoryPriceCard(
                     item = item,
-                    cardBgColor = MaterialTheme.colorScheme.onPrimary,
-                    textColor = MaterialTheme.colorScheme.onSurface,
-                    subTextColor = MaterialTheme.colorScheme.secondary,
-                    focusedColor = MaterialTheme.colorScheme.primary,
                     onPriceValueChange = { newValue ->
                         onPriceChange(item.id, newValue)
                     }
@@ -159,23 +216,31 @@ fun PriceDefinitionContent(
             onDismiss = onDismiss,
         )
     }
+
+    if (uiState.isLoading) {
+        EasyNoteLoadingOverlay(
+            modifier = Modifier,
+            text = "Salvando alterações...",
+        )
+    }
 }
 
-// 5. Linha Reutilizável de Produto Totalmente STATELESS (Sem estado interno)
+
 @Composable
 fun InventoryPriceCard(
-    item: EditableProduct,
+    item: Product,
     onPriceValueChange: (String) -> Unit,
-    cardBgColor: Color,
-    textColor: Color,
-    subTextColor: Color,
-    focusedColor: Color,
     modifier: Modifier = Modifier
 ) {
+    var priceText by remember(item.price) {
+        mutableStateOf(if (item.price == 0) "" else item.price.toString())
+    }
+
+
     Card(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = cardBgColor),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
         elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
         Row(
@@ -188,17 +253,20 @@ fun InventoryPriceCard(
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(Color(0xFFE2E8F0), RoundedCornerShape(12.dp)),
+                    .background(
+                        MaterialTheme.colorScheme.onSecondary,
+                        RoundedCornerShape(12.dp)
+                    ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(item.name.take(1), color = subTextColor, fontWeight = FontWeight.Bold)
+                Text(item.name.take(1), color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
             }
             Spacer(modifier = Modifier.width(16.dp))
             Text(
                 text = item.name,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
-                color = textColor,
+                color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
@@ -206,12 +274,17 @@ fun InventoryPriceCard(
 
 
             OutlinedTextField(
-                value = item.priceText,
-                onValueChange = onPriceValueChange,
+                value = priceText,
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isDigit() }) {
+                        priceText = newValue
+                        onPriceValueChange(newValue)
+                    }
+                },
                 prefix = {
                     Text(
                         text = "R$ ",
-                        color = subTextColor,
+                        color = MaterialTheme.colorScheme.secondary,
                         fontSize = 15.sp,
                         modifier = Modifier.padding(end = 4.dp)
                     )
@@ -223,13 +296,15 @@ fun InventoryPriceCard(
                 textStyle = LocalTextStyle.current.copy(
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Medium,
-                    color = textColor
+                    color = MaterialTheme.colorScheme.onSurface
                 ),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = focusedColor,
-                    unfocusedBorderColor = Color(0xFFE2E4E8),
-                    focusedTextColor = textColor,
-                    unfocusedTextColor = textColor
+                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                    focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
                 )
             )
         }
@@ -237,28 +312,16 @@ fun InventoryPriceCard(
 }
 
 
-// 1. Modelo simples contendo o reflexo de alteração pedido pelo Dialog
-data class PriceChangeSummary(
-    val id: String,
-    val name: String,
-    val oldPrice: String,
-    val newPrice: String
-)
-
-// 2. Componente Totalmente Stateless (State Hoisting Estrito)
-@Composable
+/*@Composable
 fun ConfirmPriceChangesDialog(
-    changedItems: List<PriceChangeSummary>,
+    changedItems: List<Product>,
     onDismissRequest: () -> Unit,
     onConfirmClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    // --- Adaptação para a paleta solicitada (Azuis modernos e Verdes) ---
-    val primaryBlue = Color(0xFF0066FF)
     val textPrimary = Color(0xFF1A1C1E)
     val textSecondary = Color(0xFF74777F)
     val priceGreen = Color(0xFF2E7D32) // Verde moderno para indicar novos preços de forma positiva
-    val dialogBgColor = Color(0xFFFFFFFF)
 
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
@@ -266,7 +329,7 @@ fun ConfirmPriceChangesDialog(
                 .fillMaxWidth()
                 .wrapContentHeight(),
             shape = RoundedCornerShape(28.dp),
-            color = dialogBgColor,
+            color = MaterialTheme.colorScheme.onPrimary,
             tonalElevation = 6.dp
         ) {
             Column(
@@ -348,7 +411,7 @@ fun ConfirmPriceChangesDialog(
                     ) {
                         Text(
                             text = "Cancelar",
-                            color = primaryBlue,
+                            color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 15.sp
                         )
@@ -358,7 +421,7 @@ fun ConfirmPriceChangesDialog(
 
                     Button(
                         onClick = onConfirmClick,
-                        colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(20.dp),
                         contentPadding = PaddingValues(horizontal = 24.dp, vertical = 12.dp)
                     ) {
@@ -373,9 +436,142 @@ fun ConfirmPriceChangesDialog(
             }
         }
     }
+}*/
+
+
+@Composable
+fun AddProductCard(
+    uiState: PriceDefinitionUiState,
+    addManualProduct: () -> Unit,
+    onManualProductPriceChange: (String) -> Unit,
+    onManualProductNameChange: (String) -> Unit
+) {
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.secondaryContainer),
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Default.AddCircleOutline,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = "Adicionar Produto Manualmente",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primaryContainer
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Campo: Nome do Produto
+            Text(
+                text = "Nome do produto",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+            OutlinedTextField(
+                value = uiState.manualProductName,
+                onValueChange = onManualProductNameChange,
+                placeholder = {
+                    Text(
+                        "Ex: Açúcar, Farinha...",
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontSize = 14.sp
+                    )
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Label,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.secondary
+                    )
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(8.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            Text(
+                text = "Preço unitário (R$)",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            Spacer(modifier = Modifier.height(6.dp))
+
+            EasyNoteBrazilianCurrencyTextField(
+                text = uiState.manuelProductPrice,
+                onValueChange = {
+                    onManualProductPriceChange(it)
+                },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                    focusedBorderColor = MaterialTheme.colorScheme.onBackground,
+                    unfocusedBorderColor = Color.Transparent,
+                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                )
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            val manualProductPrice = parseBrazilianCurrencyInput(uiState.manuelProductPrice.text)
+            Button(
+                onClick = addManualProduct,
+                enabled = uiState.manualProductName.isNotBlank() && manualProductPrice > 0.0,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = null
+                )
+                Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                Text(
+                    text = "ADICIONAR À LISTA",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp
+                )
+            }
+        }
+    }
 }
 
-// 3. Exemplo de Preview Dinâmico do Dialog com dados estáticos
+
+/*// 3. Exemplo de Preview Dinâmico do Dialog com dados estáticos
 @Preview(showBackground = true)
 @Composable
 fun ConfirmPriceChangesDialogPreview() {
@@ -385,19 +581,27 @@ fun ConfirmPriceChangesDialogPreview() {
     )
 
     MaterialTheme {
+        *//*TODO: IMPLEMENTAR ESSE DIALOG FUTURAMENTE*//*
         ConfirmPriceChangesDialog(
             changedItems = sampleChanges,
             onDismissRequest = {},
             onConfirmClick = {}
         )
     }
-}
+}*/
 
-// 6. Preview para Validação Dinâmica
+
 @Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")
 @Composable
 fun PriceDefinitionScreenPreview() {
     MaterialTheme {
-        PriceDefinitionScreen()
+        PriceDefinitionContent(
+            uiState = PriceDefinitionUiState(),
+            onBackClick = {},
+             //onSaveClick = {},
+            onPriceChange = { _, _ -> },
+            onDismiss = {},
+            addManualProduct = {}
+        )
     }
 }

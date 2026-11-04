@@ -1,8 +1,6 @@
 package com.example.anotafacil.presentation.sales_overview
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,9 +12,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.LocationCity
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,19 +32,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
+import com.example.anotafacil.domain.model.MonthlySalesData
 import com.example.anotafacil.ui.components.EasyNotesExposedDropDown
 import com.example.anotafacil.ui.components.SalesChart
-import com.example.anotafacil.ui.util.currencyFormatter
+import java.time.YearMonth
+import java.time.format.TextStyle
+import java.util.Locale
 
-
-enum class SalesMetric {
-    RECEIVED,
-    SALES_QUANTITY
+enum class SalesMetric(val label: String) {
+    TOTAL_SALES("Vendas"),
+    TOTAL_RECEIVED("Recebimentos"),
+    TOTAL_PRODUCTS_SOLD("Produtos")
 }
 
 data class MonthSales(
@@ -54,93 +62,54 @@ data class MonthSales(
     val quantity: Int
 )
 
-
-
 @Composable
 fun SalesOverviewScreen(
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    salesOverviewViewModel: SalesOverviewViewModel = hiltViewModel(),
 ) {
-    var selectedCity by remember {
-        mutableStateOf("Todas")
+    val uiState by salesOverviewViewModel.uiState.collectAsStateWithLifecycle()
+    var selectedMetric by rememberSaveable { mutableStateOf(SalesMetric.TOTAL_RECEIVED) }
+
+    val cities = remember(uiState.availableCities) {
+        listOf("Todas") + uiState.availableCities.map { it.name }
     }
 
-    var selectedMetric by remember {
-        mutableStateOf(SalesMetric.RECEIVED)
-    }
-
-    val cities = listOf(
-        "Todas",
-        "São Paulo",
-        "Rio de Janeiro",
-        "Belo Horizonte",
-        "Brasília"
-    )
-
-    val months = remember {
-        listOf(
-            MonthSales(
-                month = "Fev",
-                revenue = 5200.0,
-                received = 4100.0,
-                quantity = 83
-            ),
-            MonthSales(
-                month = "Mar",
-                revenue = 5800.0,
-                received = 4600.0,
-                quantity = 91
-            ),
-            MonthSales(
-                month = "Abr",
-                revenue = 6100.0,
-                received = 4800.0,
-                quantity = 97
-            ),
-            MonthSales(
-                month = "Mai",
-                revenue = 5700.0,
-                received = 4400.0,
-                quantity = 89
-            ),
-            MonthSales(
-                month = "Jun",
-                revenue = 6900.0,
-                received = 5500.0,
-                quantity = 108
-            ),
-            MonthSales(
-                month = "Jul",
-                revenue = 4800.0,
-                received = 3900.0,
-                quantity = 76
-            ),
-            MonthSales(
-                month = "Ago",
-                revenue = 8400.0,
-                received = 6700.0,
-                quantity = 126
-            )
-        )
+    val months = remember(uiState.monthlySales) {
+        buildLastSixMonths(uiState.monthlySales)
     }
 
     SalesOverviewContent(
-        selectedCity = selectedCity,
+        selectedCity = uiState.selectedCity,
         selectedMetric = selectedMetric,
         cities = cities,
         months = months,
-        onCitySelected = {
-            selectedCity = it
-        },
-        onMetricSelected = {
-            selectedMetric = it
-        },
+        isLoading = uiState.isLoading,
+        onCitySelected = salesOverviewViewModel::onCitySelected,
+        onMetricSelected = { selectedMetric = it },
         onBackClick = onBackClick,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
+private fun buildLastSixMonths(monthlySales: List<MonthlySalesData>): List<MonthSales> {
+    val dataByMonth = monthlySales.associateBy { it.month }
+    val currentMonth = YearMonth.now()
 
+    return (0..5).map { offset ->
+        val month = currentMonth.minusMonths((5 - offset).toLong())
+        val key = month.toString()
+        val summary = dataByMonth[key]
+
+        MonthSales(
+            month = month.month.getDisplayName(TextStyle.SHORT, Locale("pt", "BR"))
+                .replaceFirstChar { it.titlecase(Locale("pt", "BR")) },
+            revenue = summary?.totalSales ?: 0.0,
+            received = summary?.totalReceived ?: 0.0,
+            quantity = summary?.totalProducts ?: 0,
+        )
+    }
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -149,18 +118,17 @@ private fun SalesOverviewContent(
     selectedMetric: SalesMetric,
     cities: List<String>,
     months: List<MonthSales>,
+    isLoading: Boolean,
     onCitySelected: (String) -> Unit,
     onMetricSelected: (SalesMetric) -> Unit,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = {
-                    Text("Visão de desempenho")
-                },
+                title = { Text("Visão de desempenho") },
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
@@ -181,11 +149,8 @@ private fun SalesOverviewContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            contentPadding = PaddingValues(
-                horizontal = 16.dp,
-                vertical = 16.dp
-            ),
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(26.dp)
         ) {
             item {
                 CityFilterSection(
@@ -205,31 +170,48 @@ private fun SalesOverviewContent(
             item {
                 SummaryCard(
                     selectedMetric = selectedMetric,
-                    total = 1000.40,
-                    months = months
+                    months = months,
                 )
             }
 
             item {
                 SalesChart(
                     sales = when (selectedMetric) {
-                        SalesMetric.RECEIVED ->
-                            months.map { it.received }
-
-                        SalesMetric.SALES_QUANTITY ->
-                            months.map { it.quantity.toDouble() }
-                    }
+                        SalesMetric.TOTAL_RECEIVED -> months.map { it.received }
+                        SalesMetric.TOTAL_PRODUCTS_SOLD -> months.map { it.quantity.toDouble() }
+                        else -> months.map { it.revenue }
+                    },
+                    labels = months.map { it.month },
+                    valueFormatter = { value ->
+                        when (selectedMetric) {
+                            SalesMetric.TOTAL_PRODUCTS_SOLD -> "${value.toInt()}"
+                            else -> brazilianCurrencyFormatter.format(value)
+                        }
+                    },
+                    axisFormatter = { value ->
+                        when (selectedMetric) {
+                            SalesMetric.TOTAL_PRODUCTS_SOLD -> "${value.toInt()}"
+                            else -> "R$ ${value.toInt()}"
+                        }
+                    },
                 )
             }
 
-            item {
-                Spacer(modifier = Modifier.height(8.dp))
+            if (isLoading) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                }
             }
+
+            item { Spacer(modifier = Modifier.height(8.dp)) }
         }
     }
 }
-
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -237,21 +219,16 @@ private fun CityFilterSection(
     cities: List<String>,
     selectedCity: String,
     onCitySelected: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
-
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
             text = "Filtro de cidade",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
+        Spacer(modifier = Modifier.height(8.dp))
 
         EasyNotesExposedDropDown(
             items = cities,
@@ -265,70 +242,69 @@ private fun CityFilterSection(
     }
 }
 
-
 @Composable
 private fun MetricSelectorSection(
     selectedMetric: SalesMetric,
     onMetricSelected: (SalesMetric) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth()
-    ) {
+    Column(modifier = modifier.fillMaxWidth()) {
         Text(
-            text = "Seletor de métrica",
+            text = "Visualizar por:",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
+        Spacer(modifier = Modifier.height(8.dp))
 
-        SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth()
-        ) {
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             SalesMetric.entries.forEachIndexed { index, metric ->
-
                 SegmentedButton(
                     selected = selectedMetric == metric,
-                    onClick = {
-                        onMetricSelected(metric)
-                    },
+                    onClick = { onMetricSelected(metric) },
                     shape = SegmentedButtonDefaults.itemShape(
                         index = index,
                         count = SalesMetric.entries.size
                     )
                 ) {
                     Text(
-                        text = when (metric) {
-                            SalesMetric.RECEIVED ->
-                                "Recebido"
-
-                            SalesMetric.SALES_QUANTITY ->
-                                "Qtd. produtos"
-                        }
+                        text = metric.label,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }
         }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = when (selectedMetric) {
+                SalesMetric.TOTAL_SALES -> "Soma do valor de todas as vendas realizadas no período."
+                SalesMetric.TOTAL_RECEIVED -> "Total em dinheiro recebido no período."
+                SalesMetric.TOTAL_PRODUCTS_SOLD -> "Total de produtos vendidos no período."
+            },
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onBackground.copy(0.7f)
+        )
     }
 }
-
-
 
 @Composable
 private fun SummaryCard(
     selectedMetric: SalesMetric,
-    total: Double,
     months: List<MonthSales>,
 ) {
-    val average = when (selectedMetric) {
-        SalesMetric.RECEIVED ->
-            months.map { it.received }.average()
+    val total = when (selectedMetric) {
+        SalesMetric.TOTAL_SALES -> months.sumOf { it.revenue }
+        SalesMetric.TOTAL_RECEIVED -> months.sumOf { it.received }
+        SalesMetric.TOTAL_PRODUCTS_SOLD -> months.sumOf { it.quantity.toDouble() }
+    }
 
-        SalesMetric.SALES_QUANTITY ->
-            months.map { it.quantity }.average()
+    val average = when (selectedMetric) {
+        SalesMetric.TOTAL_SALES -> months.map { it.revenue }.average()
+        SalesMetric.TOTAL_RECEIVED -> months.map { it.received }.average()
+        SalesMetric.TOTAL_PRODUCTS_SOLD -> months.map { it.quantity.toDouble() }.average()
     }
 
     Column(
@@ -336,30 +312,24 @@ private fun SummaryCard(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "ÚLTIMOS 7 MESES",
+            text = "ÚLTIMOS 6 MESES",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
-        Spacer(
-            modifier = Modifier.height(6.dp)
-        )
+        Spacer(modifier = Modifier.height(6.dp))
 
         Text(
             text = when (selectedMetric) {
-                SalesMetric.RECEIVED ->
-                    currencyFormatter.format(total)
-
-                SalesMetric.SALES_QUANTITY ->
-                    "${total.toInt()} produtos"
+                SalesMetric.TOTAL_RECEIVED -> brazilianCurrencyFormatter.format(total)
+                SalesMetric.TOTAL_PRODUCTS_SOLD -> "${total.toInt()} produtos"
+                else -> brazilianCurrencyFormatter.format(total)
             },
             style = MaterialTheme.typography.headlineMedium,
             color = MaterialTheme.colorScheme.onSurface
         )
 
-        Spacer(
-            modifier = Modifier.height(8.dp)
-        )
+        Spacer(modifier = Modifier.height(8.dp))
 
         Row(
             modifier = Modifier
@@ -376,16 +346,12 @@ private fun SummaryCard(
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            Spacer(
-                modifier = Modifier.width(4.dp)
-            )
+            Spacer(modifier = Modifier.width(4.dp))
             Text(
                 text = when (selectedMetric) {
-                    SalesMetric.RECEIVED ->
-                        currencyFormatter.format(average)
-
-                    SalesMetric.SALES_QUANTITY ->
-                        "${average.toInt()} produtos"
+                    SalesMetric.TOTAL_RECEIVED -> brazilianCurrencyFormatter.format(average)
+                    SalesMetric.TOTAL_PRODUCTS_SOLD -> "${average.toInt()} produtos"
+                    else -> brazilianCurrencyFormatter.format(average)
                 },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onBackground
@@ -394,12 +360,25 @@ private fun SummaryCard(
     }
 }
 
-
-
 @Preview
 @Composable
 fun SalesOverviewScreenPreview() {
-    SalesOverviewScreen(
-        onBackClick = {}
+    SalesOverviewContent(
+        selectedCity = "Todas",
+        selectedMetric = SalesMetric.TOTAL_RECEIVED,
+        cities = listOf("Todas", "São Paulo", "Rio"),
+        months = listOf(
+            MonthSales("Jan", 3000.0, 2400.0, 40),
+            MonthSales("Fev", 3500.0, 2800.0, 55),
+            MonthSales("Mar", 4200.0, 3100.0, 63),
+            MonthSales("Abr", 3900.0, 2900.0, 58),
+            MonthSales("Mai", 4700.0, 3600.0, 72),
+            MonthSales("Jun", 5100.0, 4200.0, 81),
+        ),
+        isLoading = false,
+        onCitySelected = {},
+        onMetricSelected = {},
+        onBackClick = {},
     )
 }
+

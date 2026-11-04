@@ -3,10 +3,10 @@ package com.example.anotafacil.presentation.history
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.anotafacil.domain.formatter.toBrazilianDate
 import com.example.anotafacil.domain.model.Payment
 import com.example.anotafacil.domain.model.PurchaseWithItemsDomain
 import com.example.anotafacil.domain.repository.CustomerRepository
-import com.example.anotafacil.ui.util.toBrazilianDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -27,10 +27,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
 import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 import com.example.anotafacil.ui.components.EasyNotesExposedDropDown
-import com.example.anotafacil.ui.util.currencyFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -133,7 +133,7 @@ fun NewPurchaseContent(
                     containerColor = MaterialTheme.colorScheme.onPrimary,
                     trailingContent = { item ->
                         Text(
-                            text = currencyFormatter.format(item.price.toDouble()),
+                            text = brazilianCurrencyFormatter.format(item.price.toDouble()),
                             fontSize = 12.sp,
                             color = Color.Gray
                         )
@@ -187,7 +187,7 @@ fun NewPurchaseContent(
                                     color = Color.Black
                                 )
                                 Text(
-                                    text = "Unit: ${currencyFormatter.format(item.product.price.toDouble())}",
+                                    text = "Unit: ${brazilianCurrencyFormatter.format(item.product.price.toDouble())}",
                                     fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.secondary
                                 )
@@ -229,7 +229,7 @@ fun NewPurchaseContent(
                                         fontWeight = FontWeight.Bold
                                     )
                                     Text(
-                                        text = currencyFormatter.format(item.subtotal()),
+                                        text = brazilianCurrencyFormatter.format(item.subtotal()),
                                         fontSize = 14.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = Color.Black
@@ -264,7 +264,7 @@ fun NewPurchaseContent(
                         )
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = currencyFormatter.format(uiState.selectedProductsSubtotal),
+                            text = brazilianCurrencyFormatter.format(uiState.selectedProductsSubtotal),
                             color = Color.Black,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
@@ -279,7 +279,7 @@ fun NewPurchaseContent(
                     ) {
                         Text("Valor Pendente", color = MaterialTheme.colorScheme.secondary, fontSize = 15.sp)
                         Text(
-                            text = currencyFormatter.format(uiState.pendingDebt),
+                            text = brazilianCurrencyFormatter.format(uiState.pendingDebt),
                             color = MaterialTheme.colorScheme.error,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold
@@ -302,7 +302,7 @@ fun NewPurchaseContent(
                                 letterSpacing = 1.sp
                             )
                             Text(
-                                text = currencyFormatter.format(uiState.totalPrice),
+                                text = brazilianCurrencyFormatter.format(uiState.totalPrice),
                                 color = MaterialTheme.colorScheme.onSurface,
                                 fontSize = 28.sp,
                                 fontWeight = FontWeight.Black

@@ -109,7 +109,7 @@ fun AnnotationProductsStatusDialog(
                     }
                 }
             }
-        }
+    }
 }
 
 

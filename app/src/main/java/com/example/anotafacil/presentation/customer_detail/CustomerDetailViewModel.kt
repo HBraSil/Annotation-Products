@@ -5,12 +5,13 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
+import com.example.anotafacil.domain.formatter.parseBrazilianCurrencyInput
 import com.example.anotafacil.domain.model.CartItem
 import com.example.anotafacil.domain.model.Customer
 import com.example.anotafacil.domain.model.Payment
 import com.example.anotafacil.domain.model.Purchase
 import com.example.anotafacil.domain.repository.CustomerRepository
-import com.example.anotafacil.ui.util.currencyFormatter
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.uuid.Uuid
+
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -76,29 +78,23 @@ class CustomerDetailViewModel @Inject constructor(
 
 
     fun updatePartialPayment(value: String) {
-        val digitsOnly = value.filter { it.isDigit() }
 
-        val cleanString = digitsOnly.toLongOrNull()?.toString() ?: ""
-
-        val cents = cleanString.toLongOrNull() ?: 0L
-        val doubleValue = cents / 100.0
-
-        val formattedText = currencyFormatter.format(doubleValue)
+        val toBrazilianInput = parseBrazilianCurrencyInput(value)
+        val visualFormatText = brazilianCurrencyFormatter.format(toBrazilianInput)
 
         _uiState.update {
             it.copy(
                 partialPaymentComponent = TextFieldValue(
-                    text = formattedText,
-                    selection = TextRange(formattedText.length)
+                    text = visualFormatText,
+                    selection = TextRange(visualFormatText.length)
                 ),
-                payment = it.payment.copy(amount = doubleValue)
+                payment = it.payment.copy(amount = toBrazilianInput)
             )
         }
     }
 
 
     fun showConfirmationDialog(confirmationAction: ConfirmationAction) {
-
         _uiState.update {
             it.copy(
                 buttonConfirmationType = confirmationAction,
@@ -106,6 +102,7 @@ class CustomerDetailViewModel @Inject constructor(
             )
         }
     }
+
 
     fun confirmSelectedOnDialog() {
         when (_uiState.value.buttonConfirmationType) {
@@ -120,6 +117,7 @@ class CustomerDetailViewModel @Inject constructor(
             else -> {}
         }
     }
+
 
     fun confirmPartialPayment() {
         val payment = _uiState.value.payment

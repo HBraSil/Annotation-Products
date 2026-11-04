@@ -41,32 +41,56 @@ interface PurchaseDao {
 
     @Query("""
     SELECT
-        strftime(
-            '%Y-%m',
-            datetime(
-                p.purchaseDate / 1000,
-                'unixepoch',
-                'localtime'
-            )
-        ) AS month,
-
-        SUM(ci.quantity) AS totalQuantity
-
-    FROM purchase AS p
-
-    INNER JOIN cart_item AS ci
-        ON ci.purchaseId = p.id
-
-    WHERE p.purchaseDate >= :startDate
-      AND p.purchaseDate < :endDate
-
-    GROUP BY month
-
-    ORDER BY month ASC
+        months.month,
+        COALESCE((
+            SELECT SUM(p.totalAmount)
+            FROM purchase AS p
+            LEFT JOIN customer AS c
+                ON c.id = p.customerId
+            WHERE strftime('%Y-%m', datetime(p.purchaseDate / 1000, 'unixepoch', 'localtime')) = months.month
+              AND p.purchaseDate >= :startDate
+              AND p.purchaseDate < :endDate
+              AND (:cityId IS NULL OR c.cityId = :cityId)
+        ), 0) AS totalSales,
+        COALESCE((
+            SELECT SUM(pay.amount)
+            FROM payment AS pay
+            LEFT JOIN customer AS c
+                ON c.id = pay.customerId
+            WHERE strftime('%Y-%m', datetime(pay.paymentDate / 1000, 'unixepoch', 'localtime')) = months.month
+              AND pay.paymentDate >= :startDate
+              AND pay.paymentDate < :endDate
+              AND (:cityId IS NULL OR c.cityId = :cityId)
+        ), 0) AS totalReceived,
+        COALESCE((
+            SELECT SUM(ci.quantity)
+            FROM cart_item AS ci
+            INNER JOIN purchase AS p
+                ON p.id = ci.purchaseId
+            LEFT JOIN customer AS c
+                ON c.id = p.customerId
+            WHERE strftime('%Y-%m', datetime(p.purchaseDate / 1000, 'unixepoch', 'localtime')) = months.month
+              AND p.purchaseDate >= :startDate
+              AND p.purchaseDate < :endDate
+              AND (:cityId IS NULL OR c.cityId = :cityId)
+        ), 0) AS totalProducts
+    FROM (
+        SELECT DISTINCT strftime('%Y-%m', datetime(purchaseDate / 1000, 'unixepoch', 'localtime')) AS month
+        FROM purchase
+        WHERE purchaseDate >= :startDate
+          AND purchaseDate < :endDate
+        UNION
+        SELECT DISTINCT strftime('%Y-%m', datetime(paymentDate / 1000, 'unixepoch', 'localtime')) AS month
+        FROM payment
+        WHERE paymentDate >= :startDate
+          AND paymentDate < :endDate
+    ) AS months
+    ORDER BY months.month ASC
 """)
     fun getMonthlySales(
         startDate: Long,
-        endDate: Long
+        endDate: Long,
+        cityId: Uuid? = null
     ): Flow<List<MonthlySalesData>>
 
     @Query("""
@@ -97,7 +121,6 @@ interface PurchaseDao {
     suspend fun getPurchaseById(
         purchaseId: Uuid
     ): PurchaseEntity?
-
 
 
     @Query("DELETE FROM purchase")

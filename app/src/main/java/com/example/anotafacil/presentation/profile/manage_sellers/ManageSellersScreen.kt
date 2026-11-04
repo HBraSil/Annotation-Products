@@ -63,7 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.model.OwnerCode
 import com.example.anotafacil.domain.model.User
-import com.example.anotafacil.ui.components.AnnotationProductsConfirmationDialog
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
 import kotlinx.coroutines.launch
 
 @Composable
@@ -173,7 +173,7 @@ fun ManageSellersContent(
         }
         
         if (uiState.showDisconnectionConfirmationDialog) {
-            AnnotationProductsConfirmationDialog(
+            EasyNoteConfirmationDialog(
                 title = "Tem certeza que deseja desconectar esse vendedor?",
                 icon = Icons.Default.QuestionMark,
                 onDismissRequest = { onShowDisconnectionConfirmationDialog(false) },
