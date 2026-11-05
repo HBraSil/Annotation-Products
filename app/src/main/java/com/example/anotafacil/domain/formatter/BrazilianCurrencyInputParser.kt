@@ -15,11 +15,21 @@ val brazilianCurrencyFormatter: NumberFormat = NumberFormat.getCurrencyInstance(
 
 @RequiresApi(Build.VERSION_CODES.O)
 fun Long.toBrazilianDate(): String {
-    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale("pt", "BR"))
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.forLanguageTag("pt-BR"))
 
     return Instant.ofEpochMilli(this)
         .atZone(ZoneId.systemDefault())
         .format(formatter)
+}
+
+@RequiresApi(Build.VERSION_CODES.O)
+fun Long.toBrazilianMonthYear(): String {
+    val formatter = DateTimeFormatter.ofPattern("MMMM'/'yyyy",  Locale.forLanguageTag("pt-BR"))
+
+    return Instant.ofEpochMilli(this)
+        .atZone(ZoneId.systemDefault())
+        .format(formatter)
+        .replaceFirstChar { it.titlecase() }
 }
 
 fun parseBrazilianCurrencyInput(value: String): Double {
@@ -32,4 +42,3 @@ fun parseBrazilianCurrencyInput(value: String): Double {
 
     return doubleValue
 }
-

@@ -3,7 +3,7 @@ package com.example.anotafacil.presentation.history
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.anotafacil.domain.formatter.toBrazilianDate
+import com.example.anotafacil.domain.formatter.toBrazilianMonthYear
 import com.example.anotafacil.domain.model.Payment
 import com.example.anotafacil.domain.model.PurchaseWithItemsDomain
 import com.example.anotafacil.domain.repository.CustomerRepository
@@ -64,7 +64,7 @@ class PurchaseHistoryViewModel @Inject constructor(
                             (purchaseHistory + paymentHistory).sortedByDescending { it.date }
 
                         orderedList.groupBy { movimentacao ->
-                            movimentacao.date.toBrazilianDate()
+                            movimentacao.date.toBrazilianMonthYear()
                         }
                     }
                 }.collect { history ->

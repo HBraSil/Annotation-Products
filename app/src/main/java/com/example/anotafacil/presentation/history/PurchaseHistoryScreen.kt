@@ -124,7 +124,6 @@ fun PurchaseHistoryContent(
                             is HistoryMovement.UiPurchase -> {
                                 PurchaseHistoryCard(movement.purchaseWithItemsDomain)
                             }
-
                             is HistoryMovement.UiPayment -> {
                                 if (!movement.payment.isTotalPayment) {
                                     PaymentHistoryCard(
