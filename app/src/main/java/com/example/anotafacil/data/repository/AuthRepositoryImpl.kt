@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 class AuthRepositoryImpl @Inject constructor(
     private val userDao: UserDao,
@@ -148,6 +149,20 @@ class AuthRepositoryImpl @Inject constructor(
             Result.failure(Exception("E-mail já cadastrado"))
         }
         catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun resetPassword(email: String): Result<Unit> {
+        return try {
+            firebaseAuth.setLanguageCode("pt")
+
+            firebaseAuth.sendPasswordResetEmail(email.trim()).await()
+
+            Result.success(Unit)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
             Result.failure(e)
         }
     }

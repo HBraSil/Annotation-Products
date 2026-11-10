@@ -2,6 +2,7 @@ package com.example.anotafacil.ui.components
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Visibility
@@ -33,6 +34,7 @@ fun EasyNotesTextField(
     isPasswordVisible: Boolean = false,
     onTogglePasswordVisibility: () -> Unit = {},
     keyboardType: KeyboardType = KeyboardType.Text,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
     supportingText: @Composable (() -> Unit)?,
 ) {
     TextField(

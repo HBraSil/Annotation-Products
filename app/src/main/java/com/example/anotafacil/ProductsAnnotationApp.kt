@@ -31,6 +31,7 @@ import androidx.navigation.navArgument
 import com.example.anotafacil.domain.exception.SellerConnectionState
 import com.example.anotafacil.domain.model.WhichScreenToGo
 import com.example.anotafacil.presentation.MainActivityViewModel
+import com.example.anotafacil.presentation.auth.ForgotPasswordScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
 import com.example.anotafacil.presentation.customer_detail.CustomerDetailScreen
@@ -55,6 +56,7 @@ enum class Screens(val route: String) {
     ROLE_SECTION("role_section"),
     LOGIN("login"),
     SIGN_UP("sign_up"),
+    FORGOT_PASSWORD("forgot_password"),
     SUBSCRIPTION("subscription"),
     CODE_VERIFICATION("code_verification"),
 
@@ -192,11 +194,17 @@ fun ProductsAnnotationApp(
 
         composable(route = Screens.SIGN_UP.route) {
             SignUpScreen(
-                onBackClick = {
-                    navController.navigateUp()
-                }
+                onBackClick = { navController.navigateUp() }
             )
         }
+
+
+        composable(route = Screens.FORGOT_PASSWORD.route) {
+            ForgotPasswordScreen(
+                onNavigateBack = { navController.navigateUp() }
+            )
+        }
+
 
         composable(route = Screens.ROLE_SECTION.route) {
             Log.d("RoleSection", "in role section")

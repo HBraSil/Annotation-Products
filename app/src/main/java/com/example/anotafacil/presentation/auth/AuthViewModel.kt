@@ -140,6 +140,16 @@ class AuthViewModel @Inject constructor(
         }
     }
 
+
+    fun resetPassword() {
+        _uiState.update { it.copy(isLoading = true) }
+
+        viewModelScope.launch {
+            authRepository.resetPassword(_uiState.value.email.field)
+        }
+    }
+
+
     fun signUpWithEmailAndPassword() {
         _uiState.update { it.copy(isLoading = true) }
 
