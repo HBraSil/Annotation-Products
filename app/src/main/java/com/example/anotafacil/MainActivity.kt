@@ -8,7 +8,6 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -64,12 +63,14 @@ class MainActivity : ComponentActivity() {
                 .sellerConnection
                 .collectAsStateWithLifecycle()
 
-            LaunchedEffect(showEmailChangedDialog) {
-                Log.d(
-                    "APP_LIFECYCLE",
-                    "MainActivity recebeu: $showEmailChangedDialog"
-                )
-            }
+            val hasPremium by mainActivityViewModel
+                .subscriptionState
+                .collectAsStateWithLifecycle()
+
+            val showPremiumEndedDialog by mainActivityViewModel
+                .showPremiumEndedDialog
+                .collectAsStateWithLifecycle()
+
 
 
             AnotacoesDeProdutosTheme {
@@ -81,11 +82,13 @@ class MainActivity : ComponentActivity() {
 
                     ProductsAnnotationApp(
                         sellerConnection = sellerConnection,
+                        hasPremium = showPremiumEndedDialog,
                         showEmailChangedDialog = showEmailChangedDialog,
-                        mainActivityViewModel = mainActivityViewModel,
                         startDestination = startDestination,
                         dismissEmailChangedDialog = appForegroundManager::dismissEmailChangedDialog,
-                        confirmSellerDisconnect = mainActivityViewModel::confirmSellerDisconnect
+                        dismissDialog = mainActivityViewModel::dismissPremiumEndedDialog,
+                        confirmSellerDisconnect = mainActivityViewModel::confirmSellerDisconnect,
+                        setLastRoute = mainActivityViewModel::setLastRoute,
                     )
                 }
             }

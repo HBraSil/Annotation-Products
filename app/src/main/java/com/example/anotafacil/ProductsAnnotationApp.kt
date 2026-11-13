@@ -18,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -28,9 +27,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.anotafacil.domain.exception.SellerConnectionState
+import com.example.anotafacil.domain.Response.BillingManagerResponse
+import com.example.anotafacil.domain.Response.SellerConnectionState
 import com.example.anotafacil.domain.model.WhichScreenToGo
-import com.example.anotafacil.presentation.MainActivityViewModel
 import com.example.anotafacil.presentation.auth.ForgotPasswordScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
@@ -80,11 +79,13 @@ enum class Screens(val route: String) {
 @Composable
 fun ProductsAnnotationApp(
     sellerConnection: SellerConnectionState,
+    hasPremium: Boolean,
     showEmailChangedDialog: Boolean,
-    mainActivityViewModel: MainActivityViewModel = hiltViewModel(),
     startDestination: String,
     dismissEmailChangedDialog: () -> Unit,
-    confirmSellerDisconnect: () -> Unit
+    confirmSellerDisconnect: () -> Unit,
+    setLastRoute: (String) -> Unit,
+    dismissDialog: () -> Unit
 ) {
     val navController = rememberNavController()
 
@@ -124,6 +125,24 @@ fun ProductsAnnotationApp(
         )
     }
 
+    if (hasPremium ) {
+        AnnotationProductsStatusDialog(
+            text = "Você não tem uma assinatura ativa",
+            confirmButtonText = "Sair",
+            icon = Icons.Default.Close,
+            iconColor = MaterialTheme.colorScheme.error,
+            containerIconColor = MaterialTheme.colorScheme.errorContainer,
+            confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
+            confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
+            confirmClick = {
+                dismissDialog()
+                navController.navigate(Screens.ROLE_SECTION.route) {
+                    popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                }
+            }
+        )
+    }
+
 
     val backStackEntry = navController.currentBackStackEntryAsState()
     val backStackRoute = backStackEntry.value?.destination?.route
@@ -135,7 +154,7 @@ fun ProductsAnnotationApp(
                 innerPadding = innerPadding,
                 lastRoute = {
                     Log.d("ProductsAnnotationApp", "lastRoute: $it")
-                    mainActivityViewModel.lastRoute(it)
+                    setLastRoute(it)
                 }
             )
 

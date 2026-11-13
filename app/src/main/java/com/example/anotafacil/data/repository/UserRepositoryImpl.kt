@@ -6,8 +6,8 @@ import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.data.entity.toDomain
 import com.example.anotafacil.data.network.AppDatabase
 import com.example.anotafacil.domain.datastore.UserDataStore
-import com.example.anotafacil.domain.exception.HomeResult
-import com.example.anotafacil.domain.exception.SellerConnectionState
+import com.example.anotafacil.domain.Response.HomeResponse
+import com.example.anotafacil.domain.Response.SellerConnectionState
 import com.example.anotafacil.domain.model.SellerHomeUsers
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.model.UserRole
@@ -28,7 +28,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.catch
@@ -41,9 +40,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.tasks.await
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -170,10 +167,10 @@ class UserRepositoryImpl @Inject constructor(
 
 
 
-    override suspend fun observeOwnerInfo(ownerUid: String?): Flow<HomeResult> {
+    override suspend fun observeOwnerInfo(ownerUid: String?): Flow<HomeResponse> {
 
         val firebaseUserUid = auth.currentUser?.uid
-            ?: return flowOf(HomeResult.NotAuthenticated)
+            ?: return flowOf(HomeResponse.NotAuthenticated)
 
         return try {
 
@@ -182,21 +179,21 @@ class UserRepositoryImpl @Inject constructor(
                 .document(ownerUid ?: firebaseUserUid)
                 .snapshots()
                 .map { documentSnapshot ->
-                    if (!documentSnapshot.exists()) return@map HomeResult.NotFound("Nenhum dado encontrado")
+                    if (!documentSnapshot.exists()) return@map HomeResponse.NotFound("Nenhum dado encontrado")
 
                     val owner = documentSnapshot.toObject(User::class.java)
-                        ?: return@map HomeResult.ErrorToParse
+                        ?: return@map HomeResponse.ErrorToParse
 
                     Log.d("TESTE", "DENTRO DE observeOwnerInfo: $owner")
                     saveUserLocally(user = owner)
 
-                    HomeResult.Success(
+                    HomeResponse.Success(
                         SellerHomeUsers(owner = owner)
                     )
                 }
 
         } catch (e: Exception) {
-            flowOf(HomeResult.Error(e.message))
+            flowOf(HomeResponse.Error(e.message))
         }
     }
 
@@ -226,7 +223,7 @@ class UserRepositoryImpl @Inject constructor(
 
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun loadSellerAndOwnerInfo(): Flow<HomeResult> {
+    override fun loadSellerAndOwnerInfo(): Flow<HomeResponse> {
         return try {
             currentUser.flatMapLatest { resultSeller ->
 
@@ -234,16 +231,16 @@ class UserRepositoryImpl @Inject constructor(
                 val seller = resultSeller.getOrNull() ?: return@flatMapLatest emptyFlow()
 
                 Log.d("loadSellerAndOwnerInfo", "seller loadSellerAndOwnerInfo: $seller")
-                val ownerId = seller.ownerId ?: return@flatMapLatest flowOf(HomeResult.NotConnected)
+                val ownerId = seller.ownerId ?: return@flatMapLatest flowOf(HomeResponse.NotConnected)
 
 
                 observeOwnerInfo(ownerId).map { ownerResult ->
                     when (ownerResult) {
-                        is HomeResult.Success -> {
+                        is HomeResponse.Success -> {
                             val owner = ownerResult.users.owner
 
                             Log.d("loadSellerAndOwnerInfo", "DENTRO DE loadSellerAndOwnerInfo: $owner")
-                            HomeResult.Success(
+                            HomeResponse.Success(
                                 SellerHomeUsers(
                                     seller = seller,
                                     owner = owner
@@ -251,9 +248,9 @@ class UserRepositoryImpl @Inject constructor(
                             )
                         }
 
-                        is HomeResult.NotFound-> HomeResult.NotFound(ownerResult.message)
+                        is HomeResponse.NotFound-> HomeResponse.NotFound(ownerResult.message)
 
-                        is HomeResult.Error -> HomeResult.Error(ownerResult.message)
+                        is HomeResponse.Error -> HomeResponse.Error(ownerResult.message)
 
                         else -> ownerResult
                     }
@@ -263,7 +260,7 @@ class UserRepositoryImpl @Inject constructor(
             Log.d("Cancellation", "CAIU AQUI loadSellerAndOwnerInfo: ${e.message}")
             throw e
         } catch (throwable: Throwable) {
-            flowOf(HomeResult.Error(message = throwable.message))
+            flowOf(HomeResponse.Error(message = throwable.message))
         }
     }
 

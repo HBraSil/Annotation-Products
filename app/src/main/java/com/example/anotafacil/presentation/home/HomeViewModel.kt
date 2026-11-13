@@ -3,7 +3,7 @@ package com.example.anotafacil.presentation.home
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.anotafacil.domain.exception.HomeResult
+import com.example.anotafacil.domain.Response.HomeResponse
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.CityRepository
@@ -51,31 +51,31 @@ class HomeViewModel @Inject constructor(
             userRepository.observeOwnerInfo()
                 .collect { result ->
                     when (result) {
-                        is HomeResult.Success -> {
+                        is HomeResponse.Success -> {
                             _uiState.update {
                                 it.copy(ownerUser = result.users.owner)
                             }
                         }
 
-                        is HomeResult.NotFound -> {
+                        is HomeResponse.NotFound -> {
                             _homeEvent.emit(
                                 HomeEvent.ShowMessage(result.message)
                             )
                         }
 
-                        is HomeResult.NotAuthenticated -> {
+                        is HomeResponse.NotAuthenticated -> {
                             _homeEvent.emit(
                                 HomeEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
                             )
                         }
 
-                        is HomeResult.ErrorToParse -> {
+                        is HomeResponse.ErrorToParse -> {
                             _homeEvent.emit(
                                 HomeEvent.ShowMessage("Não foi possível carregar os dados. Tente novamente.")
                             )
                         }
 
-                        is HomeResult.Error -> {
+                        is HomeResponse.Error -> {
                             _homeEvent.emit(
                                 HomeEvent.ShowMessage(result.message)
                             )
@@ -100,7 +100,7 @@ class HomeViewModel @Inject constructor(
             userRepository.loadSellerAndOwnerInfo()
                 .collect { result ->
                     when (result) {
-                        is HomeResult.Success -> {
+                        is HomeResponse.Success -> {
                             Log.d("ViewmodelloadSellerAndOwnerInfo", "DENTRO loadSellerAndOwnerInfo no viewmodel: ${result.users.seller}  e   depois: ${result.users.owner}")
                             _uiState.update {
                                 it.copy(
@@ -111,28 +111,28 @@ class HomeViewModel @Inject constructor(
 
                         }
 
-                        is HomeResult.NotFound -> {
+                        is HomeResponse.NotFound -> {
                             Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no NotFound: ${result.message}")
                             _homeEvent.emit(
                                 HomeEvent.UserNotAuthenticated(result.message)
                             )
                         }
 
-                        is HomeResult.NotAuthenticated -> {
+                        is HomeResponse.NotAuthenticated -> {
                             Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no NotAuthenticated")
                             _homeEvent.emit(
                                 HomeEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
                             )
                         }
 
-                        is HomeResult.Error -> {
+                        is HomeResponse.Error -> {
                             Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no Error: ${result.message}")
                             _homeEvent.emit(
                                 HomeEvent.ShowMessage(result.message)
                             )
                         }
 
-                        is HomeResult.CancellationException -> {
+                        is HomeResponse.CancellationException -> {
                             Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no CancellationException")
                         }
                         else -> {

@@ -1,11 +1,12 @@
 package com.example.anotafacil.presentation.onboarding.subscription
 
+import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.example.anotafacil.data.billing.BillingManager
-import com.example.anotafacil.domain.exception.HomeResult
 import com.example.anotafacil.domain.repository.UserRepository
 import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.functions.FirebaseFunctionsException
@@ -27,53 +28,87 @@ class SubscriptionViewModel @Inject constructor(
     private val _subscriptionState = MutableStateFlow(SubscriptionState())
     val subscriptionState: StateFlow<SubscriptionState> = _subscriptionState.asStateFlow()
 
+    private var subscriptionProduct: ProductDetails? = null
+    private var subscriptionOfferToken: String? = null
 
     init {
-        viewModelScope.launch {
-
-
-            testPremiumProduct()
-           /* billingManager.purchaseUpdates.collect { purchases ->
-                purchases.forEach { purchase ->
-                    //processPurchase(purchase.purchaseToken)
-                }
-            }*/
-        }
+        loadSubscriptionProduct()
     }
 
-
-    fun testPremiumProduct() {
+    fun loadSubscriptionProduct() {
         viewModelScope.launch {
-            val productDetails = billingManager.querySubscriptionProduct(
-                productId = "premium"
-            )
-
-            if (productDetails == null) {
-                Log.e("BillingTest", "Produto premium não encontrado")
-                return@launch
+            _subscriptionState.update {
+                it.copy(status = SubscriptionStatus.LOADING, errorMessage = null)
             }
 
-            Log.d("BillingTest", "Produto: ${productDetails.productId}")
+            val productDetails = billingManager.querySubscriptionProduct("premium")
+            if (productDetails == null) {
+                subscriptionProduct = null
+                subscriptionOfferToken = null
+                _subscriptionState.update {
+                    it.copy(
+                        status = SubscriptionStatus.ERROR,
+                        errorMessage = "Não foi possível carregar o plano. Tente novamente."
+                    )
+                }
+                return@launch
+            }
 
             val monthlyPlan = productDetails.subscriptionOfferDetails
                 ?.firstOrNull { offer ->
                     offer.basePlanId == "mensal" && offer.offerId == null
                 }
+            val price = monthlyPlan
+                ?.pricingPhases
+                ?.pricingPhaseList
+                ?.lastOrNull()
+                ?.formattedPrice
 
-            if (monthlyPlan == null) {
-                Log.e("BillingTest", "Plano mensal não encontrado")
+            if (monthlyPlan == null || price.isNullOrBlank()) {
+                subscriptionProduct = null
+                subscriptionOfferToken = null
+                _subscriptionState.update {
+                    it.copy(
+                        status = SubscriptionStatus.ERROR,
+                        errorMessage = "O plano mensal não está disponível no Google Play."
+                    )
+                }
                 return@launch
             }
 
-            val price = monthlyPlan.pricingPhases
-                .pricingPhaseList
-                .lastOrNull()
-                ?.formattedPrice
-
-            Log.d("BillingTest", "Plano: ${monthlyPlan.basePlanId}")
-            Log.d("BillingTest", "Preço: $price")
-            Log.d("BillingTest", "OfferToken disponível: ${monthlyPlan.offerToken.isNotBlank()}")
+            subscriptionProduct = productDetails
+            subscriptionOfferToken = monthlyPlan.offerToken
+            _subscriptionState.update {
+                it.copy(
+                    status = SubscriptionStatus.READY,
+                    productName = productDetails.name,
+                    productDescription = productDetails.description,
+                    formattedMonthlyPrice = price
+                )
+            }
         }
+    }
+
+    fun testPremiumPurchase(activity: Activity) {
+        viewModelScope.launch {
+            val productDetails = subscriptionProduct ?: return@launch
+            val offerToken = subscriptionOfferToken ?: return@launch
+
+            val result = billingManager.launchSubscriptionPurchase(
+                activity = activity,
+                productDetails = productDetails,
+                offerToken = offerToken
+            ) ?: return@launch
+
+            Log.d(
+                "BillingTest",
+                "Resultado da abertura: ${result.responseCode} - ${result.debugMessage}"
+            )
+        }
+    }
+
+    fun restoreSubscriptionPurchases() {
+        billingManager.restoreSubscriptionPurchases()
     }
 
     fun testGooglePlaySubscription() {
@@ -144,5 +179,13 @@ class SubscriptionViewModel @Inject constructor(
 data class SubscriptionState(
     val success: Boolean = false,
     val isLoading: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val status: SubscriptionStatus = SubscriptionStatus.LOADING,
+    val productName: String? = null,
+    val productDescription: String? = null,
+    val formattedMonthlyPrice: String? = null,
 )
+
+enum class SubscriptionStatus {
+    LOADING, READY, PROCESSING, PREMIUM, ERROR
+}

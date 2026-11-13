@@ -3,7 +3,7 @@ package com.example.anotafacil.presentation.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.util.NetworkChecker
-import com.example.anotafacil.domain.exception.HomeResult
+import com.example.anotafacil.domain.Response.HomeResponse
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.repository.UserRepository
 import com.example.anotafacil.domain.usecase.UploadDataUseCase
@@ -51,16 +51,16 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             userRepository.observeOwnerInfo().collect { result ->
                 when (result) {
-                    is HomeResult.Success -> {
+                    is HomeResponse.Success -> {
                         _uiState.update { it.copy(user = result.users.owner) }
                     }
-                    is HomeResult.NotFound -> {
+                    is HomeResponse.NotFound -> {
                         _uiState.update { it.copy(isUserDisconnected = "Proprietário não encontrado") }
                     }
-                    is HomeResult.Disconnected -> {
+                    is HomeResponse.Disconnected -> {
                         _uiState.update { it.copy(message = "Você foi desconectado do proprietário") }
                     }
-                    is HomeResult.Error -> {
+                    is HomeResponse.Error -> {
                         _uiState.update { it.copy(message = result.message) }
                     }
                     else -> {}

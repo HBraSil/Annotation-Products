@@ -1,7 +1,6 @@
 package com.example.anotafacil.presentation.onboarding.subscription
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import android.app.Activity
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,64 +9,53 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.ArrowBackIosNew
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.ArrowForwardIos
-import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.CardMembership
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Cloud
-import androidx.compose.material.icons.filled.CreditCard
-import androidx.compose.material.icons.filled.Key
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.PersonAdd
-import androidx.compose.material.icons.filled.QrCode
-import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.outlined.PersonOutline
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.automirrored.outlined.ArrowForward
+import androidx.compose.material.icons.outlined.CloudDone
+import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material.icons.automirrored.outlined.TrendingUp
+import androidx.compose.material3.*
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.LifecycleResumeEffect
 
-private val TextPrimary = Color(0xFF111111)
-private val TextSecondary = Color(0xFF606575)
-private val Background = Color(0xFFF9F9FA)
-
-@Composable
+/*@Composable
 fun SubscriptionScreen(
     subscriptionViewModel: SubscriptionViewModel = hiltViewModel(),
     onBackClick: () -> Unit = {},
@@ -79,621 +67,205 @@ fun SubscriptionScreen(
         mutableStateOf(PaymentMethod.PIX)
     }
 
+    val activity = LocalContext.current as Activity
+
+
+    }*/
+
+@Composable
+fun SubscriptionScreen(
+    subscriptionViewModel: SubscriptionViewModel = hiltViewModel(),
+    goToHome: () -> Unit,
+    onBackClick: () -> Unit,
+) {
+    val uiState by subscriptionViewModel.subscriptionState.collectAsState()
+    val activity = LocalContext.current as Activity
+
+    LifecycleResumeEffect(Unit) {
+        subscriptionViewModel.restoreSubscriptionPurchases()
+
+        onPauseOrDispose {
+            // O processamento pertence ao BillingManager.
+        }
+    }
+
     LaunchedEffect(uiState.success) {
         if (uiState.success) goToHome()
-
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-            .statusBarsPadding()
-    ) {
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(
-                    horizontal = 12.dp,
-                    vertical = 8.dp
-                ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            IconButton(
-                onClick = onBackClick,
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.onPrimary)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBackIosNew,
-                    contentDescription = "Voltar",
-                    tint = TextPrimary
-                )
-            }
-        }
-
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(horizontal = 20.dp)
-                .navigationBarsPadding()
-        ) {
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.Transparent
-                )
-            ) {
-
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(
-                            brush = Brush.verticalGradient(
-                                colors = listOf(
-                                    Color(0xFFE9EBFF),
-                                    Color(0xFFF3F3F5)
-                                )
-                            ),
-                            shape = RoundedCornerShape(20.dp)
-                        )
-                        .padding(
-                            horizontal = 20.dp,
-                            vertical = 22.dp
-                        ),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-
-                    Box(
-                        modifier = Modifier
-                            .size(54.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
-                        contentAlignment = Alignment.Center
-                    ) {
-
-                        Icon(
-                            imageVector = Icons.Default.Key,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(29.dp)
-                        )
-                    }
-
-                    Spacer(
-                        modifier = Modifier.height(10.dp)
-                    )
-
-                    Surface(
-                        shape = RoundedCornerShape(50.dp),
-                        color = Color(0xFFD9DFFF)
-                    ) {
-
-                        Text(
-                            text = "ϟ  Upgrade Imediato de Proprietário",
-                            modifier = Modifier.padding(
-                                horizontal = 16.dp,
-                                vertical = 7.dp
-                            ),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-
-                    Spacer(
-                        modifier = Modifier.height(12.dp)
-                    )
-
-                    Text(
-                        text = "Desbloqueie o\nGerenciamento\nCompleto",
-                        fontSize = 25.sp,
-                        lineHeight = 30.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = TextPrimary,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(10.dp)
-                    )
-
-                    Text(
-                        text = "Ative agora todas as\nferramentas necessárias para sua gestão\ncomercial através de uma taxa única.",
-                        fontSize = 13.sp,
-                        lineHeight = 21.sp,
-                        color = TextSecondary,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(
-                    containerColor = Color.White
-                ),
-                elevation = CardDefaults.cardElevation(
-                    defaultElevation = 1.dp
-                )
-            ) {
-
-                Column(
-                    modifier = Modifier.padding(20.dp)
-                ) {
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = Color(0xFFECECF1)
-                        ) {
-                            Text(
-                                text = "Taxa única de ativação",
-                                modifier = Modifier.padding(
-                                    horizontal = 10.dp,
-                                    vertical = 5.dp
-                                ),
-                                fontSize = 12.sp,
-                                color = Color(0xFF444651)
-                            )
-                        }
-
-                        Spacer(
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = null,
-                            modifier = Modifier.size(13.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-
-                        Spacer(
-                            modifier = Modifier.size(4.dp)
-                        )
-
-                        Text(
-                            text = "Vitalício",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                    Spacer(
-                        modifier = Modifier.height(14.dp)
-                    )
-
-                    Row(
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-
-                        Text(
-                            text = "R$",
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(
-                                bottom = 9.dp
-                            )
-                        )
-
-                        Spacer(
-                            modifier = Modifier.size(8.dp)
-                        )
-
-                        Text(
-                            text = "10,00",
-                            fontSize = 40.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = TextPrimary
-                        )
-
-                        Spacer(
-                            modifier = Modifier.size(8.dp)
-                        )
-
-                        Column(
-                            modifier = Modifier.padding(
-                                bottom = 5.dp
-                            )
-                        ) {
-
-                            Text(
-                                text = "/ pagamento",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
-
-                            Text(
-                                text = "único",
-                                fontSize = 12.sp,
-                                color = TextSecondary
-                            )
-                        }
-                    }
-
-                    Spacer(
-                        modifier = Modifier.height(8.dp)
-                    )
-
-                    Text(
-                        text = "Sem cobranças recorrentes ou\nmensalidades surpresa. Acesso liberado\nno mesmo segundo para a sua conta.",
-                        fontSize = 13.sp,
-                        lineHeight = 19.sp,
-                        color = TextSecondary
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(16.dp)
-                    )
-
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(15.dp),
-                        color = Color(0xFFF7F7F8)
-                    ) {
-
-                        Row(
-                            modifier = Modifier.padding(
-                                horizontal = 14.dp,
-                                vertical = 13.dp
-                            ),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = null,
-                                modifier = Modifier.size(18.dp),
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-
-                            Spacer(
-                                modifier = Modifier.size(10.dp)
-                            )
-
-                            Text(
-                                text = "Liberação automática\nem segundos",
-                                fontSize = 12.sp,
-                                lineHeight = 17.sp,
-                                color = TextPrimary
-                            )
-
-                            Spacer(
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            Text(
-                                text = "100%\nDigital",
-                                fontSize = 12.sp,
-                                lineHeight = 17.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.primary,
-                                textAlign = TextAlign.End
-                            )
-                        }
-                    }
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(22.dp)
-            )
-
-            /*
-             * SECTION TITLE
-             */
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 4.dp),
-                verticalAlignment = Alignment.Top
-            ) {
-
-                Text(
-                    text = "O que você ganha com o\nacesso total",
-                    fontSize = 12.sp,
-                    lineHeight = 18.sp,
-                    color = TextPrimary
-                )
-
-                Spacer(
-                    modifier = Modifier.weight(1f)
-                )
-
-                Text(
-                    text = "4 recursos\nchave",
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    color = MaterialTheme.colorScheme.primary,
-                    textAlign = TextAlign.End
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
-
-            /*
-             * FEATURES
-             */
-
-            FeatureCard(
-                icon = Icons.Default.BarChart,
-                title = "Gráficos & Relatórios Completos",
-                description = "Acompanhe vendas por produto, curva de faturamento e lucro líquido detalhado dos últimos meses.",
-                iconBackground = Color(0xFFE0E4FF)
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            FeatureCard(
-                icon = Icons.Default.PersonAdd,
-                title = "Gestão Ilimitada de Clientes",
-                description = "Cadastre, edite e exclua clientes, visualize histórico de compras e controle saldos em aberto e pagamentos parciais.",
-                iconBackground = Color(0xFFE6E4EE)
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            FeatureCard(
-                icon = Icons.Default.CardMembership,
-                title = "Códigos para Vendedores Ilimitados",
-                description = "Gere e compartilhe novos códigos de acesso sem restrições para toda a sua equipe de vendas em campo.",
-                iconBackground = Color(0xFFE0E4FF)
-            )
-
-            Spacer(
-                modifier = Modifier.height(8.dp)
-            )
-
-            FeatureCard(
-                icon = Icons.Default.Cloud,
-                title = "Sincronização em Nuvem Segura",
-                description = "Seus dados, cadastros e anotações protegidos com criptografia e sempre sincronizados em tempo real.",
-                iconBackground = Color(0xFFFFE1DA)
-            )
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-
-            /*
-             * PAYMENT METHODS
-             */
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                color = Color(0xFFF0F0F2)
-            ) {
-
-                Column(
-                    modifier = Modifier.padding(14.dp)
-                ) {
-
-                    Text(
-                        text = "Formas de pagamento integradas",
-                        fontSize = 13.sp,
-                        color = TextSecondary
-                    )
-
-                    Spacer(
-                        modifier = Modifier.height(10.dp)
-                    )
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-
-                        PaymentOption(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.QrCode,
-                            title = "Pix",
-                            subtitle = "Instantâneo",
-                            selected = selectedPayment == PaymentMethod.PIX,
-                            onClick = {
-                                selectedPayment = PaymentMethod.PIX
-                            }
-                        )
-
-                        PaymentOption(
-                            modifier = Modifier.weight(1f),
-                            icon = Icons.Default.CreditCard,
-                            title = "Cartão",
-                            subtitle = "Crédito à vista",
-                            selected = selectedPayment == PaymentMethod.CARD,
-                            onClick = {
-                                selectedPayment = PaymentMethod.CARD
-                            }
-                        )
-                    }
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(18.dp)
-            )
-
-            /*
-             * PAYMENT BUTTON
-             */
-            Button(
-                onClick = {
-                    subscriptionViewModel.finalizeSubscription()
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                enabled = !uiState.isLoading,
-                shape = RoundedCornerShape(24.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                )
-            ) {
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = "Pagar R$ 10,00 e Desbloquear",
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-
-                        Spacer(
-                            modifier = Modifier.size(8.dp)
-                        )
-
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                            contentDescription = null,
-                            modifier = Modifier.size(16.dp),
-                            tint = Color.White
-                        )
-                    }
-
-                    if (uiState.isLoading) {
-                        CircularProgressIndicator()
-                    }
-                }
-            }
-
-            Spacer(
-                modifier = Modifier.height(10.dp)
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Icon(
-                    imageVector = Icons.Default.Security,
-                    contentDescription = null,
-                    modifier = Modifier.size(13.dp),
-                    tint = TextSecondary
-                )
-
-                Spacer(
-                    modifier = Modifier.size(5.dp)
-                )
-
-                Text(
-                    text = "Pagamento 100% seguro • Liberação\ninstantânea via Pix",
-                    fontSize = 11.sp,
-                    lineHeight = 16.sp,
-                    color = TextSecondary,
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.height(20.dp)
-            )
-        }
-    }
+    SubscriptionContent(
+        uiState = uiState,
+        onSubscribeClick = { subscriptionViewModel.testPremiumPurchase(activity = activity) },
+        onRetryClick = subscriptionViewModel::loadSubscriptionProduct,
+        onBackClick = onBackClick
+    )
 }
 
-private enum class PaymentMethod {
-    PIX,
-    CARD
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SubscriptionContent(
+    uiState: SubscriptionState = SubscriptionState(),
+    onSubscribeClick: () -> Unit,
+    onBackClick: () -> Unit,
+    onRetryClick: () -> Unit = {}
+) {
+
+
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = "Seja Premium",
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBackClick) {
+                        Icon(Icons.Default.ArrowBackIosNew, "Voltar")
+                    }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
+    ) { innerPadding ->
+        // O scroll é estado visual local: não precisa ir para o ViewModel.
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .consumeWindowInsets(innerPadding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Column(
+                modifier = Modifier.widthIn(max = 480.dp).fillMaxWidth(),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                PremiumHeader()
+                Spacer(Modifier.height(32.dp))
+                PremiumBenefits()
+                Spacer(Modifier.height(32.dp))
+                SubscriptionPurchaseSection(
+                    uiState = uiState,
+                    onSubscribeClick = onSubscribeClick,
+                    onRetryClick = onRetryClick
+                )
+                Spacer(Modifier.height(24.dp))
+                SubscriptionFooter(
+                    onTermsClick = {},
+                    onPrivacyClick = {}
+                )
+            }
+        }
+    }
 }
 
 @Composable
-private fun FeatureCard(
+private fun PremiumHeader(modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ) {
+            Box(Modifier.size(72.dp), contentAlignment = Alignment.Center) {
+                Icon(Icons.Outlined.StarOutline, null, Modifier.size(32.dp))
+            }
+        }
+        Spacer(Modifier.height(20.dp))
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ) {
+            Text(
+                text = "ANOTA FÁCIL PREMIUM",
+                modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                style = MaterialTheme.typography.labelMedium
+            )
+        }
+        Spacer(Modifier.height(16.dp))
+        Text(
+            text = "Desbloqueie o\nGerenciamento Completo",
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(12.dp))
+        Text(
+            text = "Tenha mais recursos para organizar seus clientes, sua equipe e suas vendas.",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+    }
+}
+
+@Composable
+private fun PremiumBenefits(modifier: Modifier = Modifier) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        PremiumBenefitCard(
+            icon = Icons.AutoMirrored.Outlined.TrendingUp,
+            title = "Relatórios e faturamento",
+            description = "Acompanhe suas vendas e os resultados do seu negócio."
+        )
+        PremiumBenefitCard(
+            icon = Icons.Outlined.Groups,
+            title = "Gestão de clientes",
+            description = "Organize clientes, compras e pagamentos em um só lugar."
+        )
+        PremiumBenefitCard(
+            icon = Icons.Outlined.PersonOutline,
+            title = "Códigos para vendedores",
+            description = "Vincule vendedores à sua equipe usando códigos de acesso."
+        )
+        PremiumBenefitCard(
+            icon = Icons.Outlined.CloudDone,
+            title = "Sincronização na nuvem",
+            description = "Envie e baixe seus dados quando precisar."
+        )
+    }
+}
+
+@Composable
+private fun PremiumBenefitCard(
     icon: ImageVector,
     title: String,
     description: String,
-    iconBackground: Color
+    modifier: Modifier = Modifier,
 ) {
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
+    Surface(
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = Color.White
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp
-        )
+        color = MaterialTheme.colorScheme.surfaceContainerLow
     ) {
-
         Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.Top
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-
-            Box(
-                modifier = Modifier
-                    .size(38.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(iconBackground),
-                contentAlignment = Alignment.Center
+            Surface(
+                shape = RoundedCornerShape(12.dp),
+                color = MaterialTheme.colorScheme.surfaceContainerHighest,
+                contentColor = MaterialTheme.colorScheme.primary
             ) {
-
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(19.dp),
-                    tint = MaterialTheme.colorScheme.primary
-                )
+                Box(Modifier.size(42.dp), contentAlignment = Alignment.Center) {
+                    Icon(icon, contentDescription = null, modifier = Modifier.size(23.dp))
+                }
             }
-
-            Spacer(
-                modifier = Modifier.size(12.dp)
-            )
-
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
-
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(title, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    text = title,
-                    fontSize = 13.sp,
-                    lineHeight = 17.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-
-                Spacer(
-                    modifier = Modifier.height(3.dp)
-                )
-
-                Text(
-                    text = description,
-                    fontSize = 12.sp,
-                    lineHeight = 17.sp,
-                    color = TextSecondary
+                    description,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -701,109 +273,205 @@ private fun FeatureCard(
 }
 
 @Composable
-private fun PaymentOption(
+private fun SubscriptionPurchaseSection(
+    uiState: SubscriptionState,
+    onSubscribeClick: () -> Unit,
+    onRetryClick: () -> Unit,
     modifier: Modifier = Modifier,
-    icon: ImageVector,
-    title: String,
-    subtitle: String,
-    selected: Boolean,
-    onClick: () -> Unit
 ) {
+    val isProcessing = uiState.status == SubscriptionStatus.PROCESSING
+    val isLoading = uiState.status == SubscriptionStatus.LOADING
+    val isPremium = uiState.status == SubscriptionStatus.PREMIUM
+    //val canSubscribe = uiState.status == SubscriptionStatus.READY && !uiState.formattedMonthlyPrice.isNullOrBlank()
 
-    Surface(
-        modifier = modifier
-            .height(64.dp)
-            .border(
-                width = if (selected) 1.5.dp else 1.dp,
-                color = if (selected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    Color.Transparent
-                },
-                shape = RoundedCornerShape(12.dp)
-            ),
-        onClick = onClick,
-        shape = RoundedCornerShape(12.dp),
-        color = Color.White
-    ) {
-
-        Row(
-            modifier = Modifier.padding(
-                horizontal = 10.dp,
-                vertical = 9.dp
-            ),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-
-            Box(
-                modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .background(
-                        if (selected) {
-                            Color(0xFFE1E5FF)
-                        } else {
-                            Color(0xFFEAEAEA)
-                        }
-                    ),
-                contentAlignment = Alignment.Center
-            ) {
-
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(16.dp),
-                    tint = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        Color(0xFF454545)
-                    }
-                )
-            }
-
-            Spacer(
-                modifier = Modifier.size(8.dp)
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        when {
+            isPremium -> Text(
+                "Seu Premium está ativo",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold
             )
 
-            Column {
+            isLoading -> Text(
+                "Carregando plano…",
+                style = MaterialTheme.typography.bodyLarge
+            )
 
-                Text(
-                    text = title,
-                    fontSize = 12.sp,
-                    fontWeight = if (selected) {
-                        FontWeight.Medium
-                    } else {
-                        FontWeight.Normal
-                    },
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        TextPrimary
+            uiState.status == SubscriptionStatus.READY -> {
+                uiState.productName
+                    ?.takeIf(String::isNotBlank)
+                    ?.let { name ->
+                        Text(
+                            name,
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
                     }
+                uiState.productDescription
+                    ?.takeIf(String::isNotBlank)
+                    ?.let { description ->
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            description,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        uiState.formattedMonthlyPrice.orEmpty(),
+                        style = MaterialTheme.typography.headlineLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        "/mês",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    "Cancele a qualquer momento",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
+            }
+        }
 
-                Text(
-                    text = subtitle,
-                    fontSize = 11.sp,
-                    color = if (selected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        TextSecondary
-                    }
+        uiState.errorMessage?.let { message ->
+            Spacer(Modifier.height(12.dp))
+            Text(
+                message,
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodyMedium,
+                textAlign = TextAlign.Center
+            )
+        }
+
+        if (uiState.status == SubscriptionStatus.ERROR) {
+            TextButton(onClick = onRetryClick) { Text("Tentar novamente") }
+        }
+
+        Spacer(Modifier.height(20.dp))
+        Button(
+            onClick = onSubscribeClick,
+            enabled = uiState.status == SubscriptionStatus.READY,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 52.dp),
+            shape = CircleShape,
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 14.dp)
+        ) {
+            // O conteúdo de Button já é um RowScope: texto e seta ficam lado a lado.
+            if (isLoading || isProcessing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = LocalContentColor.current,
+                    strokeWidth = 2.dp
                 )
+                Spacer(Modifier.width(10.dp))
+            }
+            Text(
+                text = when {
+                    isLoading -> "Carregando…"
+                    isProcessing -> "Processando…"
+                    isPremium -> "Premium ativo"
+                    else -> "Assinar agora"
+                },
+                modifier = Modifier.weight(1f, fill = false),
+                maxLines = 1,
+                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleMedium
+            )
+            //if (canSubscribe) {
+            //    Spacer(Modifier.width(16.dp))
+            //    Icon(Icons.AutoMirrored.Outlined.ArrowForward, null, Modifier.size(22.dp))
+            //}
+        }
+    }
+}
+
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun SubscriptionFooter(
+    onTermsClick: () -> Unit,
+    onPrivacyClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Icon(
+                Icons.Outlined.Lock,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                "Pagamento pelo Google Play.",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Spacer(Modifier.height(8.dp))
+        Text(
+            "Renovação automática. Cancele a qualquer momento nas configurações do Google Play.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+        Spacer(Modifier.height(16.dp))
+        FlowRow(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TextButton(onClick = onTermsClick) {
+                Text("Termos de uso", textDecoration = TextDecoration.Underline)
+            }
+            TextButton(onClick = onPrivacyClick) {
+                Text("Política de privacidade", textDecoration = TextDecoration.Underline)
             }
         }
     }
 }
 
+// Apenas para visualizar as cores da referência no Android Studio.
+// Na tela real, use o tema Anota Fácil do seu aplicativo.
+@Preview(showBackground = true, widthDp = 393, heightDp = 1100)
 @Preview(
+    name = "Fonte ampliada",
     showBackground = true,
-    widthDp = 326,
-    heightDp = 1600
+    widthDp = 360,
+    heightDp = 800,
+    fontScale = 1.5f
 )
 @Composable
 private fun SubscriptionScreenPreview() {
-    MaterialTheme {
-        SubscriptionScreen()
+    MaterialTheme(
+        colorScheme = lightColorScheme(
+            primary = Color(0xFF0730CC),
+            onPrimary = Color.White,
+            primaryContainer = Color(0xFFE0E1FF),
+            onPrimaryContainer = Color(0xFF0730CC),
+            secondaryContainer = Color(0xFFEEEEFF),
+            onSecondaryContainer = Color(0xFF0730CC),
+            background = Color(0xFFFAFAFA),
+            surface = Color(0xFFFAFAFA),
+            surfaceContainerLow = Color(0xFFF3F3F3),
+            surfaceContainerHighest = Color(0xFFE7E7E7),
+            onSurface = Color(0xFF1B1C1E),
+            onSurfaceVariant = Color(0xFF55565E)
+        )
+    ) {
+        SubscriptionContent(
+            onBackClick = {},
+            onSubscribeClick = {}
+        )
     }
 }

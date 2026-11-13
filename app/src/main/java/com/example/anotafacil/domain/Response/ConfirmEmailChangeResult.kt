@@ -1,4 +1,4 @@
-package com.example.anotafacil.domain.exception
+package com.example.anotafacil.domain.Response
 
 
 sealed interface ConfirmEmailChangeResult {

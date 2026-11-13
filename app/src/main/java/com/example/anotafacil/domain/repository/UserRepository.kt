@@ -1,15 +1,15 @@
 package com.example.anotafacil.domain.repository
 
-import com.example.anotafacil.domain.exception.HomeResult
-import com.example.anotafacil.domain.exception.SellerConnectionState
+import com.example.anotafacil.domain.Response.HomeResponse
+import com.example.anotafacil.domain.Response.SellerConnectionState
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.model.WhichScreenToGo
 import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
-    suspend fun observeOwnerInfo(ownerUid: String? = null): Flow<HomeResult>
+    suspend fun observeOwnerInfo(ownerUid: String? = null): Flow<HomeResponse>
 
-    fun loadSellerAndOwnerInfo(): Flow<HomeResult>
+    fun loadSellerAndOwnerInfo(): Flow<HomeResponse>
 
     fun observeSellerConnectionWithOwner(): Flow<SellerConnectionState>
 
