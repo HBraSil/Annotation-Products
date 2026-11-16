@@ -2,10 +2,12 @@ package com.example.anotafacil.data.datastore
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
 import jakarta.inject.Inject
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
@@ -24,8 +26,19 @@ class UserDataStoreImpl @Inject constructor(
 ) : UserDataStore {
 
     private companion object {
-        val PENDING_EMAIL_CHANGE =
-            stringPreferencesKey("pending_email_change")
+        val PENDING_EMAIL_CHANGE = stringPreferencesKey("pending_email_change")
+
+        fun previouslyHadPremium(uid: String) = booleanPreferencesKey("previously_had_premium_$uid")
+    }
+
+
+    override suspend fun hasPreviouslyHadPremium(uid: String): Boolean =
+        context.userDataStore.data.first()[previouslyHadPremium(uid)] == true
+
+    override suspend fun savePreviouslyHadPremium(uid: String, hadPremium: Boolean) {
+        context.userDataStore.edit { preferences ->
+            preferences[previouslyHadPremium(uid)] = hadPremium
+        }
     }
 
     override val pendingEmailChange: Flow<String?> =

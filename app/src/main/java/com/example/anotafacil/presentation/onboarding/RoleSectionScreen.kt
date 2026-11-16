@@ -33,6 +33,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -146,33 +147,46 @@ fun ContentRoleSectionScreen(onChoiceClick: (Int) -> Unit) {
             )
             Spacer(modifier = Modifier.weight(1f))
 
-            ElevatedButton(
-                onClick = { selectedProfileIndex?.let { onChoiceClick(it) } },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 40.dp)
-                    .height(50.dp),
-                shape = RoundedCornerShape(16.dp),
-                enabled = selectedProfileIndex != null,
-                colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.onPrimary,
-                    contentColor = MaterialTheme.colorScheme.primaryContainer,
-                )
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.Bottom
-                ) {
-                    Text(
-                        text = "Continuar",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
+                ElevatedButton(
+                    onClick = { selectedProfileIndex?.let { onChoiceClick(it) } },
+                    shape = RoundedCornerShape(16.dp),
+                    enabled = selectedProfileIndex != null,
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimary,
+                        contentColor = MaterialTheme.colorScheme.primaryContainer,
                     )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "prosseguir para escolha",
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 60.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            text = "Continuar",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = "prosseguir para escolha",
+                        )
+                    }
+                }
+
+                TextButton(
+                    onClick = {},
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ){
+                    Text(
+                        text = "Sair",
+                        style = MaterialTheme.typography.labelLarge
                     )
                 }
             }
@@ -309,5 +323,7 @@ fun ProfileOptionCard(
 @Preview(showBackground = true)
 @Composable
 fun RoleSectionScreenPreview() {
-    RoleSectionScreen()
+    ContentRoleSectionScreen(
+        onChoiceClick = {}
+    )
 }

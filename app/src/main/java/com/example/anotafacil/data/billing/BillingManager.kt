@@ -65,21 +65,17 @@ class BillingManager @Inject constructor(
 
             auth.addAuthStateListener(listener)
 
-            awaitClose {
-                auth.removeAuthStateListener(listener)
-            }
+            awaitClose { auth.removeAuthStateListener(listener) }
         }.distinctUntilChanged()
 
 
-
-    private val _purchaseUpdates = MutableSharedFlow<List<Purchase>>(
-        extraBufferCapacity = 1
-    )
+    private val _purchaseUpdates = MutableSharedFlow<List<Purchase>>(extraBufferCapacity = 1)
     val purchaseUpdates = _purchaseUpdates.asSharedFlow()
 
     private val billingScope = CoroutineScope(
         SupervisorJob() + Dispatchers.Main.immediate
     )
+
 
     private val verificationMutex = Mutex()
 
@@ -88,6 +84,7 @@ class BillingManager @Inject constructor(
     fun observeCurrentSubscriptionState(): Flow<BillingManagerResponse> {
         return observeCurrentUserUid.flatMapLatest { uid ->
             if (uid == null) return@flatMapLatest flowOf(BillingManagerResponse.Disconnected)
+
             firestore
                 .collection("subscriptionEntitlements")
                 .document(uid)
@@ -99,8 +96,8 @@ class BillingManager @Inject constructor(
                     if (!snapshot.exists()) return@map BillingManagerResponse.NoDocument
 
                     when (snapshot.getBoolean("hasPremium")) {
-                        true -> BillingManagerResponse.HasPremium
-                        false -> BillingManagerResponse.NoPremium
+                        true -> BillingManagerResponse.HasPremium(uid)
+                        false -> BillingManagerResponse.NoPremium(uid)
 
                         null -> BillingManagerResponse.Error("O documento não possui o campo hasPremium.")
                     }
@@ -113,7 +110,6 @@ class BillingManager @Inject constructor(
                         BillingManagerResponse.Error(it.message)
                     )
                 }
-
         }
     }
 
@@ -198,7 +194,6 @@ class BillingManager @Inject constructor(
             )
         }
     }
-
 
 
     /**

@@ -3,9 +3,9 @@ package com.example.anotafacil.domain.Response
 
 sealed interface BillingManagerResponse {
 
-    data object HasPremium : BillingManagerResponse
+    data class HasPremium(val uid: String) : BillingManagerResponse
 
-    data object NoPremium : BillingManagerResponse
+    data class NoPremium(val uid: String) : BillingManagerResponse
 
     data object Disconnected : BillingManagerResponse
 

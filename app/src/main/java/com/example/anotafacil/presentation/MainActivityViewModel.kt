@@ -5,9 +5,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.data.billing.BillingManager
 import com.example.anotafacil.data.datastore.LastScreenDatastore
+import com.example.anotafacil.domain.datastore.UserDataStore
 import com.example.anotafacil.domain.Response.BillingManagerResponse
 import com.example.anotafacil.domain.Response.SellerConnectionState
 import com.example.anotafacil.domain.repository.UserRepository
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -22,7 +24,8 @@ import javax.inject.Inject
 class MainActivityViewModel @Inject constructor(
     private val userRepository: UserRepository,
     private val lastScreenDatastore: LastScreenDatastore,
-    private val billingManager: BillingManager
+    private val billingManager: BillingManager,
+    private val userDataStore: UserDataStore,
 ): ViewModel() {
 
     val lastActiveProfile = lastScreenDatastore.lastScreenProfile.stateIn(
@@ -58,43 +61,34 @@ class MainActivityViewModel @Inject constructor(
                 }
         }
     }
+    
 
     private fun observeSubscriptionState() {
         viewModelScope.launch {
-            var previouslyHadPremium: Boolean? = null
-
             billingManager
                 .observeCurrentSubscriptionState()
                 .collect { response ->
 
                     when (response) {
-                        BillingManagerResponse.Unknown,
-                        BillingManagerResponse.Disconnected -> {
-                            previouslyHadPremium = null
+                        is BillingManagerResponse.Disconnected -> {
                             _showPremiumEndedDialog.value = false
                         }
 
-                        BillingManagerResponse.HasPremium -> {
-                            previouslyHadPremium = true
+                        is BillingManagerResponse.HasPremium -> {
+                            userDataStore.savePreviouslyHadPremium(response.uid, true)
                             _showPremiumEndedDialog.value = false
                         }
 
-                        BillingManagerResponse.NoPremium -> {
-                            if (previouslyHadPremium == true) {
-                                _showPremiumEndedDialog.value = true
+                        is BillingManagerResponse.NoPremium -> {
+                            val previouslyHadPremium = userDataStore.hasPreviouslyHadPremium(response.uid)
+
+                                if (previouslyHadPremium) {
+                                    _showPremiumEndedDialog.value = true
+                                    userDataStore.savePreviouslyHadPremium(response.uid, false)
+                                }
                             }
 
-                            previouslyHadPremium = false
-                        }
-
-                        BillingManagerResponse.NoDocument -> {
-                            // Sem documento, não afirmamos que uma
-                            // assinatura acabou de ser encerrada.
-                        }
-
-                        is BillingManagerResponse.Error -> {
-                            // Erro não significa perda do Premium.
-                        }
+                        else -> Unit
                     }
 
                     _subscriptionState.value = response
@@ -107,15 +101,12 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun setLastRoute(route: String) {
-        viewModelScope.launch {
-            lastScreenDatastore.setLastScreenProfile(route)
-        }
+        viewModelScope.launch { lastScreenDatastore.setLastScreenProfile(route) }
     }
 
     fun confirmSellerDisconnect() {
-        viewModelScope.launch {
-            _sellerConnection.update { SellerConnectionState.NotConnected }
-            userRepository.clearData()
-        }
+        _sellerConnection.value = SellerConnectionState.NotConnected
+
+        viewModelScope.launch { userRepository.clearData() }
     }
 }
