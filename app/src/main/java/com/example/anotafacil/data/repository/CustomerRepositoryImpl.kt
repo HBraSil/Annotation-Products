@@ -203,7 +203,7 @@ class CustomerRepositoryImpl @Inject constructor(
     }
 
 
-    private suspend fun getOwnerId(): Result<String> {
+    /*private suspend fun getOwnerId(): Result<String> {
         val firebaseUid = auth.currentUser?.uid
             ?: return Result.failure(
                 Exception("Usuário não está autenticado")
@@ -214,17 +214,13 @@ class CustomerRepositoryImpl @Inject constructor(
                 return Result.failure(it)
             }
 
-        val ownerId = when (user.role) {
-            UserRole.OWNER -> user.uid
-            UserRole.SELLER -> user.ownerId
-        }
 
-        return if (ownerId.isNullOrBlank()) {
+        return if (user.currentOwnerUid.isNullOrBlank()) {
             Result.failure(
                 Exception("Não foi possível identificar o proprietário")
             )
         } else {
-            Result.success(ownerId)
+            Result.success(user.currentOwnerUid)
         }
-    }
+    }*/
 }

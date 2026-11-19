@@ -44,16 +44,15 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.automirrored.outlined.ArrowForward
 import androidx.compose.material.icons.outlined.CloudDone
 import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.Lock
-import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material.icons.automirrored.outlined.TrendingUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import com.example.anotafacil.ui.components.EasyNoteLoadingOverlay
 
 
 @Composable
@@ -79,7 +78,7 @@ fun SubscriptionScreen(
 
     SubscriptionContent(
         uiState = uiState,
-        onSubscribeClick = { subscriptionViewModel.testPremiumPurchase(activity = activity) },
+        onSubscribeClick = { subscriptionViewModel.premiumPurchase(activity = activity) },
         onRetryClick = subscriptionViewModel::loadSubscriptionProduct,
         onBackClick = onBackClick
     )
@@ -116,7 +115,6 @@ fun SubscriptionContent(
             )
         }
     ) { innerPadding ->
-        // O scroll é estado visual local: não precisa ir para o ViewModel.
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -139,6 +137,13 @@ fun SubscriptionContent(
             SubscriptionFooter(
                 onTermsClick = {},
                 onPrivacyClick = {}
+            )
+        }
+
+        if (uiState.isLoading) {
+            EasyNoteLoadingOverlay(
+                modifier = Modifier.fillMaxSize(),
+                text = "Configurando seu plano..."
             )
         }
     }

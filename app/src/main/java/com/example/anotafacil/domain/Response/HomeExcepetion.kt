@@ -31,6 +31,8 @@ sealed interface SellerConnectionState {
     data object Connected : SellerConnectionState
 
     data object Disconnected : SellerConnectionState
+    data object NotApplicable : SellerConnectionState
+
     data class Error(
         val message: String?
     ) : SellerConnectionState

@@ -16,10 +16,7 @@ class ProductRepositoryImpl @Inject constructor(
     private suspend fun currentOwnerId(): String? {
         val currentUser = userRepository.getCurrentUser().getOrNull() ?: return null
 
-        return when (currentUser.role) {
-            UserRole.OWNER -> currentUser.uid
-            UserRole.SELLER -> currentUser.ownerId
-        }
+        return currentUser.currentOwnerUid ?: throw IllegalStateException("Owner not found")
     }
 
     override suspend fun getAllProducts(): List<Product> {

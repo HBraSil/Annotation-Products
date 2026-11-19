@@ -4,6 +4,7 @@ import android.app.Activity
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.billingclient.api.BillingClient
 import com.android.billingclient.api.ProductDetails
 import com.android.billingclient.api.Purchase
 import com.example.anotafacil.data.billing.BillingManager
@@ -22,8 +23,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SubscriptionViewModel @Inject constructor(
     private val userRepository: UserRepository,
-    private val billingManager: BillingManager
-): ViewModel() {
+    private val billingManager: BillingManager,
+) : ViewModel() {
 
     private val _subscriptionState = MutableStateFlow(SubscriptionState())
     val subscriptionState: StateFlow<SubscriptionState> = _subscriptionState.asStateFlow()
@@ -31,8 +32,19 @@ class SubscriptionViewModel @Inject constructor(
     private var subscriptionProduct: ProductDetails? = null
     private var subscriptionOfferToken: String? = null
 
+
     init {
         loadSubscriptionProduct()
+        processPurchase()
+    }
+
+    private fun processPurchase() {
+        viewModelScope.launch {
+            billingManager.purchaseUpdates.collect {
+                if (it.isEmpty()) return@collect
+                finalizeSubscription()
+            }
+        }
     }
 
     fun loadSubscriptionProduct() {
@@ -89,72 +101,33 @@ class SubscriptionViewModel @Inject constructor(
         }
     }
 
-    fun testPremiumPurchase(activity: Activity) {
-        viewModelScope.launch {
-            val productDetails = subscriptionProduct ?: return@launch
-            val offerToken = subscriptionOfferToken ?: return@launch
+    fun premiumPurchase(activity: Activity) {
+        val productDetails = subscriptionProduct ?: return
+        val offerToken = subscriptionOfferToken ?: return
 
-            val result = billingManager.launchSubscriptionPurchase(
-                activity = activity,
-                productDetails = productDetails,
-                offerToken = offerToken
-            ) ?: return@launch
+        val result = billingManager.launchSubscriptionPurchase(
+            activity = activity,
+            productDetails = productDetails,
+            offerToken = offerToken
+        )
 
-            Log.d(
-                "BillingTest",
-                "Resultado da abertura: ${result.responseCode} - ${result.debugMessage}"
-            )
+        if (
+            result == null ||
+            result.responseCode != BillingClient.BillingResponseCode.OK
+        ) {
+            _subscriptionState.update {
+                it.copy(
+                    errorMessage = "Não foi possível iniciar a compra. Tente novamente."
+                )
+            }
         }
+
     }
+
 
     fun restoreSubscriptionPurchases() {
         billingManager.restoreSubscriptionPurchases()
     }
-
-    fun testGooglePlaySubscription() {
-        viewModelScope.launch {
-            val purchases = billingManager.queryActiveSubscriptions()
-
-            val purchase = purchases.firstOrNull {
-                it.purchaseState == Purchase.PurchaseState.PURCHASED
-            }
-
-            if (purchase == null) {
-                Log.d(
-                    "BillingTest",
-                    "Nenhuma assinatura comprada foi encontrada."
-                )
-                return@launch
-            }
-
-            try {
-                val result = FirebaseFunctions
-                    .getInstance("southamerica-east1")
-                    .getHttpsCallable("verifySubscription")
-                    .call(
-                        mapOf(
-                            "purchaseToken" to purchase.purchaseToken
-                        )
-                    )
-                    .await()
-
-                Log.d(
-                    "BillingTest",
-                    "Resposta do Google Play: ${result.data}"
-                )
-
-            } catch (e: FirebaseFunctionsException) {
-                Log.e(
-                    "BillingTest",
-                    "Erro na Cloud Function: ${e.code} - ${e.message}"
-                )
-            } catch (e: Exception) {
-                Log.e("BillingTest", "Erro inesperado", e)
-            }
-        }
-    }
-
-
 
     fun finalizeSubscription() {
         _subscriptionState.value = SubscriptionState(isLoading = true)
@@ -162,7 +135,6 @@ class SubscriptionViewModel @Inject constructor(
         viewModelScope.launch {
             userRepository.becomeOwner()
                 .onSuccess {
-                    // Handle success
                     _subscriptionState.update { it.copy(isLoading = false, success = true) }
                     Log.d("SubscriptionViewModel", "Subscription finalized")
                 }

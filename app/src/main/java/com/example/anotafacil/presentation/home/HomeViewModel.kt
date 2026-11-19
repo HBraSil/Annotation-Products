@@ -48,45 +48,19 @@ class HomeViewModel @Inject constructor(
 
     fun loadOwnerInfo() {
         viewModelScope.launch {
-            userRepository.observeOwnerInfo()
+            userRepository.observeCurrentUser()
                 .collect { result ->
-                    when (result) {
-                        is HomeResponse.Success -> {
+                    result
+                        .onSuccess { user ->
                             _uiState.update {
-                                it.copy(ownerUser = result.users.owner)
+                                it.copy(ownerUser = user)
                             }
                         }
-
-                        is HomeResponse.NotFound -> {
+                        .onFailure { throwable ->
                             _homeEvent.emit(
-                                HomeEvent.ShowMessage(result.message)
+                                HomeEvent.ShowMessage(throwable.message)
                             )
                         }
-
-                        is HomeResponse.NotAuthenticated -> {
-                            _homeEvent.emit(
-                                HomeEvent.UserNotAuthenticated("Você não está autenticado. Faça login novamente.")
-                            )
-                        }
-
-                        is HomeResponse.ErrorToParse -> {
-                            _homeEvent.emit(
-                                HomeEvent.ShowMessage("Não foi possível carregar os dados. Tente novamente.")
-                            )
-                        }
-
-                        is HomeResponse.Error -> {
-                            _homeEvent.emit(
-                                HomeEvent.ShowMessage(result.message)
-                            )
-                        }
-
-                        else -> {
-                            _homeEvent.emit(
-                                HomeEvent.ShowMessage("Não foi possível carregar os dados. Tente novamente.")
-                            )
-                        }
-                    }
                 }
         }
     }

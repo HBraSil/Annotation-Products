@@ -47,30 +47,17 @@ class MainActivity : ComponentActivity() {
                 darkScrim = Color.TRANSPARENT
             )
         )
-            Log.d(
-                "APP_LIFECYCLE",
-                "MainActivity manager = ${
-                    System.identityHashCode(appForegroundManager)
-                }"
-            )
 
         setContent {
             val showEmailChangedDialog by appForegroundManager
                 .showEmailChangedDialog
                 .collectAsStateWithLifecycle()
 
-            val sellerConnection by mainActivityViewModel
-                .sellerConnection
-                .collectAsStateWithLifecycle()
+            val mainActivityUiState by mainActivityViewModel
+                .mainActivityUiState
+                .collectAsState()
 
-            val hasPremium by mainActivityViewModel
-                .subscriptionState
-                .collectAsStateWithLifecycle()
-
-            val showPremiumEndedDialog by mainActivityViewModel
-                .showPremiumEndedDialog
-                .collectAsStateWithLifecycle()
-
+            Log.d("MainActivity", "mainActivityUiState: ${mainActivityUiState.navigateToOwner}")
 
 
             AnotacoesDeProdutosTheme {
@@ -81,14 +68,14 @@ class MainActivity : ComponentActivity() {
                     val startDestination = remember { initialScreen }
 
                     ProductsAnnotationApp(
-                        sellerConnection = sellerConnection,
-                        hasPremium = showPremiumEndedDialog,
+                        uiState = mainActivityUiState,
                         showEmailChangedDialog = showEmailChangedDialog,
                         startDestination = startDestination,
                         dismissEmailChangedDialog = appForegroundManager::dismissEmailChangedDialog,
-                        dismissDialog = mainActivityViewModel::dismissPremiumEndedDialog,
                         confirmSellerDisconnect = mainActivityViewModel::confirmSellerDisconnect,
                         setLastRoute = mainActivityViewModel::setLastRoute,
+                        dismissDialog = mainActivityViewModel::dismissPremiumEndedDialog,
+                        onOwnerNavigationHandled = mainActivityViewModel::onOwnerNavigationHandled
                     )
                 }
             }

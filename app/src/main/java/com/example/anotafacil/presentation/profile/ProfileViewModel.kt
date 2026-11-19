@@ -49,23 +49,20 @@ class ProfileViewModel @Inject constructor(
 
     private fun getOwner() {
         viewModelScope.launch {
-            userRepository.observeOwnerInfo().collect { result ->
-                when (result) {
-                    is HomeResponse.Success -> {
-                        _uiState.update { it.copy(user = result.users.owner) }
-                    }
-                    is HomeResponse.NotFound -> {
-                        _uiState.update { it.copy(isUserDisconnected = "Proprietário não encontrado") }
-                    }
-                    is HomeResponse.Disconnected -> {
-                        _uiState.update { it.copy(message = "Você foi desconectado do proprietário") }
-                    }
-                    is HomeResponse.Error -> {
-                        _uiState.update { it.copy(message = result.message) }
-                    }
-                    else -> {}
+            userRepository.observeCurrentUser()
+                .collect { result ->
+                    result
+                        .onSuccess { user ->
+                            _uiState.update {
+                                it.copy(user = user)
+                            }
+                        }
+                        .onFailure { throwable ->
+                            _uiState.update {
+                                it.copy(message = throwable.message)
+                            }
+                        }
                 }
-            }
         }
     }
 

@@ -27,6 +27,20 @@ interface UserDao {
     @Query("UPDATE user SET role = :userRole WHERE uid = :uid")
     suspend fun updateRole(uid: String, userRole: UserRole)
 
+    @Query("""
+    UPDATE user
+    SET name = :name,
+        email = :email,
+        ownerId = :ownerId
+    WHERE uid = :uid
+""")
+    suspend fun updateRemoteUserInfo(
+        uid: String,
+        name: String,
+        email: String,
+        ownerId: String?
+    ): Int
+
     @Query("SELECT * FROM user WHERE uid = :uid")
     suspend fun getUserDao(uid: String): UserEntity?
 

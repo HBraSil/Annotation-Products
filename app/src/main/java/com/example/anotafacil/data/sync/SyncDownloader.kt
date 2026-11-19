@@ -13,6 +13,7 @@ import com.example.anotafacil.data.entity.CustomerEntity
 import com.example.anotafacil.data.entity.PaymentEntity
 import com.example.anotafacil.data.entity.ProductEntity
 import com.example.anotafacil.data.entity.PurchaseEntity
+import com.example.anotafacil.data.firestore.FirestoreSchema
 import com.example.anotafacil.data.model.FirestorePurchase
 import com.example.anotafacil.data.network.AppDatabase
 import com.example.anotafacil.domain.model.SyncStatus
@@ -37,11 +38,11 @@ class SyncDownloader @Inject constructor(
 
     suspend fun downloadAll(ownerId: String): Boolean {
         return withContext(Dispatchers.IO) {
-            Log.d("Down", "Downloading all data for owner: $ownerId")
+            Log.d("SyncDownadAll", "Downloading all data for owner: $ownerId")
 
             val citiesSuccess = downloadCities(ownerId)
             if (!citiesSuccess) {
-                Log.d("Down", "Failed to download cities")
+                Log.d("SyncDownloader", "Failed to download cities")
                 return@withContext false
             }
 
@@ -55,7 +56,7 @@ class SyncDownloader @Inject constructor(
                 )
 
                 if (!success) {
-                    Log.d("Down", "Failed to download city: ${city.name}")
+                    Log.d("SyncDownloader", "Failed to download city: ${city.name}")
                     return@withContext false
                 }
             }
@@ -67,12 +68,14 @@ class SyncDownloader @Inject constructor(
 
     private suspend fun downloadCities(ownerId: String): Boolean {
 
+        Log.d("downloadCities", "Downloading cities for owner: $ownerId")
         val snapshot = firestore
-            .collection("owners")
+            .collection(FirestoreSchema.Collections.OWNERS)
             .document(ownerId)
-            .collection("cities")
+            .collection(FirestoreSchema.OwnersCollections.CITIES)
             .get()
             .await()
+        Log.d("downloadCities", "depois de snapshot")
 
         for (document in snapshot.documents) {
             val cityId = Uuid.parse(document.id)

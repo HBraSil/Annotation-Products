@@ -1,16 +1,12 @@
 package com.example.anotafacil.data.sync
 
 import android.util.Log
-import com.example.anotafacil.data.dao.CityDao
 import com.example.anotafacil.data.dao.CustomerDao
 import com.example.anotafacil.data.network.RemoteDatabase
 import com.example.anotafacil.data.util.NetworkChecker
-import com.example.anotafacil.domain.model.UserRole
 import com.example.anotafacil.domain.model.toEntity
 import com.example.anotafacil.domain.repository.UserRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.uuid.Uuid
@@ -32,27 +28,17 @@ class SyncManager @Inject constructor(
         }
 
         return try {
-            val remoteUser = remoteDb.getUserData { uid ->
-                val currentUser = userRepository.getCurrentUser(uid).getOrNull()
-
-                currentUser?.let {
-                    Log.d("SyncManager", "getUserData upload: $it")
-                    return@getUserData it.toEntity()
-                }
-            }.getOrElse {
+            val remoteUser = remoteDb.getUserData().getOrElse {
                 return Result.failure(it)
             }
 
-            val ownerUid = when (remoteUser.role) {
-                UserRole.OWNER -> remoteUser.uid
-                UserRole.SELLER -> remoteUser.ownerId
-            }
+            val currentLocalUser = userRepository.getCurrentUser().getOrNull()
+                ?: return Result.failure(Exception("Usuário não encontrado"))
 
-            if (ownerUid == null) {
-                return Result.failure(Exception("Você não está mais conectado a um proprietário"))
-            }
 
-            Result.success(syncUploader.upload(ownerUid))
+            val ownerId = currentLocalUser.currentOwnerUid ?: return Result.failure(Exception("Você não está mais conectado a um proprietário"))
+
+            Result.success(syncUploader.upload(ownerId))
         } catch (e: FirebaseFirestoreException) {
             if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) {
                 return Result.failure(Exception("Sem conexão com a internet"))
@@ -72,34 +58,25 @@ class SyncManager @Inject constructor(
         }
 
         return try {
-            val remoteUser = remoteDb.getUserData { uid ->
-                val currentUser = userRepository.getCurrentUser(uid).getOrNull()
-
-                currentUser?.let {
-                    Log.d("SyncManager", "getUserData: $it")
-                    return@getUserData it.toEntity()
-                }
-            }.getOrElse {
+            val remoteUser = remoteDb.getUserData().getOrElse {
                 return Result.failure(it)
             }
 
-            val ownerUid = when (remoteUser.role) {
-                UserRole.OWNER -> remoteUser.uid
-                UserRole.SELLER -> remoteUser.ownerId
-            }
+            val currentLocalUser = userRepository.getCurrentUser().getOrNull()
+                ?: return Result.failure(Exception("Usuário não encontrado"))
 
-            if (ownerUid == null) {
-                return Result.failure(Exception("Você não está mais conectado a um proprietário"))
-            }
+            Log.d("SyncManager", "currentLocalUser: $currentLocalUser")
+            val ownerId = currentLocalUser.currentOwnerUid ?: return Result.failure(Exception("Você não está mais conectado a um proprietário"))
 
-            Result.success(syncDownloader.downloadAll(ownerUid))
+            Result.success(syncDownloader.downloadAll(ownerId))
         } catch (e: CancellationException) {
-            Log.d("Cancellation", "CAIU AQUI loadSellerAndOwnerInfo DOWNLOAD: ${e.message}")
+            Log.d("Fail", "CAIU AQUI DOWNLOAD: ${e.message}")
             throw e
         } catch (e: FirebaseFirestoreException) {
             if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) {
                 return Result.failure(Exception("Sem conexão com a internet"))
             }
+            Log.d("Fail", "CAIU 12 DOWNLOAD: ${e.message}")
 
             Result.failure(Exception("Erro ao acessar o banco de dados remoto: ${e.message}"))
         } catch (e: Exception) {
@@ -117,29 +94,15 @@ class SyncManager @Inject constructor(
 
         return try {
 
-            val remoteUser = remoteDb.getUserData { uid ->
-                val currentUser = userRepository.getCurrentUser(uid).getOrNull()
-
-                currentUser?.let {
-                    Log.d("SyncManager", "getUserData download: $it")
-                    return@getUserData it.toEntity()
-                }
-            }.getOrElse {
+            val remoteUser = remoteDb.getUserData().getOrElse {
                 return Result.failure(it)
             }
 
-            val ownerUid = when (remoteUser.role) {
-                UserRole.OWNER -> remoteUser.uid
-                UserRole.SELLER -> remoteUser.ownerId
-            }
-
-            if (ownerUid == null) {
-                return Result.failure(Exception("Você não está mais conectado a um proprietário"))
-            }
+            val ownerId = remoteUser.currentOwnerUid ?: return Result.failure(Exception("Você não está mais conectado a um proprietário"))
 
             Result.success(
                 syncDownloader.downloadCityData(
-                    ownerId = ownerUid,
+                    ownerId = ownerId,
                     cityId = cityId
                 )
             )

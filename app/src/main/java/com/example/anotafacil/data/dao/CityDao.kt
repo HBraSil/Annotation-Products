@@ -103,6 +103,6 @@ interface CityDao {
       AND city.ownerId = :ownerId""")
     fun getMonthlySalesSummary(cityId: Uuid, startMonth: Long, endMonth: Long, ownerId: String): Flow<MonthlySalesSummary>
 
-    @Query("DELETE FROM city WHERE ownerId = :ownerId")
-    suspend fun deleteAll(ownerId: String)
+    @Query("DELETE FROM city")
+    suspend fun deleteAll()
 }

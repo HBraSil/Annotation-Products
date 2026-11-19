@@ -27,9 +27,9 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.anotafacil.domain.Response.BillingManagerResponse
 import com.example.anotafacil.domain.Response.SellerConnectionState
 import com.example.anotafacil.domain.model.WhichScreenToGo
+import com.example.anotafacil.presentation.MainActivityUiState
 import com.example.anotafacil.presentation.auth.ForgotPasswordScreen
 import com.example.anotafacil.presentation.auth.LoginScreen
 import com.example.anotafacil.presentation.auth.SignUpScreen
@@ -78,17 +78,18 @@ enum class Screens(val route: String) {
 
 @Composable
 fun ProductsAnnotationApp(
-    sellerConnection: SellerConnectionState,
-    hasPremium: Boolean,
+    uiState: MainActivityUiState,
     showEmailChangedDialog: Boolean,
     startDestination: String,
     dismissEmailChangedDialog: () -> Unit,
     confirmSellerDisconnect: () -> Unit,
     setLastRoute: (String) -> Unit,
-    dismissDialog: () -> Unit
+    dismissDialog: () -> Unit,
+    onOwnerNavigationHandled: () -> Unit
 ) {
     val navController = rememberNavController()
-
+    val backStackEntry = navController.currentBackStackEntryAsState()
+    val backStackRoute = backStackEntry.value?.destination?.route
 
     if (showEmailChangedDialog) {
         EasyNoteConfirmationDialog(
@@ -106,7 +107,7 @@ fun ProductsAnnotationApp(
     }
 
 
-    if (sellerConnection == SellerConnectionState.Disconnected) {
+    if (uiState.sellerConnection == SellerConnectionState.Disconnected) {
         Log.d("ProductsAnnotationApp", "SellerDisconnected")
         AnnotationProductsStatusDialog(
             text = "Você foi desconectado do proprietário",
@@ -125,7 +126,8 @@ fun ProductsAnnotationApp(
         )
     }
 
-    if (hasPremium ) {
+
+    if(uiState.showPremiumEndedDialog) {
         AnnotationProductsStatusDialog(
             text = "Você não tem uma assinatura ativa",
             confirmButtonText = "Sair",
@@ -137,6 +139,7 @@ fun ProductsAnnotationApp(
             confirmClick = {
                 dismissDialog()
                 navController.navigate(Screens.ROLE_SECTION.route) {
+                    Log.d("ProductsAnnotationApp", "Confirm click denrto da lambda")
                     popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                 }
             }
@@ -144,8 +147,30 @@ fun ProductsAnnotationApp(
     }
 
 
-    val backStackEntry = navController.currentBackStackEntryAsState()
-    val backStackRoute = backStackEntry.value?.destination?.route
+    LaunchedEffect(uiState.navigateToOwner, backStackRoute) {
+        Log.d("ProductsAnnotationApp", "LaunchedEffect: ${uiState.navigateToOwner}, $backStackRoute")
+        if (!uiState.navigateToOwner || backStackRoute == null) {
+            return@LaunchedEffect
+        }
+
+        val alreadyInOwnerFlow = backStackRoute in setOf(
+            Screens.OWNER_HOME.route,
+            Screens.OWNER_CUSTOMERS.route
+        )
+
+        if (!alreadyInOwnerFlow) {
+            navController.navigate(Screens.OWNER_HOME.route) {
+                popUpTo(navController.graph.findStartDestination().id) {
+                    inclusive = true
+                }
+                launchSingleTop = true
+            }
+        }
+
+        onOwnerNavigationHandled()
+    }
+
+
     Scaffold { innerPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             ProductsAnnotationApp(
@@ -230,6 +255,7 @@ fun ProductsAnnotationApp(
 
             LaunchedEffect(Unit){
                 lastRoute(Screens.ROLE_SECTION.route)
+                Log.d("RoleSection", "configurado com sucesso")
             }
 
             RoleSectionScreen (

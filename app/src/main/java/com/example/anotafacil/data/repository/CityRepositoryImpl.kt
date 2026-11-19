@@ -1,9 +1,9 @@
 package com.example.anotafacil.data.repository
 
+import android.util.Log
 import com.example.anotafacil.data.dao.CityDao
 import com.example.anotafacil.data.entity.toCity
 import com.example.anotafacil.domain.model.City
-import com.example.anotafacil.domain.model.UserRole
 import com.example.anotafacil.domain.model.toCityEntity
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.UserRepository
@@ -22,10 +22,7 @@ class CityRepositoryImpl @Inject constructor(
 
     private suspend fun currentOwnerId(): String? {
         val currentUser = userRepository.getCurrentUser().getOrNull() ?: return null
-        return when (currentUser.role) {
-            UserRole.OWNER -> currentUser.uid
-            UserRole.SELLER -> currentUser.ownerId
-        }
+        return currentUser.currentOwnerUid ?: throw IllegalStateException("Owner not found")
     }
 
     override fun getCities(): Flow<List<City>> = flow {

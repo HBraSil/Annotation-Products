@@ -1,9 +1,12 @@
 package com.example.anotafacil.data.repository
 
 import android.util.Log
+import com.example.anotafacil.data.firestore.FirestoreSchema
+import com.example.anotafacil.data.firestore.model.FirestoreUser
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.OwnerCode
 import com.example.anotafacil.domain.model.User
+import com.example.anotafacil.domain.model.UserRole
 import com.example.anotafacil.domain.repository.OwnerCodeRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -17,6 +20,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import java.security.SecureRandom
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.jvm.java
 
 class OwnerCodeRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
@@ -42,7 +46,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                     .padStart(6, '0')
 
                 val document = firestore
-                    .collection("ownerCodes")
+                    .collection(FirestoreSchema.Collections.OWNER_CODES)
                     .document(code)
                     .get()
                     .await()
@@ -59,7 +63,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
             )
 
             firestore
-                .collection("ownerCodes")
+                .collection(FirestoreSchema.Collections.OWNER_CODES)
                 .document(code)
                 .set(ownerCode)
                 .await()
@@ -75,10 +79,6 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
             Result.failure(e)
         } catch (e: Exception) {
-            Log.e(
-                "OwnerCodeRepository",
-                "Error generating code: ${e.message} e = ${e.cause} e = ${e.stackTrace}"
-            )
             Result.failure(Exception(e.message))
         }
     }
@@ -96,16 +96,15 @@ class OwnerCodeRepositoryImpl @Inject constructor(
             val now = System.currentTimeMillis()
 
             val snapshot = firestore
-                .collection("ownerCodes")
-                .whereEqualTo("ownerId", firebaseUserUid)
-                .whereGreaterThan("expiresAt", now)
+                .collection(FirestoreSchema.Collections.OWNER_CODES)
+                .whereEqualTo(FirestoreSchema.OwnerCodesFields.OWNER_ID, firebaseUserUid)
+                .whereGreaterThan(FirestoreSchema.OwnerCodesFields.EXPIRES_AT, now)
                 .limit(1)
                 .get()
                 .await()
 
             val document = snapshot.documents.firstOrNull()
-            val ownerCode =
-                document?.toObject(OwnerCode::class.java) ?: return Result.failure(Exception())
+            val ownerCode = document?.toObject(OwnerCode::class.java) ?: return Result.failure(Exception())
 
             Result.success(ownerCode)
         } catch (e: Exception) {
@@ -147,20 +146,12 @@ class OwnerCodeRepositoryImpl @Inject constructor(
     }
 
 
-    private suspend fun currentUserIsOwner(): User?{
+    private suspend fun currentUserIsOwner(): User? {
         val firebaseUserUid = auth.currentUser?.uid ?: return null
 
 
-        val userTest = firestore.collection("sellers")
-            .document(firebaseUserUid)
-            .get()
-            .await()
-
-        Log.d("OwnerCodeRepository", "userTest: ${userTest.toObject(User::class.java)}")
-
-
         val document = firestore
-            .collection("owners")
+            .collection(FirestoreSchema.Collections.OWNERS)
             .document(firebaseUserUid)
             .get()
             .await()
@@ -173,7 +164,7 @@ class OwnerCodeRepositoryImpl @Inject constructor(
 
     private suspend fun isCodeWorking(code: String): Result<OwnerCode> {
         val document = firestore
-            .collection("ownerCodes")
+            .collection(FirestoreSchema.Collections.OWNER_CODES)
             .document(code)
             .get()
             .await()
@@ -202,17 +193,15 @@ class OwnerCodeRepositoryImpl @Inject constructor(
                 ?: return Result.failure(Exception("Usuário não autenticado."))
 
             firestore
-                .collection("sellers")
+                .collection(FirestoreSchema.Collections.USERS)
                 .document(firebaseUserUid)
-                .update("ownerId", ownerCode.ownerId)
+                .update(FirestoreSchema.UsersFields.OWNER_ID, ownerCode.ownerId)
                 .await()
 
-            Log.d(
-                "OwnerCodeRepository",
-                "Seller vinculado ao owner: ${ownerCode.ownerId}"
-            )
-
             Result.success(true)
+
+        } catch (e: CancellationException) {
+            throw e
 
         } catch (e: Exception) {
             Result.failure(e)
@@ -224,12 +213,25 @@ class OwnerCodeRepositoryImpl @Inject constructor(
         val firebaseUserUid = auth.currentUser?.uid ?: return emptyFlow()
 
         return firestore
-            .collection("sellers")
-            .whereEqualTo("ownerId", firebaseUserUid)
+            .collection(FirestoreSchema.Collections.USERS)
+            .whereEqualTo(FirestoreSchema.UsersFields.OWNER_ID, firebaseUserUid)
             .snapshots()
             .map { snapshot ->
                 Result.success(
-                    snapshot.toObjects(User::class.java)
+                    snapshot.documents.mapNotNull { document ->
+                        snapshot.toObjects(User::class.java)
+
+                        val remoteUser = document.toObject(FirestoreUser::class.java)
+                            ?: throw IllegalStateException("Erro ao recuperar os dados do vendedor")
+
+                        User(
+                            uid = document.id,
+                            name = remoteUser.name,
+                            email = remoteUser.email,
+                            ownerId = remoteUser.ownerId,
+                            role = UserRole.SELLER
+                        )
+                    }
                 )
             }
             .catch { e ->
@@ -241,9 +243,9 @@ class OwnerCodeRepositoryImpl @Inject constructor(
     override suspend fun disconnectOwnerFromSeller(sellerUid: String): Result<Boolean> {
         return try {
             firestore
-                .collection("sellers")
+                .collection(FirestoreSchema.Collections.USERS)
                 .document(sellerUid)
-                .update("ownerId", null)
+                .update(FirestoreSchema.UsersFields.OWNER_ID, null)
                 .await()
 
 

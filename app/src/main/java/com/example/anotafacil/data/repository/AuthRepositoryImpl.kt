@@ -2,6 +2,8 @@ package com.example.anotafacil.data.repository
 
 import android.util.Log
 import com.example.anotafacil.data.dao.UserDao
+import com.example.anotafacil.data.firestore.FirestoreSchema
+import com.example.anotafacil.data.firestore.model.FirestoreUser
 import com.example.anotafacil.data.util.GoogleSignInUtils
 import com.example.anotafacil.data.util.NetworkChecker
 import com.example.anotafacil.domain.model.User
@@ -11,6 +13,7 @@ import com.example.anotafacil.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
@@ -36,55 +39,64 @@ class AuthRepositoryImpl @Inject constructor(
                     val firebaseUser = authResult.user
                     val uid = firebaseUser?.uid ?: return Result.failure(Exception("Erro ao fazer login"))
 
-                    val sellerUser = firestore.collection("sellers")
+                    val userRef  = firestore
+                        .collection(FirestoreSchema.Collections.USERS)
                         .document(uid)
-                        .get()
+
+                    val userSnapshot = userRef
+                        .get(Source.SERVER)
                         .await()
 
-                    val ownerUser = firestore.collection("owners")
-                        .document(uid)
-                        .get()
-                        .await()
 
-                    val newUser = User(uid = uid, name = firebaseUser.displayName ?: "", email = firebaseUser.email ?: "")
-
-                    val resolvedUser = when {
-                        ownerUser.exists() -> {
-                            val remoteOwner = ownerUser.toObject(User::class.java) ?: newUser
-                            remoteOwner.copy(
-                                uid = uid,
-                                name = remoteOwner.name.ifBlank { firebaseUser.displayName ?: "" },
-                                email = remoteOwner.email.ifBlank { firebaseUser.email ?: "" },
-                                role = UserRole.OWNER,
-                                ownerId = null
+                    val remoteUser = if (userSnapshot.exists()) {
+                        userSnapshot.toObject(FirestoreUser::class.java)
+                            ?: throw Exception(
+                                "Erro ao recuperar os dados do usuário"
                             )
-                        }
-
-                        sellerUser.exists() -> {
-                            val remoteSeller = sellerUser.toObject(User::class.java) ?: newUser
-                            remoteSeller.copy(
-                                uid = uid,
-                                name = remoteSeller.name.ifBlank { firebaseUser.displayName ?: "" },
-                                email = remoteSeller.email.ifBlank { firebaseUser.email ?: "" },
-                                role = UserRole.SELLER,
-                                ownerId = remoteSeller.ownerId
-                            )
-                        }
-
-                        else -> newUser.copy(
-                            role = UserRole.SELLER,
+                    } else {
+                        val newUser = FirestoreUser(
+                            //uid = uid,
+                            name = firebaseUser.displayName.orEmpty(),
+                            email = firebaseUser.email.orEmpty(),
                             ownerId = null
                         )
+
+                        userRef.set(newUser).await()
+                        newUser
                     }
 
-                    if (!sellerUser.exists() && !ownerUser.exists()) {
-                        firestore.collection("sellers")
-                            .document(uid)
-                            .set(resolvedUser)
-                            .await()
+                    // 3. Consultar o acesso de proprietário
+                    val entitlementSnapshot = firestore
+                        .collection(
+                            FirestoreSchema.Collections.SUBSCRIPTION_ENTITLEMENTS
+                        )
+                        .document(uid)
+                        .get(Source.SERVER)
+                        .await()
+
+                    val hasOwnerAccess = entitlementSnapshot.getBoolean(
+                        FirestoreSchema.SubscriptionFields.HAS_OWNER_ACCESS
+                    ) == true
+
+                    Log.d("AuthRepositoryImpl", "loginWithGoogle: $hasOwnerAccess")
+
+                    // 4. Determinar o papel atual
+                    val role: UserRole? = when {
+                        hasOwnerAccess -> UserRole.OWNER
+                        !remoteUser.ownerId.isNullOrBlank() -> UserRole.SELLER
+                        else -> null
                     }
 
-                    userDao.saveUserDao(resolvedUser.toEntity())
+                    // 5. Construir o usuário do aplicativo
+                    val user = User(
+                        uid = uid,
+                        name = remoteUser.name,
+                        email = remoteUser.email,
+                        ownerId = remoteUser.ownerId,
+                        role = role
+                    )
+
+                    userDao.saveUserDao(user.toEntity())
 
                     Result.success(true)
                 },
@@ -139,7 +151,7 @@ class AuthRepositoryImpl @Inject constructor(
             val user = User(uid = firebaseUserUid, name = name, email = email)
 
 
-            firestore.collection("sellers")
+            firestore.collection(FirestoreSchema.Collections.USERS)
                 .document(firebaseUserUid)
                 .set(user)
                 .await()

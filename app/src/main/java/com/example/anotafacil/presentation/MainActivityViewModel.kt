@@ -9,7 +9,6 @@ import com.example.anotafacil.domain.datastore.UserDataStore
 import com.example.anotafacil.domain.Response.BillingManagerResponse
 import com.example.anotafacil.domain.Response.SellerConnectionState
 import com.example.anotafacil.domain.repository.UserRepository
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,16 +33,8 @@ class MainActivityViewModel @Inject constructor(
         initialValue = null
     )
 
-    private val _sellerConnection = MutableStateFlow<SellerConnectionState>(SellerConnectionState.NotConnected)
-    val sellerConnection: StateFlow<SellerConnectionState> = _sellerConnection.asStateFlow()
-
-
-    private val _subscriptionState = MutableStateFlow<BillingManagerResponse>(BillingManagerResponse.Unknown)
-    val subscriptionState: StateFlow<BillingManagerResponse> = _subscriptionState.asStateFlow()
-
-
-    private val _showPremiumEndedDialog = MutableStateFlow(false)
-    val showPremiumEndedDialog: StateFlow<Boolean> = _showPremiumEndedDialog.asStateFlow()
+    private val _mainActivityUiState = MutableStateFlow(MainActivityUiState())
+    val mainActivityUiState: StateFlow<MainActivityUiState> = _mainActivityUiState.asStateFlow()
 
 
     init {
@@ -56,8 +47,8 @@ class MainActivityViewModel @Inject constructor(
         viewModelScope.launch {
             userRepository
                 .observeSellerConnectionWithOwner()
-                .collect {
-                    _sellerConnection.value = it
+                .collect { response ->
+                    _mainActivityUiState.update { it.copy(sellerConnection = response) }
                 }
         }
     }
@@ -71,42 +62,77 @@ class MainActivityViewModel @Inject constructor(
 
                     when (response) {
                         is BillingManagerResponse.Disconnected -> {
-                            _showPremiumEndedDialog.value = false
+                            _mainActivityUiState.update { it.copy(sellerConnection = SellerConnectionState.NotConnected) }
                         }
 
                         is BillingManagerResponse.HasPremium -> {
+                            val previouslyHadPremium = userDataStore.wasPremiumActive(response.uid)
+                            if (!previouslyHadPremium) {
+                                _mainActivityUiState.update {
+                                    it.copy(navigateToOwner = true)
+                                }
+                            }
+
                             userDataStore.savePreviouslyHadPremium(response.uid, true)
-                            _showPremiumEndedDialog.value = false
                         }
 
                         is BillingManagerResponse.NoPremium -> {
-                            val previouslyHadPremium = userDataStore.hasPreviouslyHadPremium(response.uid)
+                            val previouslyHadPremium = userDataStore.wasPremiumActive(response.uid)
 
-                                if (previouslyHadPremium) {
-                                    _showPremiumEndedDialog.value = true
-                                    userDataStore.savePreviouslyHadPremium(response.uid, false)
+                            Log.d("MainActivityViewModel", "previouslyHadPremium: $previouslyHadPremium")
+                            if (previouslyHadPremium) {
+                                _mainActivityUiState.update {
+                                    it.copy(
+                                        showPremiumEndedDialog = true,
+                                        navigateToOwner = false
+                                    )
                                 }
                             }
+
+                            userDataStore.savePreviouslyHadPremium(response.uid, false)
+                        }
 
                         else -> Unit
                     }
 
-                    _subscriptionState.value = response
                 }
         }
     }
 
     fun dismissPremiumEndedDialog() {
-        _showPremiumEndedDialog.value = false
+        _mainActivityUiState.update { it.copy(showPremiumEndedDialog = false) }
     }
 
     fun setLastRoute(route: String) {
+        Log.d("MainActivityViewModel", "setLastRoute: $route")
         viewModelScope.launch { lastScreenDatastore.setLastScreenProfile(route) }
     }
 
     fun confirmSellerDisconnect() {
-        _sellerConnection.value = SellerConnectionState.NotConnected
+        viewModelScope.launch {
+            userRepository.clearData()
+                .onSuccess {
+                    _mainActivityUiState.update {
+                        it.copy(
+                            sellerConnection = SellerConnectionState.NotConnected
+                        )
+                    }
+                }
+                .onFailure { error ->
+                    // Apresentar o erro ao usuário.
+                }
+        }
+    }
 
-        viewModelScope.launch { userRepository.clearData() }
+    fun onOwnerNavigationHandled() {
+        _mainActivityUiState.update { it.copy(navigateToOwner = false) }
     }
 }
+
+
+
+data class MainActivityUiState(
+    val showPremiumEndedDialog: Boolean = false,
+    val navigateToOwner: Boolean = false,
+    val sellerConnection: SellerConnectionState = SellerConnectionState.NotConnected
+)

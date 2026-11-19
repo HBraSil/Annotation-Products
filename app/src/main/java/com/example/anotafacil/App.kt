@@ -4,6 +4,8 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.ProcessLifecycleOwner
 import com.example.anotafacil.data.util.AppForegroundManager
+import com.google.firebase.firestore.BuildConfig
+import com.google.firebase.firestore.FirebaseFirestore
 import dagger.hilt.android.HiltAndroidApp
 import jakarta.inject.Inject
 
@@ -21,6 +23,10 @@ class App : Application() {
                 System.identityHashCode(appForegroundManager)
             }"
         )
+
+        if (BuildConfig.DEBUG) {
+            FirebaseFirestore.setLoggingEnabled(true)
+        }
 
         ProcessLifecycleOwner
             .get()

@@ -45,8 +45,8 @@ interface ProductDao {
     @Query("SELECT * FROM product WHERE name LIKE '%' || :query || '%' AND (ownerId = :ownerId OR ownerId = '')")
     suspend fun search(query: String, ownerId: String): List<ProductEntity>
 
-    @Query("DELETE FROM product WHERE ownerId = :ownerId")
-    suspend fun deleteAll(ownerId: String)
+    @Query("DELETE FROM product")
+    suspend fun deleteAll()
 
     @Query("""
     UPDATE product

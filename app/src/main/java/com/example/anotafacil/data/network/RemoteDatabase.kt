@@ -2,6 +2,7 @@ package com.example.anotafacil.data.network
 
 import android.util.Log
 import com.example.anotafacil.data.entity.UserEntity
+import com.example.anotafacil.data.firestore.FirestoreSchema
 import com.example.anotafacil.domain.model.User
 import com.example.anotafacil.domain.model.UserRole
 import com.google.firebase.auth.FirebaseAuth
@@ -13,30 +14,19 @@ class RemoteDatabase @Inject constructor(
     private val firestore: FirebaseFirestore,
     private val auth: FirebaseAuth
 ) {
-    suspend fun getUserData(getUserEntity: suspend (String) -> UserEntity?): Result<User> {
+    suspend fun getUserData(): Result<User> {
         return try {
             val firebaseUserUid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuário não autenticado"))
 
-            Log.d("RemoteDatabase", "firebaseUserUid: $firebaseUserUid, getUserRoleEntity: ${getUserEntity(firebaseUserUid)}")
-            val userEntity = getUserEntity(firebaseUserUid)
-                ?: return Result.failure(Exception("Tipo de usuário não encontrado"))
-
-            val collectionPath = when (userEntity.role) {
-                UserRole.OWNER -> "owners"
-                UserRole.SELLER -> "sellers"
-            }
-
             val document = firestore
-                .collection(collectionPath)
+                .collection(FirestoreSchema.Collections.USERS)
                 .document(firebaseUserUid)
                 .get()
                 .await()
 
-            if (!document.exists()) {
-                Log.d("RemoteDatabase", "Document not found")
-                return Result.failure(Exception("Usuário não encontrado"))
-            }
+            if (!document.exists()) return Result.failure(Exception("Usuário não encontrado"))
+
 
             val user = document.toObject(User::class.java)
                 ?: return Result.failure(Exception("Usuário inválido"))

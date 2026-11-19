@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface UserRepository {
     suspend fun observeOwnerInfo(ownerUid: String? = null): Flow<HomeResponse>
+    fun observeRemoteUser(): Flow<Result<User>>
 
     fun loadSellerAndOwnerInfo(): Flow<HomeResponse>
 
@@ -24,11 +25,13 @@ interface UserRepository {
 
     suspend fun clearData(): Result<Boolean>
 
-    suspend fun saveChanges(newUserName: User? = null, newUserEmail: User? = null): Result<String?>
+    suspend fun saveChanges(userWithNewName: User? = null, userWithNewEmail: User? = null): Result<String?>
 
     suspend fun checkEmailChange(): Result<Boolean>
 
     suspend fun signOut(): Result<Boolean>
 
     suspend fun resolveInitialDestination(): Result<WhichScreenToGo>
+
+    suspend fun acknowledgeSellerDisconnection(uid: String)
 }

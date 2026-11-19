@@ -11,7 +11,6 @@ import com.example.anotafacil.ui.validation.EmailValidator
 import com.example.anotafacil.ui.validation.NameValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -117,8 +116,8 @@ class AccountProfileViewModel @Inject constructor(
             with(_uiState.value) {
 
                 userRepository.saveChanges(
-                    newUserName = if (wasNameChanged) user?.copy(name = name.field) else null,
-                    newUserEmail = if (wasEmailChanged) user?.copy(email = email.field) else null
+                    userWithNewName = if (wasNameChanged) user?.copy(name = name.field) else null,
+                    userWithNewEmail = if (wasEmailChanged) user?.copy(email = email.field) else null
                 )
                     .onSuccess { text ->
                         _uiEvent.emit(

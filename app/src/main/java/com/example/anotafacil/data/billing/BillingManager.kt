@@ -14,6 +14,7 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.PurchasesResponseListener
+import com.example.anotafacil.data.firestore.FirestoreSchema
 import com.example.anotafacil.domain.Response.BillingManagerResponse
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -86,7 +87,7 @@ class BillingManager @Inject constructor(
             if (uid == null) return@flatMapLatest flowOf(BillingManagerResponse.Disconnected)
 
             firestore
-                .collection("subscriptionEntitlements")
+                .collection(FirestoreSchema.Collections.SUBSCRIPTION_ENTITLEMENTS)
                 .document(uid)
                 .snapshots(MetadataChanges.INCLUDE)
                 .map { snapshot ->
@@ -95,7 +96,7 @@ class BillingManager @Inject constructor(
                     }
                     if (!snapshot.exists()) return@map BillingManagerResponse.NoDocument
 
-                    when (snapshot.getBoolean("hasPremium")) {
+                    when (snapshot.getBoolean(FirestoreSchema.SubscriptionFields.HAS_OWNER_ACCESS)) {
                         true -> BillingManagerResponse.HasPremium(uid)
                         false -> BillingManagerResponse.NoPremium(uid)
 
@@ -123,12 +124,6 @@ class BillingManager @Inject constructor(
      * * *purchases*: contém os objetos Purchase relacionados à operação, incluindo informações como purchaseToken e purchaseState.*/
     private val purchasesUpdatedListener =
         PurchasesUpdatedListener { billingResult, purchases ->
-
-            Log.d(
-                "BillingTest",
-                "Compra: ${billingResult.responseCode} - " +
-                        billingResult.debugMessage
-            )
 
             if (
                 billingResult.responseCode ==
@@ -320,14 +315,11 @@ class BillingManager @Inject constructor(
     private suspend fun processPurchase(purchase: Purchase) {
         //if ("premium" !in purchase.products) return
 
-        if (purchase.purchaseState == Purchase.PurchaseState.PENDING) {
-            Log.d("BillingTest", "Pagamento pendente.")
-            return
-        }
+        if (purchase.purchaseState == Purchase.PurchaseState.PENDING) return
 
-        if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) {
-            return
-        }
+
+        if (purchase.purchaseState != Purchase.PurchaseState.PURCHASED) return
+
 
         verificationMutex.withLock {
             val uid = auth.currentUser?.uid
@@ -411,30 +403,6 @@ class BillingManager @Inject constructor(
         }
     }
 
-
-    suspend fun testVerifySubscriptionConnection(): String {
-        return try {
-            FirebaseFunctions
-                .getInstance("southamerica-east1")
-                .getHttpsCallable("verifySubscription")
-                .call(emptyMap<String, String>())
-                .await()
-
-            "Função respondeu com sucesso"
-
-        } catch (e: FirebaseFunctionsException) {
-            when (e.code) {
-                FirebaseFunctionsException.Code.INVALID_ARGUMENT ->
-                    "Conexão funcionando! A função recebeu nossa solicitação."
-
-                FirebaseFunctionsException.Code.UNAUTHENTICATED ->
-                    "O usuário não está autenticado no Firebase."
-
-                else ->
-                    "Erro na função: ${e.code}"
-            }
-        }
-    }
 
     private fun obfuscateAccountId(uid: String): String {
         val bytes = MessageDigest
