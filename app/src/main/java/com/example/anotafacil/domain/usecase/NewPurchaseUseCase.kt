@@ -9,7 +9,6 @@ import com.example.anotafacil.domain.repository.UserRepository
 import jakarta.inject.Inject
 
 class NewPurchaseUseCase @Inject constructor(
-    private val remoteDb: RemoteDatabase,
     private val userRepository: UserRepository,
     private val customerRepository: CustomerRepository
 ) {
@@ -18,7 +17,7 @@ class NewPurchaseUseCase @Inject constructor(
         purchase: Purchase
     ): Result<Unit> {
 
-        val remoteUser = remoteDb.getUserData().getOrElse {
+        val remoteUser = userRepository.getCurrentUser().getOrElse {
             return Result.failure(it)
         }
 
