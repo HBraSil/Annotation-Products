@@ -86,7 +86,7 @@ class CustomersViewModel @Inject constructor(
                         }
                     } else {
                         _customerUiState.update {
-                            it.copy(message = "Erro ao atualizar dados")
+                            it.copy(message = it.message ?: "Erro ao atualizar dados")
                         }
                     }
                 }

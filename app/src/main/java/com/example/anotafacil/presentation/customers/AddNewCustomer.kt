@@ -101,7 +101,8 @@ fun AddNewCustomerScreen(
                         AnnotationProductsTextField(
                             text = uiState.name,
                             onNameChange = onNameChange,
-                            placeholder = "Digite o nome do cliente"
+                            placeholder = "Digite o nome do cliente",
+                            capitalization = KeyboardCapitalization.Words
                         )
                     }
 
@@ -120,10 +121,9 @@ fun AddNewCustomerScreen(
                             letterSpacing = 0.5.sp
                         )
                         AnnotationProductsTextField(
-                            text = uiState.extraInfo ?: "",
+                            text = uiState.extraInfo,
                             onNameChange = onExtraInfoChange,
-                            placeholder = "Rua, Bairro, Perto de...",
-                            capitalization = KeyboardCapitalization.None
+                            placeholder = "Rua, Bairro, Perto de..."
                         )
                     }
                 }

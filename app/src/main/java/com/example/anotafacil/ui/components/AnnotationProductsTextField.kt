@@ -17,7 +17,7 @@ fun AnnotationProductsTextField(
     text: String,
     onNameChange: (String) -> Unit,
     placeholder: String,
-    capitalization: KeyboardCapitalization = KeyboardCapitalization.Words
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.None
 ) {
     TextField(
         value = text.replace(Regex("\\s+"), " "),

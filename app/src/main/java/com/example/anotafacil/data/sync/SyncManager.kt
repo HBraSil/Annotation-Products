@@ -1,10 +1,7 @@
 package com.example.anotafacil.data.sync
 
 import android.util.Log
-import com.example.anotafacil.data.dao.CustomerDao
-import com.example.anotafacil.data.network.RemoteDatabase
 import com.example.anotafacil.data.util.NetworkChecker
-import com.example.anotafacil.domain.model.toEntity
 import com.example.anotafacil.domain.repository.UserRepository
 import com.google.firebase.firestore.FirebaseFirestoreException
 import javax.inject.Inject
@@ -14,8 +11,6 @@ import kotlin.uuid.Uuid
 
 
 class SyncManager @Inject constructor(
-    private val customerDao: CustomerDao,
-    private val remoteDb: RemoteDatabase,
     private val userRepository: UserRepository,
     private val syncUploader: SyncUploader,
     private val syncDownloader: SyncDownloader,
@@ -28,10 +23,6 @@ class SyncManager @Inject constructor(
         }
 
         return try {
-            val remoteUser = remoteDb.getUserData().getOrElse {
-                return Result.failure(it)
-            }
-
             val currentLocalUser = userRepository.getCurrentUser().getOrNull()
                 ?: return Result.failure(Exception("Usuário não encontrado"))
 
@@ -58,10 +49,6 @@ class SyncManager @Inject constructor(
         }
 
         return try {
-            val remoteUser = remoteDb.getUserData().getOrElse {
-                return Result.failure(it)
-            }
-
             val currentLocalUser = userRepository.getCurrentUser().getOrNull()
                 ?: return Result.failure(Exception("Usuário não encontrado"))
 
@@ -94,11 +81,13 @@ class SyncManager @Inject constructor(
 
         return try {
 
-            val remoteUser = remoteDb.getUserData().getOrElse {
+            val remoteUser = userRepository.getCurrentUser().getOrElse {
                 return Result.failure(it)
             }
 
             val ownerId = remoteUser.currentOwnerUid ?: return Result.failure(Exception("Você não está mais conectado a um proprietário"))
+
+            Log.d("SyncManager", "currentLocalUser: $remoteUser")
 
             Result.success(
                 syncDownloader.downloadCityData(

@@ -77,7 +77,7 @@ fun OwnerCustomersScreen(
         goToHomeScreen()
     }
 
-    ClientManagementContent(
+    CustomersContent(
         customerUiState = customerUiState,
         currentCity = customerUiState.currentCity ?: City(),
         allowDeleteCustomer = true,
@@ -104,7 +104,7 @@ fun SellerCustomersScreen(
         goToHomeScreen()
     }
 
-    ClientManagementContent(
+    CustomersContent(
         customerUiState = customerUiState,
         currentCity = customerUiState.currentCity ?: City(),
         onBackClick = onBackClick,
@@ -119,7 +119,7 @@ fun SellerCustomersScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ClientManagementContent(
+fun CustomersContent(
     customerUiState: CustomersUiState = CustomersUiState(),
     currentCity: City = City(),
     allowDeleteCustomer: Boolean = false,
@@ -130,7 +130,6 @@ fun ClientManagementContent(
 ) {
     val context = LocalContext.current
     LaunchedEffect(customerUiState.message) {
-        println("EEEEEEEEEEEEsdafsdfsdIIIIIIIIII - ${customerUiState.message}")
         customerUiState.message?.let {
             Toast.makeText(
                 context,
@@ -557,6 +556,6 @@ fun CardCustomers(
 @Composable
 fun CustomersScreenPreview() {
     MaterialTheme {
-        ClientManagementContent()
+        CustomersContent()
     }
 }
