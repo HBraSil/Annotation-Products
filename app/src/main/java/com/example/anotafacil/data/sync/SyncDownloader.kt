@@ -173,7 +173,7 @@ class SyncDownloader @Inject constructor(
             val name = document.getString("name") ?: continue
             val lastPurchaseDate = document.getString("lastPurchaseDate")
             val owes = document.getDouble("owes")
-            val extraInfo = document.getString("extraInfo")
+            val extraInfo = document.getString("extraInfo") ?: "Nenhuma informação extra"
 
             Log.d("CustomerSync", "name: $name")
 

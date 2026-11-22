@@ -264,10 +264,15 @@ class CustomersViewModel @Inject constructor(
 
     private fun saveCustomer() {
         viewModelScope.launch {
+            val extraInfo = if (_customerUiState.value.extraInfo.isBlank()) {
+                "Nenhuma informação extra"
+            } else {
+                _customerUiState.value.extraInfo.trim()
+            }
 
             val customer = Customer(
                 name = _customerUiState.value.name.trim(),
-                extraInfo = _customerUiState.value.extraInfo?.trim(),
+                extraInfo = extraInfo,
                 cityId = _customerUiState.value.currentCity?.id
             )
             customerRepository.addCustomer(customer)
@@ -276,7 +281,7 @@ class CustomersViewModel @Inject constructor(
                         customerUiState.copy(
                             success = true,
                             name = "",
-                            extraInfo = null
+                            extraInfo = ""
                         )
                     }
                 }
@@ -295,7 +300,7 @@ class CustomersViewModel @Inject constructor(
         _customerUiState.update {
             it.copy(
                 name = "",
-                extraInfo = null,
+                extraInfo = "",
                 success = false
             )
         }
@@ -327,7 +332,7 @@ data class CustomersUiState(
     val isDeletingCustomer: Boolean = false,
     val name: String = "",
     val searchQuery: String = "",
-    val extraInfo: String? = null,
+    val extraInfo: String = "",
     val customers: List<Customer> = emptyList(),
     val metric: MonthlySalesSummary = MonthlySalesSummary(),
     val currentCity: City? = null,

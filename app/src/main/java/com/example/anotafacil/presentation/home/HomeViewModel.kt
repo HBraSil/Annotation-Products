@@ -106,9 +106,6 @@ class HomeViewModel @Inject constructor(
                             )
                         }
 
-                        is HomeResponse.CancellationException -> {
-                            Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no CancellationException")
-                        }
                         else -> {
                             Log.d("ViewmodelloadSellerAndOwnerInfo", "Caiu no Else")
 

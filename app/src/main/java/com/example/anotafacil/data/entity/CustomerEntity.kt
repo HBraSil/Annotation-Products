@@ -24,7 +24,7 @@ data class CustomerEntity(
     val name: String = "",
     val lastPurchaseDate: String?,
     val owes: Double?,
-    val extraInfo: String?,
+    val extraInfo: String,
     val cityId: Uuid,
     val syncStatus: SyncStatus = SyncStatus.PENDING,
     val deletedAt: Long? = null

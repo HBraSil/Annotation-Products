@@ -517,7 +517,7 @@ fun CardCustomers(
                     )
 
                     Text(
-                        text = customer.extraInfo ?: "nenhuma informação extra",
+                        text = customer.extraInfo,
                         fontSize = 14.sp,
                         color = Color.Black,
                         fontWeight = FontWeight.W500

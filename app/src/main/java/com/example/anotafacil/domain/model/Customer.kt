@@ -9,7 +9,7 @@ data class Customer(
     val owes: Double? = null,
     val lastPurchase: List<CartItem> = emptyList(),
     val lastPurchaseDate: String? = null,
-    val extraInfo: String? = null,
+    val extraInfo: String = "",
     val cityId: Uuid? = null,
     val syncStatus: SyncStatus = SyncStatus.PENDING
 )

@@ -35,7 +35,7 @@ import kotlin.coroutines.cancellation.CancellationException
         CartItemEntity::class,
         PaymentEntity::class
     ],
-    version = 11,
+    version = 13,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
