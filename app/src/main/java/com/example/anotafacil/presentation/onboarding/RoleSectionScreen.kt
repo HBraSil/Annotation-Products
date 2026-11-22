@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
@@ -45,20 +46,22 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.model.WhichScreenToGo
+import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
 import com.hilquias.anotafacil.R
 
 
 @Composable
 fun RoleSectionScreen(
-    loadingViewModel: LoadingViewModel = hiltViewModel(),
+    roleSectionViewModel: RoleSectionViewModel = hiltViewModel(),
     whichScreenToGo: (WhichScreenToGo) -> Unit = {},
-    onChoiceClick: (Int) -> Unit = {}
+    onChoiceClick: (Int) -> Unit = {},
+    onSignOutClick: () -> Unit = {}
 ) {
-    val uiState by loadingViewModel.uiState.collectAsState()
+    val uiState by roleSectionViewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.goTo) {
         when (uiState.goTo) {
-            WhichScreenToGo.ROLE_SECTION -> loadingViewModel.cancelLoading()
+            WhichScreenToGo.ROLE_SECTION -> roleSectionViewModel.cancelLoading()
 
             WhichScreenToGo.SELLER_HOME -> whichScreenToGo(WhichScreenToGo.SELLER_HOME)
 
@@ -66,7 +69,7 @@ fun RoleSectionScreen(
 
             WhichScreenToGo.LOGIN -> whichScreenToGo(WhichScreenToGo.LOGIN)
 
-            WhichScreenToGo.ERROR -> loadingViewModel.cancelLoading()
+            WhichScreenToGo.ERROR -> roleSectionViewModel.cancelLoading()
 
             else -> {}
         }
@@ -79,7 +82,11 @@ fun RoleSectionScreen(
             LoadingMainScreen()
         } else {
             ContentRoleSectionScreen(
-                onChoiceClick = onChoiceClick
+                onChoiceClick = onChoiceClick,
+                onSignOutConfirm = {
+                    onSignOutClick()
+                    roleSectionViewModel.signOut()
+                }
             )
         }
     }
@@ -103,8 +110,12 @@ fun LoadingMainScreen() {
 
 
 @Composable
-fun ContentRoleSectionScreen(onChoiceClick: (Int) -> Unit) {
+fun ContentRoleSectionScreen(
+    onChoiceClick: (Int) -> Unit,
+    onSignOutConfirm: () -> Unit
+) {
     var selectedProfileIndex by remember { mutableStateOf<Int?>(null) }
+    var signOutConfirm by remember { mutableStateOf(false) }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -179,7 +190,7 @@ fun ContentRoleSectionScreen(onChoiceClick: (Int) -> Unit) {
                 }
 
                 TextButton(
-                    onClick = {},
+                    onClick = { signOutConfirm = true },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.errorContainer
                     )
@@ -192,6 +203,16 @@ fun ContentRoleSectionScreen(onChoiceClick: (Int) -> Unit) {
             }
 
             Spacer(modifier = Modifier.height(60.dp))
+        }
+
+        if (signOutConfirm) {
+            EasyNoteConfirmationDialog(
+                title = "Tem certeza que deseja sair?",
+                subtitle = null,
+                icon = Icons.Default.QuestionMark,
+                onDismissRequest = { signOutConfirm = false },
+                onConfirmClick = onSignOutConfirm
+            )
         }
     }
 }
@@ -323,7 +344,5 @@ fun ProfileOptionCard(
 @Preview(showBackground = true)
 @Composable
 fun RoleSectionScreenPreview() {
-    ContentRoleSectionScreen(
-        onChoiceClick = {}
-    )
+
 }

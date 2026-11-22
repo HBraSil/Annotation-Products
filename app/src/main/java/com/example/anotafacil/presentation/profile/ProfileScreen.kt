@@ -73,7 +73,6 @@ fun ProfileScreen(
     onPriceTableClick: () -> Unit = {},
     onManageSellersClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
-    onDisconnectOwner: () -> Unit = {},
 ) {
     val uiState by profileViewModel.uiState.collectAsState()
 
@@ -88,7 +87,6 @@ fun ProfileScreen(
             profileViewModel.signOut()
         },
         goToAccountProfile = goToAccountProfile,
-        onDisconnectOwnerClick = onDisconnectOwner
     )
 }
 
@@ -103,7 +101,6 @@ fun ProfileContent(
     onSyncCloudClick: () -> Unit = {},
     onSignOutClick: () -> Unit = {},
     goToAccountProfile: () -> Unit = {},
-    onDisconnectOwnerClick: () -> Unit = {},
 ) {
     var signOutConfirm by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -218,7 +215,7 @@ fun ProfileContent(
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        LogoutButton(
+        SignOutButton(
             onLogoutClick = { signOutConfirm = true }
         )
 
@@ -367,7 +364,7 @@ private fun ManagementOptionCard(
 
 
 @Composable
-private fun LogoutButton(
+private fun SignOutButton(
     onLogoutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {

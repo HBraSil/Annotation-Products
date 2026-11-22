@@ -292,6 +292,11 @@ fun ProductsAnnotationApp(
                         0 -> navController.navigate(Screens.SUBSCRIPTION.route)
                         1 -> navController.navigate(Screens.CODE_VERIFICATION.route)
                     }
+                },
+                onSignOutClick = {
+                    navController.navigate(Screens.LOGIN.route) {
+                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                    }
                 }
             )
         }
@@ -522,11 +527,6 @@ fun ProductsAnnotationApp(
                 onManageSellersClick = { navController.navigate(Screens.MANAGE_SELLERS.route) },
                 onSignOutClick = {
                     navController.navigate(Screens.LOGIN.route) {
-                        popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-                    }
-                },
-                onDisconnectOwner = {
-                    navController.navigate(Screens.ROLE_SECTION.route) {
                         popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                     }
                 }

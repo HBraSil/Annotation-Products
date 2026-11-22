@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 @HiltViewModel
-class LoadingViewModel @Inject constructor(
-    private val userRepository: UserRepository
+class RoleSectionViewModel @Inject constructor(
+    private val userRepository: UserRepository,
 ): ViewModel() {
 
     private val _uiState = MutableStateFlow(LoadingState())
@@ -44,6 +44,12 @@ class LoadingViewModel @Inject constructor(
         }
     }
 
+
+    fun signOut() {
+        viewModelScope.launch {
+            userRepository.signOut()
+        }
+    }
 
     fun cancelLoading() = _uiState.update { it.copy(isLoading = false) }
 
