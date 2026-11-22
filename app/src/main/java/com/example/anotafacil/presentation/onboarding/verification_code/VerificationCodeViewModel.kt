@@ -3,6 +3,7 @@ package com.example.anotafacil.presentation.onboarding.verification_code
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.anotafacil.domain.repository.OwnerCodeRepository
+import com.example.anotafacil.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import jakarta.inject.Inject
 import kotlinx.coroutines.delay
@@ -17,6 +18,7 @@ import kotlin.time.Duration.Companion.milliseconds
 @HiltViewModel
 class VerificationCodeViewModel @Inject constructor(
     private val ownerCodeRepository: OwnerCodeRepository,
+    private val userRepository: UserRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(VerificationCodeUiState())
     val uiState: StateFlow<VerificationCodeUiState> = _uiState.asStateFlow()
@@ -42,7 +44,7 @@ class VerificationCodeViewModel @Inject constructor(
                         return@onSuccess
                     }
 
-                    _uiState.update { it.copy(success = true) }
+                    becomeSeller()
                 }.onFailure { throwable ->
                     _uiState.update { it.copy(errorMessage = throwable.message) }
                 }
@@ -50,6 +52,15 @@ class VerificationCodeViewModel @Inject constructor(
             delay(400.milliseconds)
             _uiState.update { it.copy(errorMessage = null, isLoading = false) }
         }
+    }
+
+    private suspend fun becomeSeller() {
+        userRepository.becomeSeller()
+            .onSuccess {
+                _uiState.update { it.copy(success = true) }
+            }.onFailure { throwable ->
+                _uiState.update { it.copy(errorMessage = throwable.message) }
+            }
     }
 }
 

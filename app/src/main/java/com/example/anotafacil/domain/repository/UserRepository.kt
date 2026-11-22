@@ -21,6 +21,8 @@ interface UserRepository {
 
     suspend fun becomeOwner(): Result<Boolean>
 
+    suspend fun becomeSeller(): Result<Boolean>
+
     suspend fun verifyingAndDeletingOwnerFromSeller(): Result<Boolean>
 
     suspend fun clearData(): Result<Boolean>

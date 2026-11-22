@@ -129,10 +129,9 @@ class SubscriptionViewModel @Inject constructor(
         billingManager.restoreSubscriptionPurchases()
     }
 
-    fun finalizeSubscription() {
+    private suspend fun finalizeSubscription() {
         _subscriptionState.value = SubscriptionState(isLoading = true)
 
-        viewModelScope.launch {
             userRepository.becomeOwner()
                 .onSuccess {
                     _subscriptionState.update { it.copy(isLoading = false, success = true) }
@@ -143,7 +142,6 @@ class SubscriptionViewModel @Inject constructor(
                     _subscriptionState.update { it.copy(isLoading = false, errorMessage = throwable.message) }
                     Log.e("SubscriptionViewModel", "Error finalizing subscription: ${throwable.message}")
                 }
-        }
     }
 }
 

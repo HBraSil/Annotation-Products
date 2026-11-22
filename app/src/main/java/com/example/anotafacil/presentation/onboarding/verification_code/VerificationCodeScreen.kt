@@ -83,7 +83,6 @@ fun VerificationCodeContent(
     uiState: VerificationCodeUiState = VerificationCodeUiState(),
     onVerifyCode: () -> Unit = {},
     onBack: () -> Unit = {},
-    onNameChange: (String) -> Unit = {},
     onCodeChange: (String) -> Unit = {}
 ) {
 

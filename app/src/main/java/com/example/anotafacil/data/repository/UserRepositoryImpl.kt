@@ -300,7 +300,7 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             val firebaseUserUid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuário não está logado"))
-
+            Log.d("UserRepository", "getCurrentUser: $uid")
             val user = userDao.getUserDao(uid ?: firebaseUserUid)
                 ?: return Result.failure(Exception("Usuário não encontrado no banco local"))
             Log.d("UserRepository", "getCurrentUser: $user")
@@ -344,6 +344,31 @@ class UserRepositoryImpl @Inject constructor(
 
         } catch (e: Exception) {
             Log.e("UserRepository", "Error becoming owner", e)
+            Result.failure(e)
+        }
+    }
+
+
+    override suspend fun becomeSeller(): Result<Boolean> {
+
+        val uid = auth.currentUser?.uid
+            ?: return Result.failure(
+                Exception("Usuário não autenticado")
+            )
+
+        return try {
+            userDao.updateRole(
+                uid = uid,
+                userRole = UserRole.SELLER
+            )
+
+            Result.success(true)
+
+        } catch (e: CancellationException) {
+            throw e
+
+        } catch (e: Exception) {
+            Log.e("UserRepository", "Error becoming seller", e)
             Result.failure(e)
         }
     }
@@ -515,12 +540,17 @@ class UserRepositoryImpl @Inject constructor(
                 ?: return Result.success(WhichScreenToGo.LOGIN)
 
             val ownerDocument = firestore
-                .collection(FirestoreSchema.Collections.OWNERS)
+                .collection(FirestoreSchema.Collections.SUBSCRIPTION_ENTITLEMENTS)
                 .document(uid)
                 .get(Source.SERVER)
                 .await()
 
-            if (ownerDocument.exists()) {
+            if (
+                ownerDocument.exists()
+                && ownerDocument.getBoolean(
+                    FirestoreSchema.SubscriptionFields.HAS_OWNER_ACCESS
+                ) == true
+            ) {
                 return Result.success(WhichScreenToGo.OWNER_HOME)
             }
 
@@ -532,9 +562,7 @@ class UserRepositoryImpl @Inject constructor(
 
             if (!sellerDocument.exists()) {
                 return Result.failure(
-                    IllegalStateException(
-                        "Conta autenticada sem documento de usuário."
-                    )
+                    IllegalStateException("Conta autenticada sem documento de usuário.")
                 )
             }
 

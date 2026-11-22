@@ -22,8 +22,10 @@ class CityRepositoryImpl @Inject constructor(
 
     private suspend fun currentOwnerId(): String? {
         val currentUser = userRepository.getCurrentUser().getOrNull() ?: return null
+        Log.d("CityRepositoryImpl", "currentOwnerId: $currentUser")
         return currentUser.currentOwnerUid ?: throw IllegalStateException("Owner not found")
     }
+
 
     override fun getCities(): Flow<List<City>> = flow {
         val ownerId = currentOwnerId() ?: run {
@@ -35,11 +37,13 @@ class CityRepositoryImpl @Inject constructor(
         })
     }
 
+
     override suspend fun addCity(city: City): Long {
         val ownerId = currentOwnerId() ?: return 0L
         val newCity = city.copy(ownerId = ownerId).toCityEntity()
         return cityDao.insertCity(newCity)
     }
+
 
     override suspend fun getCity(cityId: Uuid?): Result<City?> {
         val ownerId = currentOwnerId() ?: return Result.failure(Exception("Não foi possível identificar o proprietário"))
@@ -50,6 +54,7 @@ class CityRepositoryImpl @Inject constructor(
         }
     }
 
+
     override fun searchCities(query: String): Flow<List<City>> = flow {
         val ownerId = currentOwnerId() ?: run {
             emit(emptyList())
@@ -59,6 +64,7 @@ class CityRepositoryImpl @Inject constructor(
             cityList.map { it.toCity() }
         })
     }
+
 
     override fun getMonthlySalesSummary(
         cityId: Uuid?,
