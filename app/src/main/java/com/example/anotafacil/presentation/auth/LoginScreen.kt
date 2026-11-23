@@ -54,6 +54,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.anotafacil.ui.components.EasyNoteButtonWithoutRippleEffect
 import com.example.anotafacil.ui.components.EasyNotesTextField
 import com.hilquias.anotafacil.R
 
@@ -204,21 +205,17 @@ fun LoginContent(
                     }
                 )
 
-                Box(
-                    modifier = Modifier.fillMaxWidth(),
-                    contentAlignment = Alignment.CenterEnd
-                ) {
-                    TextButton(
-                        onClick = onForgotPasswordClick,
-                        contentPadding = PaddingValues(vertical = 4.dp, horizontal = 0.dp)
-                    ) {
-                        Text(
-                            text = "Esqueceu a senha?",
-                            color = MaterialTheme.colorScheme.primary,
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                        )
-                    }
-                }
+                EasyNoteButtonWithoutRippleEffect(
+                    onClick = onForgotPasswordClick,
+                    modifier = Modifier
+                        .padding(vertical = 4.dp)
+                        .align(Alignment.End),
+                    text = "Esqueceu a senha?",
+                    contentColor = MaterialTheme.colorScheme.secondary,
+                    textStyle = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Medium
+                    )
+                )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
@@ -301,8 +298,9 @@ fun LoginContent(
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
                             text = "Entrar com Google",
-                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
-                            //color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            )
                         )
                     }
             }
@@ -322,16 +320,13 @@ fun LoginContent(
             )
 
             Spacer(modifier = Modifier.width(4.dp))
-            TextButton(
+
+            EasyNoteButtonWithoutRippleEffect(
                 onClick = goToSignUpScreen,
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text(
-                    text = "Cadastre-se",
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold)
-                )
-            }
+                text = "Cadastre-se",
+                textStyle = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                contentColor = MaterialTheme.colorScheme.primary,
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))

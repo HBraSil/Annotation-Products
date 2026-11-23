@@ -145,15 +145,24 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             val authResult = firebaseAuth.createUserWithEmailAndPassword(email, password).await()
 
-            val firebaseUserUid = authResult.user?.uid
+            val userUid = authResult.user?.uid
                 ?: return Result.failure(Exception("Erro ao criar usuário"))
 
-            val user = User(uid = firebaseUserUid, name = name, email = email)
+            val firestoreUser = FirestoreUser(name = name, email = email)
 
+            val user = User(
+                uid = userUid,
+                name = name,
+                email = email,
+            )
+
+            userDao.saveUserDao(user.toEntity())
+
+            Log.d("AuthRepositoryImpl", "signUpWithEmailAndPassword: $firestoreUser and \n user: $user")
 
             firestore.collection(FirestoreSchema.Collections.USERS)
-                .document(firebaseUserUid)
-                .set(user)
+                .document(userUid)
+                .set(firestoreUser)
                 .await()
 
             Result.success(true)

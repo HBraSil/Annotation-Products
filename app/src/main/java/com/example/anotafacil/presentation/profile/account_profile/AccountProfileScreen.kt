@@ -50,6 +50,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.presentation.profile.account_profile.AccountProfileViewModel
 import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiEvent
 import com.example.anotafacil.presentation.profile.account_profile.ProfileDetailUiState
+import com.example.anotafacil.ui.components.EasyNoteButtonWithoutRippleEffect
 import com.example.anotafacil.ui.components.EasyNoteConfirmationDialog
 import com.example.anotafacil.ui.components.EasyNoteLoadingOverlay
 import com.example.anotafacil.ui.components.EasyNotesTextField
@@ -182,35 +183,6 @@ fun AccountProfileContent(
                     }
                 }
 
-                /*// Campo Nome Completo (Sem Card)
-                OutlinedTextField(
-                    value = uiState.name.field,
-                    onValueChange = onUpdateName,
-                    singleLine = true,
-                    trailingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Editar Nome",
-                            tint = MaterialTheme.colorScheme.secondary
-                        )
-                    },
-                    shape = RoundedCornerShape(16.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledContainerColor = MaterialTheme.colorScheme.onPrimary,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledBorderColor = MaterialTheme.colorScheme.onPrimary,
-                        disabledTextColor = MaterialTheme.colorScheme.onBackground,
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        disabledLabelColor = MaterialTheme.colorScheme.secondary,
-                        focusedLabelColor = MaterialTheme.colorScheme.primary,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.secondary
-                    ),
-                    modifier = Modifier.fillMaxWidth()
-                )*/
                 EasyNotesTextField(
                     value = uiState.name.field,
                     onValueChange = onUpdateName,
@@ -330,20 +302,19 @@ fun FooterActions(
             }
         }
 
-        TextButton(onClick = deleteAccount) {
-            Icon(
-                imageVector = Icons.Default.Delete,
-                contentDescription = null,
-                tint = Color(0xFFEF4444),
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "Excluir minha conta",
-                color = Color(0xFFEF4444),
-                fontWeight = FontWeight.SemiBold
-            )
-        }
+        EasyNoteButtonWithoutRippleEffect(
+            text = "Excluir minha conta",
+            contentColor = MaterialTheme.colorScheme.error,
+            onClick = deleteAccount,
+            icon = {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
+        )
     }
 }
 

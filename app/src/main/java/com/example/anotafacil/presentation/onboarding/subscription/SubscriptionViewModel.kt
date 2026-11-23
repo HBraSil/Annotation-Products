@@ -135,12 +135,10 @@ class SubscriptionViewModel @Inject constructor(
         userRepository.becomeOwner()
             .onSuccess {
                 _subscriptionState.update { it.copy(isLoading = false, success = true) }
-                Log.d("SubscriptionViewModel", "Subscription finalized")
             }
             .onFailure {throwable ->
                 // Handle failure
                 _subscriptionState.update { it.copy(isLoading = false, errorMessage = throwable.message) }
-                Log.e("SubscriptionViewModel", "Error finalizing subscription: ${throwable.message}")
             }
     }
 }

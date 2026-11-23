@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,6 +33,7 @@ import androidx.compose.material.icons.filled.QuestionMark
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.LocalRippleConfiguration
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
@@ -189,16 +191,19 @@ fun ContentRoleSectionScreen(
                     }
                 }
 
-                TextButton(
-                    onClick = { signOutConfirm = true },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.errorContainer
-                    )
-                ){
-                    Text(
-                        text = "Sair",
-                        style = MaterialTheme.typography.labelLarge
-                    )
+                CompositionLocalProvider(LocalRippleConfiguration provides null) {
+                    TextButton(
+                        onClick = { signOutConfirm = true },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 60.dp),
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.errorContainer
+                        ),
+                    ) {
+                        Text(
+                            text = "Sair",
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
                 }
             }
 

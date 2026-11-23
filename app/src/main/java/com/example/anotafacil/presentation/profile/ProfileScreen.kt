@@ -143,7 +143,6 @@ fun ProfileContent(
         UserHeaderCard(
             name = uiState.user?.name ?: "Sem nome",
             email = uiState.user?.email ?: "email@gmail.com",
-            role = uiState.user?.role?.name ?: "No role",
             goToAccountProfile = goToAccountProfile
         )
 
@@ -238,7 +237,6 @@ fun ProfileContent(
 private fun UserHeaderCard(
     name: String,
     email: String,
-    role: String,
     modifier: Modifier = Modifier,
     goToAccountProfile: () -> Unit,
 ) {
@@ -247,18 +245,6 @@ private fun UserHeaderCard(
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column {
-            Surface(
-                color = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Text(
-                    text = role,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF4F46E5),
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
-                )
-            }
 
             Spacer(modifier = Modifier.height(8.dp))
 
