@@ -51,22 +51,21 @@ class SalesOverviewViewModel @Inject constructor(
     }
 
     private fun loadMonthlySales(cityName: String) {
-        val selectedCityId = if (cityName == "Todas") null else _uiState.value.availableCities.firstOrNull { it.name == cityName }?.id
+        val cities = _uiState.value.availableCities
+        val ownerId = cities.firstOrNull()?.ownerId
+        val selectedCityId = if (cityName == "Todas") null else cities.firstOrNull { it.name == cityName }?.id
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val now = java.time.LocalDate.now()
-            val startDate = java.time.LocalDate.now().minusMonths(5).withDayOfMonth(1)
-            val endDate = now.withDayOfMonth(1).plusMonths(1)
+            if (ownerId.isNullOrBlank()) {
+                _uiState.update {
+                    it.copy(monthlySales = emptyList(), isLoading = false)
+                }
+                return@launch
+            }
 
-            val startMillis = java.time.LocalDateTime.of(
-                startDate.year,
-                startDate.monthValue,
-                startDate.dayOfMonth,
-                0,
-                0,
-                0
-            ).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+            val now = java.time.LocalDate.now()
+            val endDate = now.withDayOfMonth(1).plusMonths(1)
 
             val endMillis = java.time.LocalDateTime.of(
                 endDate.year,
@@ -77,7 +76,7 @@ class SalesOverviewViewModel @Inject constructor(
                 0
             ).atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
 
-            salesOverviewRepository.getMonthlySales(startMillis, endMillis, selectedCityId)
+            salesOverviewRepository.getMonthlySales(0L, endMillis, ownerId, selectedCityId)
                 .collect { months ->
                     _uiState.update {
                         it.copy(

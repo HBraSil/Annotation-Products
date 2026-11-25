@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2026-11-23T22:49:35.424393300Z">
+        <DropdownSelection timestamp="2026-11-25T02:21:51.230554900Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Windows\.android\avd\Pixel_10_Pro_XL.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=ZTKBBUHAMV9TOZ65" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -30,6 +30,17 @@
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Windows\.android\avd\Pixel_10_Pro_XL.avd" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="AddNewClientScreenPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2026-11-25T02:21:51.230554900Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=ZTKBBUHAMV9TOZ65" />
             </handle>
           </Target>
         </DropdownSelection>

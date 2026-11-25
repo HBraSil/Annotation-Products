@@ -39,8 +39,6 @@ class PurchaseHistoryViewModel @Inject constructor(
 
 
     init {
-        updateCustomer()
-
         updateHistory()
     }
 
@@ -50,8 +48,9 @@ class PurchaseHistoryViewModel @Inject constructor(
                 .flatMapLatest { uuid ->
                     combine(
                         customerRepository.getAllPurchases(uuid),
-                        customerRepository.getAllPayments(uuid)
-                    ) { purchases, payments ->
+                        customerRepository.getAllPayments(uuid),
+                        customerRepository.getCustomer(uuid)
+                    ) { purchases, payments, customer ->
                         val purchaseHistory = purchases.map {
                             HistoryMovement.UiPurchase(it)
                         }
@@ -63,30 +62,56 @@ class PurchaseHistoryViewModel @Inject constructor(
                         val orderedList =
                             (purchaseHistory + paymentHistory).sortedByDescending { it.date }
 
-                        orderedList.groupBy { movimentacao ->
+                        val history = orderedList.groupBy { movimentacao ->
                             movimentacao.date.toBrazilianMonthYear()
                         }
+                        val monthlyBalances = calculateMonthlyBalances(
+                            history = history,
+                            currentBalance = customer?.owes ?: 0.0
+                        )
+
+                        Triple(customer?.name.orEmpty(), history, monthlyBalances)
                     }
                 }.collect { history ->
                     _uiState.update {
-                        it.copy(history = history)
+                        it.copy(
+                            clientName = history.first,
+                            history = history.second,
+                            monthlyBalances = history.third
+                        )
                     }
                 }
         }
     }
+}
 
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private fun updateCustomer() {
-        viewModelScope.launch {
-            customerUuid.flatMapLatest { uuid ->
-                customerRepository.getCustomer(uuid)
-            }.collect { customer ->
-                _uiState.update {
-                    it.copy(clientName = customer?.name ?: "")
+private fun calculateMonthlyBalances(
+    history: Map<String, List<HistoryMovement>>,
+    currentBalance: Double
+): Map<String, MonthlyBalance> {
+    var closingBalance = currentBalance
+    val balances = mutableMapOf<String, MonthlyBalance>()
+
+    history.entries
+        .sortedByDescending { (_, movements) -> movements.maxOf { it.date } }
+        .forEach { (month, movements) ->
+            val monthlyChange = movements.sumOf { movement ->
+                when (movement) {
+                    is HistoryMovement.UiPurchase ->
+                        movement.purchaseWithItemsDomain.purchase.totalAmount
+
+                    is HistoryMovement.UiPayment -> -movement.payment.amount
                 }
             }
+            val openingBalance = closingBalance - monthlyChange
+            balances[month] = MonthlyBalance(
+                openingBalance = openingBalance,
+                closingBalance = closingBalance
+            )
+            closingBalance = openingBalance
         }
-    }
+
+    return balances
 }
 
 sealed interface HistoryMovement {
@@ -108,5 +133,11 @@ sealed interface HistoryMovement {
 
 data class PurchaseHistoryUiState(
     val clientName: String = "",
-    val history: Map<String, List<HistoryMovement>> = emptyMap()
+    val history: Map<String, List<HistoryMovement>> = emptyMap(),
+    val monthlyBalances: Map<String, MonthlyBalance> = emptyMap()
+)
+
+data class MonthlyBalance(
+    val openingBalance: Double,
+    val closingBalance: Double
 )

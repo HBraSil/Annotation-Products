@@ -1,7 +1,17 @@
 package com.example.anotafacil.presentation.history
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -9,23 +19,45 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.Money
 import androidx.compose.material.icons.filled.ShoppingCart
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
 import com.example.anotafacil.domain.formatter.toBrazilianDate
+import com.example.anotafacil.domain.model.CartItem
+import com.example.anotafacil.domain.model.CartItemWithProductDomain
 import com.example.anotafacil.domain.model.Payment
+import com.example.anotafacil.domain.model.Product
+import com.example.anotafacil.domain.model.Purchase
 import com.example.anotafacil.domain.model.PurchaseWithItemsDomain
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
+import kotlin.uuid.Uuid
 
 
 @Composable
@@ -55,10 +87,12 @@ fun PurchaseHistoryContent(
             TopAppBar(
                 title = {
                     Text(
-                        text = "HISTÓRICO DE VENDAS",
-                        fontSize = 14.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        letterSpacing = 1.sp
+                        text = uiState.clientName,
+                        style = MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold
+                        ),
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primaryContainer
                     )
                 },
                 navigationIcon = {
@@ -73,33 +107,17 @@ fun PurchaseHistoryContent(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.onPrimary)
             )
         },
-        containerColor = MaterialTheme.colorScheme.onPrimary,
+        containerColor = MaterialTheme.colorScheme.background,
         modifier = modifier.fillMaxSize()
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = 10.dp),
+                .padding(horizontal = 10.dp, vertical = 20.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(2.dp)
-                ) {
-                    Text(
-                        text = uiState.clientName,
-                        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
 
             if (uiState.history.isEmpty()) {
                 item {
@@ -110,45 +128,135 @@ fun PurchaseHistoryContent(
                 }
             } else {
                 uiState.history.forEach { (month, history) ->
-                    item(month) {
-                        Text(
-                            text = month,
+                    item(key = month) {
+                        Card(
                             modifier = Modifier.fillMaxWidth(),
-                            textAlign = TextAlign.Start,
-                            style = MaterialTheme.typography.titleLarge,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    items(history) { movement ->
-                        when (movement) {
-                            is HistoryMovement.UiPurchase -> {
-                                PurchaseHistoryCard(movement.purchaseWithItemsDomain)
-                            }
-                            is HistoryMovement.UiPayment -> {
-                                if (!movement.payment.isTotalPayment) {
-                                    PaymentHistoryCard(
-                                        payment = movement.payment,
-                                        isTotalPayment = false
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.onPrimary
+                            ),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)
+                            ) {
+                                Text(
+                                    text = month,
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold
+                                )
+
+                                uiState.monthlyBalances[month]?.let { balance ->
+                                    MonthBalanceSummary(
+                                        openingBalance = brazilianCurrencyFormatter.format(
+                                            balance.openingBalance
+                                        ),
+                                        closingBalance = brazilianCurrencyFormatter.format(
+                                            balance.closingBalance
+                                        )
                                     )
                                 }
-                                else {
-                                    PaymentHistoryCard(
-                                        payment = movement.payment,
-                                        amountColor = MaterialTheme.colorScheme.surface.copy(green = 0.8f),
-                                    )
+                            }
+
+                            HorizontalDivider(
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(12.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                history.forEach { movement ->
+                                    when (movement) {
+                                        is HistoryMovement.UiPurchase -> {
+                                            PurchaseHistoryCard(
+                                                movement.purchaseWithItemsDomain
+                                            )
+                                        }
+
+                                        is HistoryMovement.UiPayment -> {
+                                            if (movement.payment.isTotalPayment) {
+                                                PaymentHistoryCard(
+                                                    payment = movement.payment,
+                                                    amountColor = MaterialTheme.colorScheme.surface
+                                                        .copy(green = 0.8f)
+                                                )
+                                            } else {
+                                                PaymentHistoryCard(
+                                                    payment = movement.payment,
+                                                    isTotalPayment = false
+                                                )
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(24.dp))
-                        HorizontalDivider(color = MaterialTheme.colorScheme.secondary, thickness = 3.dp)
                     }
                 }
             }
         }
     }
 }
+
+
+@Composable
+private fun MonthBalanceSummary(
+    openingBalance: String,
+    closingBalance: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        color = MaterialTheme.colorScheme.onPrimary,
+
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = buildAnnotatedString {
+                    append("Início: ")
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(openingBalance)
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.bodySmall
+            )
+
+            Text(
+                text = "→",
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            Text(
+                text = buildAnnotatedString {
+                    append("Saldo final: ")
+                    withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                        append(closingBalance)
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                textAlign = TextAlign.End,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+    }
+}
+
+
 
 @Composable
 fun PurchaseHistoryCard(purchase: PurchaseWithItemsDomain) {
@@ -181,7 +289,10 @@ fun PurchaseHistoryCard(purchase: PurchaseWithItemsDomain) {
                     )
 
                     Spacer(modifier = Modifier.width(6.dp))
-                    HorizontalDivider(modifier = Modifier.width(14.dp), color = MaterialTheme.colorScheme.onSurface)
+                    HorizontalDivider(
+                        modifier = Modifier.width(14.dp),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
 
                     Text(
@@ -237,7 +348,7 @@ fun PurchaseHistoryCard(purchase: PurchaseWithItemsDomain) {
 fun PaymentHistoryCard(
     payment: Payment,
     isTotalPayment: Boolean = true,
-    amountColor: Color = MaterialTheme.colorScheme.primaryContainer
+    amountColor: Color = MaterialTheme.colorScheme.primaryContainer,
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -271,7 +382,10 @@ fun PaymentHistoryCard(
                     )
 
                     Spacer(modifier = Modifier.width(6.dp))
-                    HorizontalDivider(modifier = Modifier.width(14.dp), color = MaterialTheme.colorScheme.onSurface)
+                    HorizontalDivider(
+                        modifier = Modifier.width(14.dp),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                     Spacer(modifier = Modifier.width(6.dp))
 
                     Text(
@@ -282,7 +396,9 @@ fun PaymentHistoryCard(
                 }
                 Spacer(modifier = Modifier.height(12.dp))
                 Text(
-                    text = if (isTotalPayment) "QUITADO" else brazilianCurrencyFormatter.format(payment.amount),
+                    text = if (isTotalPayment) "QUITADO" else brazilianCurrencyFormatter.format(
+                        payment.amount
+                    ),
                     color = amountColor,
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
@@ -292,22 +408,6 @@ fun PaymentHistoryCard(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PurchaseHistoryCardPreview() {
-    MaterialTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.White)
-                .padding(16.dp),
-        ) {
-
-            Spacer(modifier = Modifier.height(10.dp))
-            //PaymentHistoryCard()
-        }
-    }
-}
 
 @Preview(showBackground = true, device = "spec:width=1080px,height=2340px,dpi=440")
 @Composable
@@ -316,6 +416,45 @@ fun PurchaseHistoryScreenPreview() {
         PurchaseHistoryContent(
             uiState = PurchaseHistoryUiState(
                 clientName = "Cliente Teste",
+                history = mapOf(
+                    "1" to listOf(
+                        HistoryMovement.UiPayment(
+                            Payment(
+                                id = Uuid.random(),
+                                customerId = Uuid.random(),
+                                amount = 100.0,
+                                paymentDate = System.currentTimeMillis(),
+                                isTotalPayment = false
+                            )
+                        ),
+                        HistoryMovement.UiPurchase(
+                            PurchaseWithItemsDomain(
+                                purchase = Purchase(
+                                    id = Uuid.random(),
+                                    customerId = Uuid.random(),
+                                    totalAmount = 100.0,
+                                    purchaseDate = System.currentTimeMillis(),
+                                ),
+                                items = listOf(
+                                    CartItemWithProductDomain(
+                                        cartItem = CartItem(
+                                            id = 1L,
+                                            productId = Uuid.random(),
+                                            quantity = 1
+                                        ),
+                                        product = Product(
+                                            name = "Produto Teste",
+                                            price = 100,
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                ),
+                monthlyBalances = mapOf(
+                    "1" to MonthlyBalance(openingBalance = 100.0, closingBalance = 100.0)
+                )
             ),
             onBackClick = {}
         )

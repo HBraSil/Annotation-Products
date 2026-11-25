@@ -4,7 +4,6 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import androidx.room.Update
 import com.example.anotafacil.data.entity.UserEntity
 import com.example.anotafacil.domain.model.UserRole
 import kotlinx.coroutines.flow.Flow
@@ -34,7 +33,7 @@ interface UserDao {
         ownerId = :ownerId
     WHERE uid = :uid
 """)
-    suspend fun updateRemoteUserInfo(
+    suspend fun updateLocalUserInfo(
         uid: String,
         name: String,
         email: String,

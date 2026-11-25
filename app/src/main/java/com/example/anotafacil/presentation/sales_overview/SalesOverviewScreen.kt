@@ -46,6 +46,7 @@ import com.example.anotafacil.domain.model.MonthlySalesData
 import com.example.anotafacil.ui.components.EasyNotesExposedDropDown
 import com.example.anotafacil.ui.components.SalesChart
 import java.time.YearMonth
+import java.time.temporal.ChronoUnit
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -84,6 +85,7 @@ fun SalesOverviewScreen(
         selectedMetric = selectedMetric,
         cities = cities,
         months = months,
+        allMonthlySales = uiState.monthlySales,
         isLoading = uiState.isLoading,
         onCitySelected = salesOverviewViewModel::onCitySelected,
         onMetricSelected = { selectedMetric = it },
@@ -118,6 +120,7 @@ private fun SalesOverviewContent(
     selectedMetric: SalesMetric,
     cities: List<String>,
     months: List<MonthSales>,
+    allMonthlySales: List<MonthlySalesData>,
     isLoading: Boolean,
     onCitySelected: (String) -> Unit,
     onMetricSelected: (SalesMetric) -> Unit,
@@ -170,7 +173,7 @@ private fun SalesOverviewContent(
             item {
                 SummaryCard(
                     selectedMetric = selectedMetric,
-                    months = months,
+                    monthlySales = allMonthlySales,
                 )
             }
 
@@ -293,26 +296,36 @@ private fun MetricSelectorSection(
 @Composable
 private fun SummaryCard(
     selectedMetric: SalesMetric,
-    months: List<MonthSales>,
+    monthlySales: List<MonthlySalesData>,
 ) {
     val total = when (selectedMetric) {
-        SalesMetric.TOTAL_SALES -> months.sumOf { it.revenue }
-        SalesMetric.TOTAL_RECEIVED -> months.sumOf { it.received }
-        SalesMetric.TOTAL_PRODUCTS_SOLD -> months.sumOf { it.quantity.toDouble() }
+        SalesMetric.TOTAL_SALES -> monthlySales.sumOf { it.totalSales }
+        SalesMetric.TOTAL_RECEIVED -> monthlySales.sumOf { it.totalReceived }
+        SalesMetric.TOTAL_PRODUCTS_SOLD -> monthlySales.sumOf { it.totalProducts.toDouble() }
     }
 
-    val average = when (selectedMetric) {
-        SalesMetric.TOTAL_SALES -> months.map { it.revenue }.average()
-        SalesMetric.TOTAL_RECEIVED -> months.map { it.received }.average()
-        SalesMetric.TOTAL_PRODUCTS_SOLD -> months.map { it.quantity.toDouble() }.average()
-    }
+    val firstMonth = monthlySales
+        .asSequence()
+        .filter { summary ->
+            when (selectedMetric) {
+                SalesMetric.TOTAL_SALES -> summary.totalSales > 0.0
+                SalesMetric.TOTAL_RECEIVED -> summary.totalReceived > 0.0
+                SalesMetric.TOTAL_PRODUCTS_SOLD -> summary.totalProducts > 0
+            }
+        }
+        .map { YearMonth.parse(it.month) }
+        .minOrNull()
+    val elapsedMonths = firstMonth?.let {
+        ChronoUnit.MONTHS.between(it, YearMonth.now()).toInt() + 1
+    }?.coerceAtLeast(1) ?: 0
+    val average = if (elapsedMonths > 0) total / elapsedMonths else 0.0
 
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "ÚLTIMOS 6 MESES",
+            text = "TOTAL DESDE O INÍCIO",
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -375,10 +388,10 @@ fun SalesOverviewScreenPreview() {
             MonthSales("Mai", 4700.0, 3600.0, 72),
             MonthSales("Jun", 5100.0, 4200.0, 81),
         ),
+        allMonthlySales = emptyList(),
         isLoading = false,
         onCitySelected = {},
         onMetricSelected = {},
         onBackClick = {},
     )
 }
-

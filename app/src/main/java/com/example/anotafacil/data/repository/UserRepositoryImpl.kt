@@ -118,11 +118,9 @@ class UserRepositoryImpl @Inject constructor(
                 .document(uid)
                 .snapshots(MetadataChanges.INCLUDE)
                 .filter { snapshot ->
-                    !snapshot.metadata.isFromCache &&
-                            !snapshot.metadata.hasPendingWrites()
+                    !snapshot.metadata.isFromCache && !snapshot.metadata.hasPendingWrites()
                 }
                 .map { snapshot ->
-
                     if (!snapshot.exists()) {
                         return@map Result.failure(Exception("Usuário remoto não encontrado"))
                     }
@@ -142,7 +140,7 @@ class UserRepositoryImpl @Inject constructor(
                         )
                     }
 
-                    userDao.updateRemoteUserInfo(
+                    userDao.updateLocalUserInfo(
                         uid = uid,
                         name = remoteUser.name,
                         email = remoteUser.email,
@@ -300,17 +298,17 @@ class UserRepositoryImpl @Inject constructor(
         return try {
             val firebaseUserUid = auth.currentUser?.uid
                 ?: return Result.failure(Exception("Usuário não está logado"))
-            Log.d("UserRepository", "getCurrentUser: $uid")
+
             val user = userDao.getUserDao(uid ?: firebaseUserUid)
                 ?: return Result.failure(Exception("Usuário não encontrado no banco local"))
-            Log.d("UserRepository", "getCurrentUser: $user")
+
             Result.success(user.toDomain())
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    @OptIn(ExperimentalCoroutinesApi::class)
+
     override fun observeCurrentUser(): Flow<Result<User>> {
         return observeUserDao.map { resultSeller ->
             if (resultSeller.isFailure) return@map Result.failure(resultSeller.exceptionOrNull()!!)

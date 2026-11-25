@@ -13,9 +13,10 @@ class SalesOverviewRepositoryImpl @Inject constructor(
     override fun getMonthlySales(
         startDate: Long,
         endDate: Long,
+        ownerId: String,
         cityId: Uuid?
     ): Flow<List<MonthlySalesData>> {
-        return purchaseDao.getMonthlySales(startDate, endDate, cityId)
+        return purchaseDao.getMonthlySales(startDate, endDate, ownerId, cityId)
     }
 
 }
