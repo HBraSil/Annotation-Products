@@ -26,7 +26,7 @@ interface PurchaseDao {
     @Query("""
         SELECT * FROM purchase
         WHERE customerId = :customerId
-        ORDER BY id DESC
+        ORDER BY purchaseDate DESC, id DESC
         LIMIT 1
     """)
     fun getLastPurchase(customerId: Uuid?): Flow<PurchaseWithItemsData?>

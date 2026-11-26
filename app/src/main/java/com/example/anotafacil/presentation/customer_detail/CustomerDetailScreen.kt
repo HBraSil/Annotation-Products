@@ -405,7 +405,8 @@ fun DebtAndPartialPayment(
                     ) {
                         EasyNoteBrazilianCurrencyTextField(
                             text = uiState.partialPaymentComponent,
-                            onValueChange = onPartialPaymentChange
+                            onValueChange = onPartialPaymentChange,
+                            modifier = Modifier.weight(1f)
                         )
                         Button(
                             onClick = {

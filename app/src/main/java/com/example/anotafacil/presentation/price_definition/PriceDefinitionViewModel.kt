@@ -42,7 +42,7 @@ class PriceDefinitionViewModel @Inject constructor(
     fun addManualProduct() {
         val productName = _uiState.value.manualProductName.trim()
 
-        val toBrazilianInput = parseBrazilianCurrencyInput(_uiState.value.manuelProductPrice.text)
+        val toBrazilianInput = parseBrazilianCurrencyInput(_uiState.value.manualProductPrice.text)
         val product = Product(
             name = productName,
             price = toBrazilianInput.toInt(),
@@ -52,7 +52,7 @@ class PriceDefinitionViewModel @Inject constructor(
             uiState.copy(
                 items = listOf(product) + uiState.items,
                 manualProductName = "",
-                manuelProductPrice = TextFieldValue("R$ 0,00")
+                manualProductPrice = TextFieldValue("R$ 0,00")
             )
         }
     }
@@ -88,7 +88,7 @@ class PriceDefinitionViewModel @Inject constructor(
 
         _uiState.update { uiState ->
             uiState.copy(
-                manuelProductPrice = TextFieldValue(
+                manualProductPrice = TextFieldValue(
                     visualFormatText,
                     selection = TextRange(visualFormatText.length)
                 )
@@ -128,7 +128,7 @@ data class PriceDefinitionUiState(
     val items: List<Product> = emptyList(),
     val originalItems: List<Product> = emptyList(),
     val manualProductName: String = "",
-    val manuelProductPrice: TextFieldValue = TextFieldValue("R$ 0,00"),
+    val manualProductPrice: TextFieldValue = TextFieldValue("R$ 0,00"),
     val itemPrice: String = "",
     val priceSaved: Boolean = false,
     val isLoading: Boolean = false

@@ -8,6 +8,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
@@ -15,6 +16,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun EasyNoteBrazilianCurrencyTextField(
+    modifier: Modifier = Modifier,
     text: TextFieldValue,
     onValueChange: (String) -> Unit = {},
     colors: TextFieldColors = OutlinedTextFieldDefaults.colors(
@@ -29,6 +31,7 @@ fun EasyNoteBrazilianCurrencyTextField(
         onValueChange = {
             onValueChange(it.text)
         },
+        modifier = modifier,
         placeholder = {
             Text(
                 "R$ 0,00",

@@ -30,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
 import com.example.anotafacil.domain.model.Product
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
+import com.example.anotafacil.ui.components.EasyNoteProductQuantityCard
 import com.example.anotafacil.ui.components.EasyNotesExposedDropDown
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -44,8 +45,8 @@ fun NewPurchaseScreen(
         uiState = uiState,
         onBackClick = onBackClick,
         onSelectProductClick = newPurchaseViewModel::onProductSelected,
-        decreaseQntt = newPurchaseViewModel::decreaseQuantity,
-        increaseQntt = newPurchaseViewModel::increaseQuantity,
+        onDecreaseQuantityClick = newPurchaseViewModel::decreaseQuantity,
+        onIncreaseQuantityClick = newPurchaseViewModel::increaseQuantity,
         onFinalizeClick = newPurchaseViewModel::finalizePurchase,
         onDismiss = newPurchaseViewModel::onDismiss
     )
@@ -59,8 +60,8 @@ fun NewPurchaseContent(
     uiState: NewPurchaseUiState = NewPurchaseUiState(),
     onBackClick: () -> Unit = {},
     onSelectProductClick: (Product) -> Unit = {},
-    decreaseQntt: (Product) -> Unit = { _ -> },
-    increaseQntt: (Product) -> Unit = { _ -> },
+    onDecreaseQuantityClick: (Product) -> Unit = { _ -> },
+    onIncreaseQuantityClick: (Product) -> Unit = { _ -> },
     onFinalizeClick: () -> Unit = {},
     onDismiss: () -> Unit = {},
 ) {
@@ -169,75 +170,19 @@ fun NewPurchaseContent(
             } else {
                 HorizontalDivider(color = MaterialTheme.colorScheme.secondary, thickness = 0.dp)
                 uiState.selectedProducts.forEach { item ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp).fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(
-                                    text = item.product.name,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.Black
-                                )
-                                Text(
-                                    text = "Unit: ${brazilianCurrencyFormatter.format(item.product.price.toDouble())}",
-                                    fontSize = 12.sp,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                            }
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Row(
-                                    modifier = Modifier.background(
-                                        MaterialTheme.colorScheme.onPrimary,
-                                        RoundedCornerShape(24.dp)
-                                    ).padding(horizontal = 4.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    IconButton(
-                                        onClick = {
-                                            decreaseQntt(item.product)
-                                        },
-                                        modifier = Modifier.size(28.dp)
-                                    ) { Text("−", fontWeight = FontWeight.Bold) }
-                                    Text(
-                                        text = item.quantity.toString(),
-                                        modifier = Modifier.padding(horizontal = 8.dp),
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    IconButton(
-                                        onClick = {
-                                            increaseQntt(item.product)
-                                        },
-                                        modifier = Modifier.size(28.dp)
-                                    ) { Text(text = "+", fontWeight = FontWeight.Bold) }
-                                }
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "SUBTOTAL",
-                                        fontSize = 9.sp,
-                                        color = MaterialTheme.colorScheme.secondary,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = brazilianCurrencyFormatter.format(item.subtotal()),
-                                        fontSize = 14.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = Color.Black
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    EasyNoteProductQuantityCard(
+                        item = item.product,
+                        productName = item.product.name,
+                        productPrice = item.product.price.toString(),
+                        quantity = item.quantity.toString(),
+                        decreaseQntt = { product ->
+                            onDecreaseQuantityClick(product)
+                        },
+                        increaseQntt = { product ->
+                            onIncreaseQuantityClick(product)
+                        },
+                        subtotal = { item.subtotal() }
+                    )
                 }
             }
             Spacer(modifier = Modifier.weight(1f))

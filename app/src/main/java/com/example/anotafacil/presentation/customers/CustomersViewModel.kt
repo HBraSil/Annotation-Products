@@ -2,19 +2,25 @@ package com.example.anotafacil.presentation.customers
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.anotafacil.domain.formatter.FormatDate
+import com.example.anotafacil.domain.formatter.brazilianCurrencyFormatter
+import com.example.anotafacil.domain.formatter.parseBrazilianCurrencyInput
+import com.example.anotafacil.domain.model.CartItem
 import com.example.anotafacil.domain.model.City
 import com.example.anotafacil.domain.model.Customer
+import com.example.anotafacil.domain.model.Product
+import com.example.anotafacil.domain.model.Purchase
 import com.example.anotafacil.domain.repository.CityRepository
 import com.example.anotafacil.domain.repository.CustomerRepository
+import com.example.anotafacil.domain.repository.ProductRepository
 import com.example.anotafacil.domain.usecase.RefreshCustomersUseCase
-import com.example.anotafacil.domain.formatter.FormatDate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -25,6 +31,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapLatest
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
+import javax.inject.Inject
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid
 
@@ -36,11 +47,12 @@ class CustomersViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val customerRepository: CustomerRepository,
     private val cityRepository: CityRepository,
-    private val refreshCustomersUseCase: RefreshCustomersUseCase
+    private val productRepository: ProductRepository,
+    private val refreshCustomersUseCase: RefreshCustomersUseCase,
 ) : ViewModel() {
 
-    private val _customerUiState = MutableStateFlow(CustomersUiState())
-    val customerUiState = _customerUiState.asStateFlow()
+    private val _uiState = MutableStateFlow(CustomersUiState())
+    val uiState = _uiState.asStateFlow()
 
     val cityIdFlow = savedStateHandle
         .getStateFlow<String?>("cityId", null)
@@ -53,6 +65,7 @@ class CustomersViewModel @Inject constructor(
         getCustomersList()
         getMonthlySalesSummary()
         observeSearchQuery()
+        getProductsWithDefinedPrice()
     }
 
 
@@ -61,9 +74,14 @@ class CustomersViewModel @Inject constructor(
             is CustomersUiEvent.OnSearchQueryChange -> updateSearchQuery(event.query)
             is CustomersUiEvent.OnNameChange -> updateName(event.name)
             is CustomersUiEvent.OnExtraInfoChange -> updateExtraInfo(event.extraInfo)
+            is CustomersUiEvent.OnShowModalDeleteCustomer -> showModalDeleteCustomer(event.id)
+            is CustomersUiEvent.OnLastPurchaseDateChange -> updateLastPurchaseDate(event.date)
+            is CustomersUiEvent.OnLastPurchasedProductsSelected -> updateLastPurchasedProducts(event.product)
+            is CustomersUiEvent.OnOpeningDebtChange -> updateOpeningDebt(event.openingDebt)
+            is CustomersUiEvent.OnIncreaseQuantityClick -> increaseQuantity(event.product)
+            is CustomersUiEvent.OnDecreaseQuantityClick -> decreaseQuantity(event.product)
             is CustomersUiEvent.OnCreateCustomerClick -> saveCustomer()
             is CustomersUiEvent.OnDismissModalDeleteCustomer -> onDismissModalDeleteCustomer()
-            is CustomersUiEvent.OnShowModalDeleteCustomer -> showModalDeleteCustomer(event.id)
             is CustomersUiEvent.OnShowModalCreateCustomer -> showModalCreateCustomer()
             is CustomersUiEvent.OnDeleteCustomerClick -> deleteCustomer()
             is CustomersUiEvent.OnDismissOverlayCreatedCustomer -> closeModalAndOverlayCreatedCustomer()
@@ -73,7 +91,7 @@ class CustomersViewModel @Inject constructor(
 
 
     fun refreshCustomers() {
-        _customerUiState.update { it.copy(isLoading = true) }
+        _uiState.update { it.copy(isLoading = true) }
 
         viewModelScope.launch {
             val cityId = cityIdFlow.first()
@@ -81,23 +99,23 @@ class CustomersViewModel @Inject constructor(
             refreshCustomersUseCase(cityId)
                 .onSuccess { success ->
                     if (success) {
-                        _customerUiState.update {
+                        _uiState.update {
                             it.copy(message = "Dados atualizados com sucesso")
                         }
                     } else {
-                        _customerUiState.update {
+                        _uiState.update {
                             it.copy(message = it.message ?: "Erro ao atualizar dados")
                         }
                     }
                 }
                 .onFailure {
-                    _customerUiState.update {
+                    _uiState.update {
                         it.copy(message = it.message ?: "Erro ao atualizar dados")
                     }
                 }
 
             delay(400.milliseconds)
-            _customerUiState.update { it.copy(isLoading = false, message = null) }
+            _uiState.update { it.copy(isLoading = false, message = null) }
         }
     }
 
@@ -108,13 +126,13 @@ class CustomersViewModel @Inject constructor(
                 cityRepository.getCity(cityId)
             }.collect { result ->
                 result.onSuccess { city ->
-                    _customerUiState.update { it.copy(currentCity = city) }
+                    _uiState.update { it.copy(currentCity = city) }
                 }
-                .onFailure { error ->
-                    _customerUiState.update {
-                        it.copy(message = error.message ?: "Erro ao carregar cidade")
+                    .onFailure { error ->
+                        _uiState.update {
+                            it.copy(message = error.message ?: "Erro ao carregar cidade")
+                        }
                     }
-                }
             }
         }
     }
@@ -130,12 +148,12 @@ class CustomersViewModel @Inject constructor(
                     // Usar .fold() trata de forma funcional e limpa os dois estados
                     result.fold(
                         onSuccess = { customers ->
-                            _customerUiState.update {
+                            _uiState.update {
                                 it.copy(customers = customers)
                             }
                         },
                         onFailure = { error ->
-                            _customerUiState.update {
+                            _uiState.update {
                                 it.copy(message = error.message ?: "Erro ao carregar clientes")
                             }
                         }
@@ -158,7 +176,7 @@ class CustomersViewModel @Inject constructor(
                     )
                 }
                 .collect { monthlySalesSummary ->
-                    _customerUiState.update { it.copy(metric = monthlySalesSummary) }
+                    _uiState.update { it.copy(metric = monthlySalesSummary) }
                 }
         }
     }
@@ -166,12 +184,12 @@ class CustomersViewModel @Inject constructor(
 
     private fun observeSearchQuery() {
         viewModelScope.launch {
-            _customerUiState
+            _uiState
                 .map { it.searchQuery }
                 .distinctUntilChanged()
                 .collect { query ->
 
-                    _customerUiState.update { state ->
+                    _uiState.update { state ->
                         state.copy(
                             customers = state.customers.filter { customer ->
                                 customer.name.contains(
@@ -186,49 +204,168 @@ class CustomersViewModel @Inject constructor(
     }
 
 
-    private fun updateSearchQuery(query: String) = _customerUiState.update { it.copy(searchQuery = query) }
+    private fun getProductsWithDefinedPrice() {
+        viewModelScope.launch {
+            val products = productRepository.getProductsWithDefinedPrice()
 
-
-    private fun updateName(name: String) = _customerUiState.update { it.copy(name = name) }
-
-
-    private fun updateExtraInfo(extraInfo: String) = _customerUiState.update { it.copy(extraInfo = extraInfo) }
-
-
-    private fun showModalCreateCustomer() = _customerUiState.update {
-        it.copy(showModalCreateCustomer = true)
+            _uiState.update {
+                it.copy(
+                    addNewCustomersField = it.addNewCustomersField.copy(availableProducts = products)
+                )
+            }
+        }
     }
 
+    private fun updateSearchQuery(query: String) =
+        _uiState.update {
+            it.copy(searchQuery = query)
+        }
 
-    private fun showModalDeleteCustomer(id: Uuid?) = _customerUiState.update {
-        it.copy(showModalDeleteCustomer = id)
-    }
+
+    private fun updateName(name: String) =
+        _uiState.update {
+            it.copy(addNewCustomersField = it.addNewCustomersField.copy(name = name))
+        }
 
 
-    private fun closeModalAndOverlayCreatedCustomer() {
-        _customerUiState.update {
-            it.copy(
-                showModalCreateCustomer = false,
-                success = false
+    private fun updateExtraInfo(extraInfo: String) =
+        _uiState.update {
+            it.copy(addNewCustomersField = it.addNewCustomersField.copy(extraInfo = extraInfo))
+        }
+
+
+    private fun updateLastPurchasedProducts(product: Product) =
+        _uiState.update { state ->
+            val findProduct =
+                state.addNewCustomersField.lastPurchasedProducts.keys.find { it.id == product.id }
+
+            val updatedProducts = if (findProduct != null) {
+                val value = state.addNewCustomersField.lastPurchasedProducts[findProduct]
+
+
+                state.addNewCustomersField.lastPurchasedProducts.mapValues {
+                    if (it.key.id == product.id) {
+                        value?.plus(1) ?: 1
+                    } else {
+                        it.value
+                    }
+                }
+            } else {
+                state.addNewCustomersField.lastPurchasedProducts + (product to 1)
+            }
+
+            state.copy(
+                addNewCustomersField = state.addNewCustomersField.copy(
+                    lastPurchasedProducts = updatedProducts
+                )
             )
         }
 
-        resetAddNewCustomerFields()
+    private fun updateLastPurchaseDate(date: Long?) =
+        _uiState.update {
+            it.copy(addNewCustomersField = it.addNewCustomersField.copy(lastPurchaseDateMillis = date))
+        }
+
+    private fun updateOpeningDebt(openingDebt: String) {
+        val toBrazilianInput = parseBrazilianCurrencyInput(openingDebt)
+        val visualFormatText = brazilianCurrencyFormatter.format(toBrazilianInput)
+
+        _uiState.update {
+            it.copy(
+                addNewCustomersField = it.addNewCustomersField.copy(
+                    openingDebt = TextFieldValue(
+                        visualFormatText,
+                        selection = androidx.compose.ui.text.TextRange(visualFormatText.length)
+                    )
+                )
+            )
+        }
     }
 
 
+    fun decreaseQuantity(product: Product) {
+        _uiState.update { state ->
+            val selectedProducts = state.addNewCustomersField.lastPurchasedProducts
+            val selectedProduct = selectedProducts.keys.find { it.id == product.id }
+                ?: return@update state
+            val quantity = selectedProducts[selectedProduct] ?: return@update state
+            val updatedProducts = if (quantity <= 1) {
+                selectedProducts.filterKeys { it.id != product.id }
+            } else {
+                selectedProducts.mapValues { (selected, currentQuantity) ->
+                    if (selected.id == product.id) currentQuantity - 1 else currentQuantity
+                }
+            }
 
-    private fun onDismissModalDeleteCustomer() = _customerUiState.update {
+            state.copy(
+                addNewCustomersField = state.addNewCustomersField.copy(
+                    lastPurchasedProducts = updatedProducts
+                )
+            )
+        }
+    }
+
+    private fun increaseQuantity(product: Product) {
+        _uiState.update { state ->
+            val selectedProducts = state.addNewCustomersField.lastPurchasedProducts
+            if (selectedProducts.keys.none { it.id == product.id }) {
+                return@update state
+            }
+
+            val updatedProducts = selectedProducts.mapValues { (selected, quantity) ->
+                if (selected.id == product.id) quantity + 1 else quantity
+            }
+
+            state.copy(
+                addNewCustomersField = state.addNewCustomersField.copy(
+                    lastPurchasedProducts = updatedProducts
+                )
+            )
+        }
+    }
+
+
+    private fun showModalCreateCustomer() =
+        _uiState.update {
+            it.copy(showModalCreateCustomer = true)
+        }
+
+
+    private fun showModalDeleteCustomer(id: Uuid?) =
+        _uiState.update {
+            it.copy(showModalDeleteCustomer = id)
+        }
+
+
+    private fun closeModalAndOverlayCreatedCustomer() {
+        _uiState.update {
+            val updatedFields = if (it.success) {
+                AddNewCustomersField(
+                    availableProducts = it.addNewCustomersField.availableProducts
+                )
+            } else {
+                it.addNewCustomersField
+            }
+
+            it.copy(
+                showModalCreateCustomer = false,
+                success = false,
+                addNewCustomersField = updatedFields
+            )
+        }
+    }
+
+
+    private fun onDismissModalDeleteCustomer() = _uiState.update {
         it.copy(showModalDeleteCustomer = null)
     }
 
 
-
     private fun deleteCustomer() {
-        val customerId = _customerUiState.value.showModalDeleteCustomer
+        val customerId = _uiState.value.showModalDeleteCustomer
             ?: return
 
-        _customerUiState.update {
+        _uiState.update {
             it.copy(
                 showModalDeleteCustomer = null,
                 isDeletingCustomer = true
@@ -240,7 +377,7 @@ class CustomersViewModel @Inject constructor(
 
             result
                 .onSuccess {
-                    _customerUiState.update {
+                    _uiState.update {
                         it.copy(
                             isDeletingCustomer = false,
                             showModalDeleteCustomer = null
@@ -248,7 +385,7 @@ class CustomersViewModel @Inject constructor(
                     }
                 }
                 .onFailure { exception ->
-                    _customerUiState.update {
+                    _uiState.update {
                         it.copy(
                             message = exception.message
                                 ?: "Não foi possível excluir o cliente.",
@@ -260,51 +397,93 @@ class CustomersViewModel @Inject constructor(
     }
 
 
-
-
     private fun saveCustomer() {
-        viewModelScope.launch {
-            val extraInfo = if (_customerUiState.value.extraInfo.isBlank()) {
-                "Nenhuma informação extra"
-            } else {
-                _customerUiState.value.extraInfo.trim()
+        val state = _uiState.value
+        if (state.isSavingCustomer) return
+
+        val fields = state.addNewCustomersField
+        val name = fields.name.trim()
+        if (name.isBlank()) {
+            _uiState.update { it.copy(message = "Informe o nome do cliente.") }
+            return
+        }
+
+        val city = state.currentCity
+        if (city == null) {
+            _uiState.update { it.copy(message = "Não foi possível identificar a cidade do cliente.") }
+            return
+        }
+
+        val customerId = Uuid.random()
+        val openingDebt = parseBrazilianCurrencyInput(fields.openingDebt.text)
+        val purchaseId = Uuid.random()
+        val purchase = fields.lastPurchasedProducts
+            .takeIf { it.isNotEmpty() }
+            ?.let { selectedProducts ->
+                Purchase(
+                    id = purchaseId,
+                    customerId = customerId,
+                    ownerId = city.ownerId,
+                    purchaseDate = fields.lastPurchaseDateMillis ?: 0L,
+                    totalAmount = selectedProducts.entries.sumOf { (product, quantity) ->
+                        product.price.toDouble() * quantity
+                    }
+                )
             }
-
-            val customer = Customer(
-                name = _customerUiState.value.name.trim(),
-                extraInfo = extraInfo,
-                cityId = _customerUiState.value.currentCity?.id
+        val cartItems = fields.lastPurchasedProducts.map { (product, quantity) ->
+            CartItem(
+                product = product,
+                productId = product.id,
+                purchaseId = purchaseId,
+                quantity = quantity
             )
-            customerRepository.addCustomer(customer)
-                .onSuccess {
-                    _customerUiState.update { customerUiState ->
-                        customerUiState.copy(
-                            success = true,
-                            name = "",
-                            extraInfo = ""
-                        )
+        }
+        val lastPurchaseDate = fields.lastPurchaseDateMillis?.let { millis ->
+            SimpleDateFormat("dd/MM/yyyy", Locale.forLanguageTag("pt-BR"))
+                .apply { timeZone = TimeZone.getTimeZone("UTC") }
+                .format(Date(millis))
+        }
+
+        val customer = Customer(
+            id = customerId,
+            name = name,
+            extraInfo = fields.extraInfo
+                .takeUnless { it.isBlank() }
+                ?.trim()
+                ?: "Nenhuma informação extra",
+            owes = openingDebt.takeIf { it > 0.0 },
+            lastPurchaseDate = lastPurchaseDate,
+            cityId = city.id
+        )
+
+        _uiState.update { it.copy(isSavingCustomer = true, message = null) }
+        viewModelScope.launch {
+            try {
+                customerRepository.addCustomerWithHistory(
+                    customer = customer,
+                    purchase = purchase,
+                    cartItems = cartItems
+                )
+                    .onSuccess {
+                        _uiState.update { customerUiState ->
+                            customerUiState.copy(success = true)
+                        }
                     }
-                }
-                .onFailure { exception ->
-                    _customerUiState.update {
-                        it.copy(
-                            message = exception.message
-                        )
+                    .onFailure { exception ->
+                        _uiState.update {
+                            it.copy(
+                                message = exception.message
+                                    ?: "Não foi possível salvar o cliente."
+                            )
+                        }
                     }
-                }
+            } finally {
+                _uiState.update { it.copy(isSavingCustomer = false) }
+            }
         }
     }
 
 
-    fun resetAddNewCustomerFields() {
-        _customerUiState.update {
-            it.copy(
-                name = "",
-                extraInfo = "",
-                success = false
-            )
-        }
-    }
 }
 
 
@@ -312,30 +491,45 @@ sealed interface CustomersUiEvent {
     data class OnSearchQueryChange(val query: String) : CustomersUiEvent
     data class OnNameChange(val name: String) : CustomersUiEvent
     data class OnExtraInfoChange(val extraInfo: String) : CustomersUiEvent
+    data class OnShowModalDeleteCustomer(val id: Uuid?) : CustomersUiEvent
+    data class OnLastPurchasedProductsSelected(val product: Product) : CustomersUiEvent
+    data class OnLastPurchaseDateChange(val date: Long?) : CustomersUiEvent
+    data class OnOpeningDebtChange(val openingDebt: String) : CustomersUiEvent
+    data class OnIncreaseQuantityClick(val product: Product) : CustomersUiEvent
+    data class OnDecreaseQuantityClick(val product: Product) : CustomersUiEvent
     object OnCreateCustomerClick : CustomersUiEvent
     object OnDeleteCustomerClick : CustomersUiEvent
     object OnDismissModalDeleteCustomer : CustomersUiEvent
-    data class OnShowModalDeleteCustomer(val id: Uuid?) : CustomersUiEvent
     object OnShowModalCreateCustomer : CustomersUiEvent
     object OnDismissOverlayCreatedCustomer : CustomersUiEvent
 }
 
 data class MonthlySalesSummary(
     val totalProducts: Int = 0,
-    val totalAmount: Double = 0.0
+    val totalAmount: Double = 0.0,
 )
 
 data class CustomersUiState(
     val isLoading: Boolean = false,
+    val isSavingCustomer: Boolean = false,
     val success: Boolean = false,
     val message: String? = null,
+    val addNewCustomersField: AddNewCustomersField = AddNewCustomersField(),
     val isDeletingCustomer: Boolean = false,
-    val name: String = "",
     val searchQuery: String = "",
-    val extraInfo: String = "",
     val customers: List<Customer> = emptyList(),
     val metric: MonthlySalesSummary = MonthlySalesSummary(),
     val currentCity: City? = null,
     val showModalCreateCustomer: Boolean = false,
     val showModalDeleteCustomer: Uuid? = null,
+)
+
+
+data class AddNewCustomersField(
+    val name: String = "",
+    val extraInfo: String = "",
+    val availableProducts: List<Product> = emptyList(),
+    val lastPurchasedProducts: Map<Product, Int> = emptyMap(),
+    val lastPurchaseDateMillis: Long? = null,
+    val openingDebt: TextFieldValue = TextFieldValue("R$ 0,00"),
 )

@@ -67,6 +67,40 @@ class CustomerRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun addCustomerWithHistory(
+        customer: Customer,
+        purchase: Purchase?,
+        cartItems: List<CartItem>,
+    ): Result<Boolean> {
+        return try {
+            require(customer.id != null) { "ID do cliente inválido" }
+            require(purchase != null || cartItems.isEmpty()) {
+                "Os itens precisam estar associados a uma compra"
+            }
+            require(purchase == null || purchase.customerId == customer.id) {
+                "A compra precisa pertencer ao cliente criado"
+            }
+            require(purchase == null || cartItems.all { it.purchaseId == purchase.id }) {
+                "Os itens precisam estar associados à compra criada"
+            }
+
+            appDatabase.withTransaction {
+                customerDao.saveCustomer(customer.toCustomerEntity())
+                purchase?.let {
+                    purchaseDao.addPurchase(it.toEntity())
+                    if (cartItems.isNotEmpty()) {
+                        customerDao.saveCartItems(cartItems.map { item -> item.toCartEntity() })
+                    }
+                }
+            }
+            Result.success(true)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun newPurchase(purchase: Purchase): Result<Unit> {
         return try {
             purchaseDao.addPurchase(purchase.toEntity())

@@ -526,7 +526,7 @@ fun AddProductCard(
             Spacer(modifier = Modifier.height(6.dp))
 
             EasyNoteBrazilianCurrencyTextField(
-                text = uiState.manuelProductPrice,
+                text = uiState.manualProductPrice,
                 onValueChange = {
                     onManualProductPriceChange(it)
                 },
@@ -537,12 +537,12 @@ fun AddProductCard(
                     unfocusedBorderColor = Color.Transparent,
                     focusedTextColor = MaterialTheme.colorScheme.onSurface,
                     unfocusedTextColor = MaterialTheme.colorScheme.onSurface
-                )
+                ),
             )
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            val manualProductPrice = parseBrazilianCurrencyInput(uiState.manuelProductPrice.text)
+            val manualProductPrice = parseBrazilianCurrencyInput(uiState.manualProductPrice.text)
             Button(
                 onClick = addManualProduct,
                 enabled = uiState.manualProductName.isNotBlank() && manualProductPrice > 0.0,

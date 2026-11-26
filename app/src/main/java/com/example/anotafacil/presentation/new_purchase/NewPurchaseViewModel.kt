@@ -52,20 +52,30 @@ class NewPurchaseViewModel @Inject constructor(
     val uiState: StateFlow<NewPurchaseUiState> = _uiState.asStateFlow()
 
     init {
+        updateAllProducts()
         getProductsWithDefinedPrice()
     }
 
-    private fun getProductsWithDefinedPrice() {
+    private fun updateAllProducts() {
         viewModelScope.launch {
             val products = productRepository.getProductsWithDefinedPrice()
 
+            _uiState.update {
+                it.copy(allProducts = products)
+            }
+        }
+
+    }
+
+
+    private fun getProductsWithDefinedPrice() {
+        viewModelScope.launch {
             customer.collect { customer ->
                 val debt = customer?.owes ?: 0.0
 
                 _uiState.update {
                     it.copy(
                         pendingDebt = debt,
-                        allProducts = products,
                         totalPrice = debt
                     )
                 }
@@ -73,12 +83,13 @@ class NewPurchaseViewModel @Inject constructor(
         }
     }
 
+
     fun onProductSelected(product: Product) {
-        _uiState.update { currentState ->
-            val existingProduct = currentState.selectedProducts.find { it.product.id == product.id }
+        _uiState.update { state ->
+            val existingProduct = state.selectedProducts.find { it.product.id == product.id }
 
             val updatedList = if (existingProduct != null) {
-                currentState.selectedProducts.map { item ->
+                state.selectedProducts.map { item ->
                     if (item.product.id == product.id) {
                         item.copy(quantity = item.quantity + 1)
                     } else {
@@ -86,17 +97,17 @@ class NewPurchaseViewModel @Inject constructor(
                     }
                 }
             } else {
-                currentState.selectedProducts + CartItem(product = product, quantity = 1)
+                state.selectedProducts + CartItem(product = product, quantity = 1)
             }
 
             val subtotal = updatedList.sumOf {
                 it.subtotal()
             }
 
-            currentState.copy(
+            state.copy(
                 selectedProducts = updatedList,
                 selectedProductsSubtotal = subtotal,
-                totalPrice = subtotal + currentState.pendingDebt
+                totalPrice = subtotal + state.pendingDebt
             )
         }
 
@@ -119,9 +130,9 @@ class NewPurchaseViewModel @Inject constructor(
     }
 
     fun increaseQuantity(product: Product) {
-        _uiState.update { currentState ->
+        _uiState.update { state ->
 
-            val updatedProducts = currentState.selectedProducts.map {
+            val updatedProducts = state.selectedProducts.map {
                 if (it.product.id == product.id) {
                     it.copy(quantity = it.quantity + 1)
                 } else {
@@ -133,10 +144,10 @@ class NewPurchaseViewModel @Inject constructor(
                 it.subtotal()
             }
 
-            currentState.copy(
+            state.copy(
                 selectedProducts = updatedProducts,
                 selectedProductsSubtotal = subtotal,
-                totalPrice = subtotal + currentState.pendingDebt
+                totalPrice = subtotal + state.pendingDebt
             )
         }
     }

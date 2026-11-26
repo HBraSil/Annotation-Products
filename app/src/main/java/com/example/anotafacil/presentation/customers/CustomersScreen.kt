@@ -71,7 +71,7 @@ fun OwnerCustomersScreen(
     goToCustomerDetailScreen: (Uuid?) -> Unit = {},
 ) {
 
-    val customerUiState by customersViewModel.customerUiState.collectAsState()
+    val customerUiState by customersViewModel.uiState.collectAsState()
 
     BackHandler {
         goToHomeScreen()
@@ -98,7 +98,7 @@ fun SellerCustomersScreen(
     goToCustomerDetailScreen: (Uuid?) -> Unit = {},
 ) {
 
-    val customerUiState by customersViewModel.customerUiState.collectAsState()
+    val customerUiState by customersViewModel.uiState.collectAsState()
 
     BackHandler {
         goToHomeScreen()
@@ -257,6 +257,11 @@ fun CustomersContent(
                 onExtraInfoChange = { onCustomerUiEvent(CustomersUiEvent.OnExtraInfoChange(it)) },
                 onCreateClientClick = { onCustomerUiEvent(CustomersUiEvent.OnCreateCustomerClick) },
                 onCloseModal = { onCustomerUiEvent(CustomersUiEvent.OnDismissOverlayCreatedCustomer) },
+                onLastPurchaseProductSelected = { onCustomerUiEvent(CustomersUiEvent.OnLastPurchasedProductsSelected(it)) },
+                onLastPurchaseDateChange = { onCustomerUiEvent(CustomersUiEvent.OnLastPurchaseDateChange(it)) },
+                onOpeningDebtChange = { onCustomerUiEvent(CustomersUiEvent.OnOpeningDebtChange(it)) },
+                onIncreaseQuantityClick = { onCustomerUiEvent(CustomersUiEvent.OnIncreaseQuantityClick(it)) },
+                onDecreaseQuantityClick = { onCustomerUiEvent(CustomersUiEvent.OnDecreaseQuantityClick(it)) }
             )
         }
 
