@@ -29,7 +29,9 @@ import androidx.compose.material.icons.filled.ArrowBackIosNew
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowUp
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.QuestionMark
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -40,6 +42,9 @@ import com.example.anotafacil.ui.components.AnnotationProductsFab
 import com.example.anotafacil.ui.components.AnnotationProductsNothingToShow
 import com.example.anotafacil.ui.components.AnnotationProductsStatusDialog
 import com.example.anotafacil.ui.components.EasyNoteBrazilianCurrencyTextField
+import com.example.anotafacil.presentation.customers.AddNewCustomerScreen
+import com.example.anotafacil.presentation.customers.CustomersUiState
+import com.example.anotafacil.domain.model.Product
 import kotlin.uuid.Uuid
 
 @Composable
@@ -60,7 +65,18 @@ fun CustomerDetailScreen(
         onPartialPaymentConfirm = customerDetailViewModel::confirmSelectedOnDialog,
         onDismiss = customerDetailViewModel::onDismiss,
         showConfirmationDialog = customerDetailViewModel::showConfirmationDialog,
-        onDismissToast = customerDetailViewModel::onDismissToast
+        onDismissToast = customerDetailViewModel::onDismissToast,
+        onEditProfileClick = customerDetailViewModel::openEditProfile,
+        onEditNameChange = customerDetailViewModel::updateEditName,
+        onEditExtraInfoChange = customerDetailViewModel::updateEditExtraInfo,
+        onEditPurchaseDateChange = customerDetailViewModel::updateEditPurchaseDate,
+        onEditOpeningDebtChange = customerDetailViewModel::updateEditOpeningDebt,
+        onEditProductSelected = customerDetailViewModel::selectEditProduct,
+        onIncreaseEditProductQuantity = customerDetailViewModel::increaseEditProductQuantity,
+        onDecreaseEditProductQuantity = customerDetailViewModel::decreaseEditProductQuantity,
+        onSaveCustomerProfile = customerDetailViewModel::saveCustomerProfile,
+        onDismissEditProfile = customerDetailViewModel::dismissEditProfile,
+        onDismissMessage = customerDetailViewModel::dismissMessage
     )
 }
 
@@ -76,8 +92,27 @@ fun CustomerDetailContent(
     onDismiss: () -> Unit = {},
     showConfirmationDialog: (ConfirmationAction) -> Unit = {},
     onDismissToast: () -> Unit = {},
+    onEditProfileClick: () -> Unit = {},
+    onEditNameChange: (String) -> Unit = {},
+    onEditExtraInfoChange: (String) -> Unit = {},
+    onEditPurchaseDateChange: (Long?) -> Unit = {},
+    onEditOpeningDebtChange: (String) -> Unit = {},
+    onEditProductSelected: (Product) -> Unit = {},
+    onIncreaseEditProductQuantity: (Product) -> Unit = {},
+    onDecreaseEditProductQuantity: (Product) -> Unit = {},
+    onSaveCustomerProfile: () -> Unit = {},
+    onDismissEditProfile: () -> Unit = {},
+    onDismissMessage: () -> Unit = {},
 ) {
     val context = LocalContext.current
+    var menuExpanded by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(uiState.message) {
+        uiState.message?.let { message ->
+            Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+            onDismissMessage()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -89,11 +124,38 @@ fun CustomerDetailContent(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { onHistoryClick(uiState.customer.id) }) {
-                        Icon(
-                            imageVector = Icons.Default.History,
-                            contentDescription = "Histórico",
-                        )
+                    Box {
+                        IconButton(onClick = { menuExpanded = true }) {
+                            Icon(
+                                imageVector = Icons.Default.MoreVert,
+                                contentDescription = "Opções do cliente",
+                            )
+                        }
+                        DropdownMenu(
+                            expanded = menuExpanded,
+                            onDismissRequest = { menuExpanded = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text("Histórico") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.History, contentDescription = null)
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onHistoryClick(uiState.customer.id)
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Editar perfil") },
+                                leadingIcon = {
+                                    Icon(Icons.Default.Edit, contentDescription = null)
+                                },
+                                onClick = {
+                                    menuExpanded = false
+                                    onEditProfileClick()
+                                }
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -278,6 +340,29 @@ fun CustomerDetailContent(
             text = "Pagamento realizado com sucesso!",
             confirmClick = onDismiss,
             onDismiss = onDismiss,
+        )
+    }
+
+    if (uiState.showEditProfile) {
+        AddNewCustomerScreen(
+            uiState = CustomersUiState(
+                addNewCustomersField = uiState.editFields,
+                success = uiState.editSuccess,
+                isSavingCustomer = uiState.isSavingProfile
+            ),
+            title = "Editar perfil",
+            submitButtonText = "Atualizar",
+            successMessage = "Perfil atualizado com sucesso!",
+            onDismissOverlayCreatedCustomer = onDismissEditProfile,
+            onNameChange = onEditNameChange,
+            onExtraInfoChange = onEditExtraInfoChange,
+            onCreateClientClick = onSaveCustomerProfile,
+            onCloseModal = onDismissEditProfile,
+            onLastPurchaseProductSelected = onEditProductSelected,
+            onLastPurchaseDateChange = onEditPurchaseDateChange,
+            onOpeningDebtChange = onEditOpeningDebtChange,
+            onIncreaseQuantityClick = onIncreaseEditProductQuantity,
+            onDecreaseQuantityClick = onDecreaseEditProductQuantity
         )
     }
 

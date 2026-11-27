@@ -29,6 +29,7 @@ class SubscriptionViewModel @Inject constructor(
     private val _subscriptionState = MutableStateFlow(SubscriptionState())
     val subscriptionState: StateFlow<SubscriptionState> = _subscriptionState.asStateFlow()
 
+
     private var subscriptionProduct: ProductDetails? = null
     private var subscriptionOfferToken: String? = null
 
@@ -38,6 +39,7 @@ class SubscriptionViewModel @Inject constructor(
         processPurchase()
     }
 
+
     private fun processPurchase() {
         viewModelScope.launch {
             billingManager.purchaseUpdates.collect {
@@ -46,6 +48,7 @@ class SubscriptionViewModel @Inject constructor(
             }
         }
     }
+
 
     fun loadSubscriptionProduct() {
         viewModelScope.launch {
@@ -101,27 +104,54 @@ class SubscriptionViewModel @Inject constructor(
         }
     }
 
+
     fun premiumPurchase(activity: Activity) {
         val productDetails = subscriptionProduct ?: return
         val offerToken = subscriptionOfferToken ?: return
 
-        val result = billingManager.launchSubscriptionPurchase(
-            activity = activity,
-            productDetails = productDetails,
-            offerToken = offerToken
-        )
+        viewModelScope.launch {
 
-        if (
-            result == null ||
-            result.responseCode != BillingClient.BillingResponseCode.OK
-        ) {
-            _subscriptionState.update {
-                it.copy(
-                    errorMessage = "Não foi possível iniciar a compra. Tente novamente."
-                )
+            when (billingManager.hasSubscriptionFromAnotherAccount()) {
+                true -> {
+                    _subscriptionState.update {
+                        it.copy(showSubscriptionAlreadyOwnedDialog = true)
+                    }
+                }
+
+                false -> {
+                    val result = billingManager.launchSubscriptionPurchase(
+                        activity = activity,
+                        productDetails = productDetails,
+                        offerToken = offerToken
+                    )
+
+                    if (
+                        result == null ||
+                        result.responseCode != BillingClient.BillingResponseCode.OK
+                    ) {
+                        _subscriptionState.update {
+                            it.copy(
+                                errorMessage = "Não foi possível iniciar a compra. Tente novamente."
+                            )
+                        }
+                    }
+                }
+
+                null -> {
+                    _subscriptionState.update {
+                        it.copy(
+                            errorMessage = "Não foi possível verificar as assinaturas da Google Play. Tente novamente."
+                        )
+                    }
+                }
             }
         }
+    }
 
+    fun dismissSubscriptionAlreadyOwnedDialog() {
+        _subscriptionState.update {
+            it.copy(showSubscriptionAlreadyOwnedDialog = false)
+        }
     }
 
 
@@ -152,6 +182,7 @@ data class SubscriptionState(
     val productName: String? = null,
     val productDescription: String? = null,
     val formattedMonthlyPrice: String? = null,
+    val showSubscriptionAlreadyOwnedDialog: Boolean = false
 )
 
 enum class SubscriptionStatus {

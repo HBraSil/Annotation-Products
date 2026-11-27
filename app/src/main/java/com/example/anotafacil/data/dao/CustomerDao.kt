@@ -33,6 +33,9 @@ interface CustomerDao {
     @Insert
     suspend fun saveCartItems(cartItems: List<CartItemEntity>): List<Long>
 
+    @Query("DELETE FROM cart_item WHERE purchaseId = :purchaseId")
+    suspend fun deleteCartItemsForPurchase(purchaseId: Uuid): Int
+
     @Query("""
     SELECT *
     FROM customer

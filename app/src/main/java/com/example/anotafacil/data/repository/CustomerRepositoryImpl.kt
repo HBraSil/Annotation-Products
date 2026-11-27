@@ -101,6 +101,54 @@ class CustomerRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun updateCustomerWithLastPurchase(
+        customer: Customer,
+        purchase: Purchase?,
+        cartItems: List<CartItem>,
+        replacePurchaseId: Uuid?,
+    ): Result<Boolean> {
+        return try {
+            val customerId = requireNotNull(customer.id) { "ID do cliente inválido" }
+            require(purchase != null || cartItems.isEmpty()) {
+                "Os itens precisam estar associados a uma compra"
+            }
+            require(purchase == null || purchase.customerId == customerId) {
+                "A compra precisa pertencer ao cliente"
+            }
+            require(purchase == null || cartItems.all { it.purchaseId == purchase.id }) {
+                "Os itens precisam estar associados à compra"
+            }
+            require(replacePurchaseId == null || purchase?.id == replacePurchaseId) {
+                "Apenas a última compra pode ser atualizada"
+            }
+
+            appDatabase.withTransaction {
+                check(customerDao.updateCustomer(customer.toCustomerEntity()) == 1) {
+                    "Não foi possível atualizar o cliente"
+                }
+
+                if (replacePurchaseId != null) {
+                    customerDao.deleteCartItemsForPurchase(replacePurchaseId)
+                    checkNotNull(purchase)
+                    check(purchaseDao.updatePurchase(purchase.toEntity()) == 1) {
+                        "Não foi possível atualizar a última compra"
+                    }
+                } else if (purchase != null) {
+                    purchaseDao.addPurchase(purchase.toEntity())
+                }
+
+                if (cartItems.isNotEmpty()) {
+                    customerDao.saveCartItems(cartItems.map { it.toCartEntity() })
+                }
+            }
+            Result.success(true)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun newPurchase(purchase: Purchase): Result<Unit> {
         return try {
             purchaseDao.addPurchase(purchase.toEntity())

@@ -45,6 +45,9 @@ import java.util.TimeZone
 @Composable
 fun AddNewCustomerScreen(
     uiState: CustomersUiState = CustomersUiState(),
+    title: String = "Novo Cliente",
+    submitButtonText: String = "Criar Cliente",
+    successMessage: String = "Cliente adicionado com sucesso!",
     onDismissOverlayCreatedCustomer: () -> Unit = {},
     onNameChange: (String) -> Unit = {},
     onExtraInfoChange: (String) -> Unit = {},
@@ -69,7 +72,7 @@ fun AddNewCustomerScreen(
                 CenterAlignedTopAppBar(
                     title = {
                         Text(
-                            "New Client",
+                            title,
                             color = MaterialTheme.colorScheme.onSurface,
                             fontWeight = FontWeight.Bold,
                             fontSize = 24.sp
@@ -190,7 +193,7 @@ fun AddNewCustomerScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = if (uiState.isSavingCustomer) "Salvando..." else "Criar Cliente",
+                                text = if (uiState.isSavingCustomer) "Salvando..." else submitButtonText,
                                 color = Color.White,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
@@ -218,7 +221,7 @@ fun AddNewCustomerScreen(
 
     if (uiState.success) {
         AnnotationProductsStatusDialog(
-            text = "Cliente adicionado com sucesso!",
+            text = successMessage,
             confirmClick = onDismissOverlayCreatedCustomer,
             onDismiss = onDismissOverlayCreatedCustomer,
         )

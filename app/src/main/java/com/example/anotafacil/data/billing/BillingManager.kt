@@ -14,6 +14,7 @@ import com.android.billingclient.api.QueryProductDetailsParams
 import com.android.billingclient.api.Purchase
 import com.android.billingclient.api.QueryPurchasesParams
 import com.android.billingclient.api.PurchasesResponseListener
+import com.android.billingclient.api.queryPurchasesAsync
 import com.example.anotafacil.data.firestore.FirestoreSchema
 import com.example.anotafacil.domain.Response.BillingManagerResponse
 import com.google.firebase.auth.FirebaseAuth
@@ -402,6 +403,36 @@ class BillingManager @Inject constructor(
                     e
                 )
             }
+        }
+    }
+
+    suspend fun hasSubscriptionFromAnotherAccount(): Boolean? {
+
+        val uid = auth.currentUser?.uid ?: return null
+
+        val params = QueryPurchasesParams.newBuilder()
+            .setProductType(BillingClient.ProductType.SUBS)
+            .build()
+
+        val result = billingClient.queryPurchasesAsync(params)
+
+        if (
+            result.billingResult.responseCode !=
+            BillingClient.BillingResponseCode.OK
+        ) {
+            return null
+        }
+
+        val currentAccountId = obfuscateAccountId(uid)
+
+        return result.purchasesList.any { purchase ->
+
+            val purchaseAccountId = purchase.accountIdentifiers?.obfuscatedAccountId
+
+            "premium" in purchase.products &&
+                purchase.purchaseState == Purchase.PurchaseState.PURCHASED &&
+                purchaseAccountId != null &&
+                purchaseAccountId != currentAccountId
         }
     }
 

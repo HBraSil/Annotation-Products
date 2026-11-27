@@ -79,8 +79,9 @@ fun SubscriptionScreen(
     SubscriptionContent(
         uiState = uiState,
         onSubscribeClick = { subscriptionViewModel.premiumPurchase(activity = activity) },
+        onBackClick = onBackClick,
         onRetryClick = subscriptionViewModel::loadSubscriptionProduct,
-        onBackClick = onBackClick
+        onDismissSubscriptionAlreadyOwnedDialog = subscriptionViewModel::dismissSubscriptionAlreadyOwnedDialog
     )
 }
 
@@ -89,9 +90,10 @@ fun SubscriptionScreen(
 @Composable
 fun SubscriptionContent(
     uiState: SubscriptionState = SubscriptionState(),
-    onSubscribeClick: () -> Unit,
-    onBackClick: () -> Unit,
-    onRetryClick: () -> Unit = {}
+    onSubscribeClick: () -> Unit = {},
+    onBackClick: () -> Unit = {},
+    onRetryClick: () -> Unit = {},
+    onDismissSubscriptionAlreadyOwnedDialog: () -> Unit = {}
 ) {
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -144,6 +146,30 @@ fun SubscriptionContent(
             EasyNoteLoadingOverlay(
                 modifier = Modifier.fillMaxSize(),
                 text = "Configurando seu plano..."
+            )
+        }
+
+        if (uiState.showSubscriptionAlreadyOwnedDialog) {
+            AlertDialog(
+                onDismissRequest = onDismissSubscriptionAlreadyOwnedDialog,
+                title = {
+                    Text("Assinatura já existente")
+                },
+                text = {
+                    Text(
+                        "Esta conta Google Play já possui uma assinatura " +
+                                "Premium vinculada a outra conta do Anota Fácil.\n\n" +
+                                "Entre na conta original ou utilize outra conta " +
+                                "Google Play para contratar uma assinatura independente."
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = onDismissSubscriptionAlreadyOwnedDialog
+                    ) {
+                        Text("Entendi")
+                    }
+                }
             )
         }
     }
@@ -440,8 +466,7 @@ private fun SubscriptionScreenPreview() {
         )
     ) {
         SubscriptionContent(
-            onBackClick = {},
-            onSubscribeClick = {}
+            onSubscribeClick = {},
         )
     }
 }

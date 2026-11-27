@@ -21,6 +21,13 @@ interface CustomerRepository {
         cartItems: List<CartItem>,
     ): Result<Boolean>
 
+    suspend fun updateCustomerWithLastPurchase(
+        customer: Customer,
+        purchase: Purchase?,
+        cartItems: List<CartItem>,
+        replacePurchaseId: Uuid?,
+    ): Result<Boolean>
+
     suspend fun newPurchase(purchase: Purchase): Result<Unit>
 
     suspend fun updateCustomer(customer: Customer): Int
