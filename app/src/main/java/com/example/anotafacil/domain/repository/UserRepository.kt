@@ -29,6 +29,8 @@ interface UserRepository {
 
     suspend fun saveChanges(userWithNewName: User? = null, userWithNewEmail: User? = null): Result<String?>
 
+    suspend fun removeOwnerRole(uid: String)
+
     suspend fun checkEmailChange(): Result<Boolean>
 
     suspend fun signOut(): Result<Boolean>

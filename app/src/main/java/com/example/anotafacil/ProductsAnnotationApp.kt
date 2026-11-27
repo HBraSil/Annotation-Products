@@ -139,7 +139,6 @@ fun ProductsAnnotationApp(
             confirmClick = {
                 dismissDialog()
                 navController.navigate(Screens.ROLE_SECTION.route) {
-                    Log.d("ProductsAnnotationApp", "Confirm click denrto da lambda")
                     popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                 }
             }

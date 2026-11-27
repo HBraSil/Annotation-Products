@@ -14,8 +14,8 @@ interface UserDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveUserDao(user: UserEntity)
 
-    @Query("UPDATE user SET ownerId = :ownerId WHERE uid = :uid")
-    suspend fun updateOwnerId(uid: String, ownerId: String?)
+    @Query("UPDATE user SET ownerId = :ownerId, role = :role WHERE uid = :uid")
+    suspend fun updateSellerDisconnectedData(uid: String, ownerId: String?, role: UserRole? )
 
     @Query("UPDATE user SET name = :name WHERE uid = :uid")
     suspend fun updateUserName(uid: String, name: String): Int
@@ -24,7 +24,7 @@ interface UserDao {
     suspend fun updateEmail(uid: String, email: String)
 
     @Query("UPDATE user SET role = :userRole WHERE uid = :uid")
-    suspend fun updateRole(uid: String, userRole: UserRole)
+    suspend fun updateRole(uid: String, userRole: UserRole?)
 
     @Query("""
     UPDATE user

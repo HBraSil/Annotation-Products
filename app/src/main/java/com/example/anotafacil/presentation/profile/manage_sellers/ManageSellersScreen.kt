@@ -175,6 +175,9 @@ fun ManageSellersContent(
         if (uiState.showDisconnectionConfirmationDialog) {
             EasyNoteConfirmationDialog(
                 title = "Tem certeza que deseja desconectar esse vendedor?",
+                subtitle = "Anotações que ainda não foram sincronizadas poderão ser perdidas.\n" +
+                        "\n" +
+                        "Certifique-se de que o vendedor sincronizou seus dados antes de continuar.",
                 icon = Icons.Default.QuestionMark,
                 onDismissRequest = { onShowDisconnectionConfirmationDialog(false) },
                 onConfirmClick = { disconnectSeller(sellerUid) }

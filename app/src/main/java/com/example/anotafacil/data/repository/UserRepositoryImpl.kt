@@ -401,6 +401,9 @@ class UserRepositoryImpl @Inject constructor(
     }
 
 
+    override suspend fun removeOwnerRole(uid: String) = userDao.updateRole(uid, null)
+
+
     private suspend fun saveNewName(user: User): Result<Boolean> {
         return try {
             firestore
@@ -518,7 +521,7 @@ class UserRepositoryImpl @Inject constructor(
 
             appDatabase.clearSellerData().getOrThrow()
 
-            userDao.updateOwnerId(uid = uid, ownerId = null)
+            userDao.updateSellerDisconnectedData(uid = uid, ownerId = null, role = null)
 
             userDataStore.clearSellerLinkState(uid)
 

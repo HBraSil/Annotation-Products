@@ -3,6 +3,7 @@ package com.example.anotafacil.presentation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.anotafacil.Screens
 import com.example.anotafacil.data.billing.BillingManager
 import com.example.anotafacil.data.datastore.LastScreenDatastore
 import com.example.anotafacil.domain.datastore.UserDataStore
@@ -62,6 +63,7 @@ class MainActivityViewModel @Inject constructor(
 
                     when (response) {
                         is BillingManagerResponse.Disconnected -> {
+                            // ATUALIZAR A ROTA AQUI?
                             _mainActivityUiState.update { it.copy(sellerConnection = SellerConnectionState.NotConnected) }
                         }
 
@@ -79,8 +81,15 @@ class MainActivityViewModel @Inject constructor(
                         is BillingManagerResponse.NoPremium -> {
                             val previouslyHadPremium = userDataStore.wasPremiumActive(response.uid)
 
-                            Log.d("MainActivityViewModel", "previouslyHadPremium: $previouslyHadPremium")
                             if (previouslyHadPremium) {
+
+                                // Salva a tela que deverá abrir na próxima inicialização.
+                                lastScreenDatastore.setLastScreenProfile(Screens.ROLE_SECTION.route)
+
+                                Log.d("MainActivityViewModel", "RoleSection: ${response.uid}")
+                                // Remove o papel OWNER do Room.
+                                userRepository.removeOwnerRole(response.uid)
+
                                 _mainActivityUiState.update {
                                     it.copy(
                                         showPremiumEndedDialog = true,
@@ -104,7 +113,6 @@ class MainActivityViewModel @Inject constructor(
     }
 
     fun setLastRoute(route: String) {
-        Log.d("MainActivityViewModel", "setLastRoute: $route")
         viewModelScope.launch { lastScreenDatastore.setLastScreenProfile(route) }
     }
 
