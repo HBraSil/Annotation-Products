@@ -12,6 +12,7 @@ import com.example.anotafacil.domain.model.toEntity
 import com.example.anotafacil.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
@@ -32,71 +33,14 @@ class AuthRepositoryImpl @Inject constructor(
 
         return try {
             googleSignInUtils.doGoogleSingIn().fold(
-                onSuccess = {
-                    if (it == null) return Result.failure(Exception())
-                    val authResult = firebaseAuth.signInWithCredential(it).await()
+                onSuccess = { credential ->
+                    if (credential == null) return Result.failure(Exception())
+                    val authResult = firebaseAuth.signInWithCredential(credential).await()
 
                     val firebaseUser = authResult.user
-                    val uid = firebaseUser?.uid ?: return Result.failure(Exception("Erro ao fazer login"))
+                        ?: return Result.failure(Exception("Erro ao fazer login"))
 
-                    val userRef  = firestore
-                        .collection(FirestoreSchema.Collections.USERS)
-                        .document(uid)
-
-                    val userSnapshot = userRef
-                        .get(Source.SERVER)
-                        .await()
-
-
-                    val remoteUser = if (userSnapshot.exists()) {
-                        userSnapshot.toObject(FirestoreUser::class.java)
-                            ?: throw Exception(
-                                "Erro ao recuperar os dados do usuário"
-                            )
-                    } else {
-                        val newUser = FirestoreUser(
-                            //uid = uid,
-                            name = firebaseUser.displayName.orEmpty(),
-                            email = firebaseUser.email.orEmpty(),
-                            ownerId = null
-                        )
-
-                        userRef.set(newUser).await()
-                        newUser
-                    }
-
-                    // 3. Consultar o acesso de proprietário
-                    val entitlementSnapshot = firestore
-                        .collection(
-                            FirestoreSchema.Collections.SUBSCRIPTION_ENTITLEMENTS
-                        )
-                        .document(uid)
-                        .get(Source.SERVER)
-                        .await()
-
-                    val hasOwnerAccess = entitlementSnapshot.getBoolean(
-                        FirestoreSchema.SubscriptionFields.HAS_OWNER_ACCESS
-                    ) == true
-
-                    Log.d("AuthRepositoryImpl", "loginWithGoogle: $hasOwnerAccess")
-
-                    // 4. Determinar o papel atual
-                    val role: UserRole? = when {
-                        hasOwnerAccess -> UserRole.OWNER
-                        !remoteUser.ownerId.isNullOrBlank() -> UserRole.SELLER
-                        else -> null
-                    }
-
-                    // 5. Construir o usuário do aplicativo
-                    val user = User(
-                        uid = uid,
-                        name = remoteUser.name,
-                        email = remoteUser.email,
-                        ownerId = remoteUser.ownerId,
-                        role = role
-                    )
-
-                    userDao.saveUserDao(user.toEntity())
+                    saveAuthenticatedUser(firebaseUser)
 
                     Result.success(true)
                 },
@@ -121,10 +65,10 @@ class AuthRepositoryImpl @Inject constructor(
         return try {
             val authResult = firebaseAuth.signInWithEmailAndPassword(email, password).await()
 
-            //val
+            val firebaseUser = authResult.user
+                ?: return Result.failure(Exception("Erro ao fazer login"))
 
-            if (authResult.user?.uid == null)
-                return Result.failure(Exception("Erro ao fazer login"))
+            saveAuthenticatedUser(firebaseUser)
 
             Result.success(true)
         } catch (e: Exception) {
@@ -132,6 +76,65 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+
+    private suspend fun saveAuthenticatedUser(firebaseUser: FirebaseUser) {
+        val uid = firebaseUser.uid
+
+        // 1. Recuperar o usuário do Firestore
+        val userRef = firestore
+            .collection(FirestoreSchema.Collections.USERS)
+            .document(uid)
+
+        val userSnapshot = userRef
+            .get(Source.SERVER)
+            .await()
+
+        val remoteUser = if (userSnapshot.exists()) {
+            userSnapshot.toObject(FirestoreUser::class.java)
+                ?: throw Exception("Erro ao recuperar os dados do usuário")
+        } else {
+            val newUser = FirestoreUser(
+                name = firebaseUser.displayName.orEmpty(),
+                email = firebaseUser.email.orEmpty(),
+                ownerId = null
+            )
+
+            userRef.set(newUser).await()
+            newUser
+        }
+
+        // 2. Consultar a assinatura
+        val entitlementSnapshot = firestore
+            .collection(
+                FirestoreSchema.Collections.SUBSCRIPTION_ENTITLEMENTS
+            )
+            .document(uid)
+            .get(Source.SERVER)
+            .await()
+
+        val hasOwnerAccess = entitlementSnapshot.getBoolean(
+            FirestoreSchema.SubscriptionFields.HAS_OWNER_ACCESS
+        ) == true
+
+        // 3. Determinar a role
+        val role: UserRole? = when {
+            hasOwnerAccess -> UserRole.OWNER
+            !remoteUser.ownerId.isNullOrBlank() -> UserRole.SELLER
+            else -> null
+        }
+
+        // 4. Construir o usuário
+        val user = User(
+            uid = uid,
+            name = remoteUser.name,
+            email = remoteUser.email,
+            ownerId = remoteUser.ownerId,
+            role = role
+        )
+
+        // 5. Salvar no Room
+        userDao.saveUserDao(user.toEntity())
+    }
 
     override suspend fun signUpWithEmailAndPassword(
         name: String,
