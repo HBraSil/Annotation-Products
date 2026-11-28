@@ -72,7 +72,10 @@ class MainActivity : ComponentActivity() {
                         showEmailChangedDialog = showEmailChangedDialog,
                         startDestination = startDestination,
                         dismissEmailChangedDialog = appForegroundManager::dismissEmailChangedDialog,
-                        confirmSellerDisconnect = mainActivityViewModel::confirmSellerDisconnect,
+                        dismissSellerDisconnectedDialog =
+                            mainActivityViewModel::dismissSellerDisconnectedDialog,
+                        onSellerDisconnectionNavigationHandled =
+                            mainActivityViewModel::onSellerDisconnectionNavigationHandled,
                         setLastRoute = mainActivityViewModel::setLastRoute,
                         dismissDialog = mainActivityViewModel::dismissPremiumEndedDialog,
                         onOwnerNavigationHandled = mainActivityViewModel::onOwnerNavigationHandled

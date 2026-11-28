@@ -37,5 +37,5 @@ interface UserRepository {
 
     suspend fun resolveInitialDestination(): Result<WhichScreenToGo>
 
-    suspend fun acknowledgeSellerDisconnection(uid: String)
+    suspend fun acknowledgeSellerDisconnection()
 }

@@ -29,4 +29,10 @@ interface UserDataStore {
     ): Flow<Boolean>
 
     suspend fun clearSellerDisconnectionPending(uid: String)
+
+    suspend fun markSellerDisconnectionInitiatedBySeller(uid: String)
+
+    suspend fun clearSellerDisconnectionInitiatedBySeller(uid: String)
+
+    fun observeSellerDisconnectionBySellerPending(uid: String): Flow<Boolean>
 }

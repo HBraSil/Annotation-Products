@@ -37,6 +37,12 @@ class UserDataStoreImpl @Inject constructor(
         fun sellerDisconnectionPending(uid: String) =
             booleanPreferencesKey("seller_disconnection_pending_$uid")
 
+        fun sellerDisconnectionBySellerPending(uid: String) =
+            booleanPreferencesKey("seller_disconnection_by_seller_pending_$uid")
+
+        fun sellerDisconnectionInitiatedBySeller(uid: String) =
+            booleanPreferencesKey("seller_disconnection_initiated_by_seller_$uid")
+
         fun lastLinkedOwnerUid(uid: String) =
             stringPreferencesKey("last_linked_owner_uid_$uid")
     }
@@ -48,17 +54,28 @@ class UserDataStoreImpl @Inject constructor(
         context.userDatastore.edit { preferences ->
             val linkedKey = wasSellerLinked(uid)
             val pendingKey = sellerDisconnectionPending(uid)
+            val bySellerPendingKey = sellerDisconnectionBySellerPending(uid)
+            val initiatedBySellerKey = sellerDisconnectionInitiatedBySeller(uid)
 
             val previousLinked = preferences[linkedKey] ?: false
             val isLinked = !ownerId.isNullOrBlank()
 
             if (previousLinked && !isLinked) {
-                preferences[pendingKey] = true
+                if (preferences[initiatedBySellerKey] == true) {
+                    preferences[bySellerPendingKey] = true
+                    preferences[pendingKey] = false
+                } else {
+                    preferences[pendingKey] = true
+                    preferences[bySellerPendingKey] = false
+                }
+                preferences[initiatedBySellerKey] = false
             }
 
             if (isLinked) {
                 preferences[lastLinkedOwnerUid(uid)] = ownerId
                 preferences[pendingKey] = false
+                preferences[bySellerPendingKey] = false
+                preferences[initiatedBySellerKey] = false
             }
 
             preferences[linkedKey] = isLinked
@@ -73,10 +90,14 @@ class UserDataStoreImpl @Inject constructor(
         context.userDatastore.edit { preferences ->
             val linkedKey = wasSellerLinked(uid)
             val pendingKey = sellerDisconnectionPending(uid)
+            val bySellerPendingKey = sellerDisconnectionBySellerPending(uid)
+            val initiatedBySellerKey = sellerDisconnectionInitiatedBySeller(uid)
             val ownerKey = lastLinkedOwnerUid(uid)
 
             preferences[linkedKey] = false
             preferences[pendingKey] = false
+            preferences[bySellerPendingKey] = false
+            preferences[initiatedBySellerKey] = false
             preferences[ownerKey] = ""
         }
     }
@@ -95,6 +116,24 @@ class UserDataStoreImpl @Inject constructor(
         context.userDatastore.edit { preferences ->
             preferences[sellerDisconnectionPending(uid)] = false
         }
+    }
+
+    override suspend fun markSellerDisconnectionInitiatedBySeller(uid: String) {
+        context.userDatastore.edit { preferences ->
+            preferences[sellerDisconnectionInitiatedBySeller(uid)] = true
+        }
+    }
+
+    override suspend fun clearSellerDisconnectionInitiatedBySeller(uid: String) {
+        context.userDatastore.edit { preferences ->
+            preferences[sellerDisconnectionInitiatedBySeller(uid)] = false
+        }
+    }
+
+    override fun observeSellerDisconnectionBySellerPending(uid: String): Flow<Boolean> {
+        return context.userDatastore.data
+            .map { preferences -> preferences[sellerDisconnectionBySellerPending(uid)] ?: false }
+            .distinctUntilChanged()
     }
 
     override suspend fun wasPremiumActive(uid: String): Boolean =

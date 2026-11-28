@@ -49,7 +49,34 @@ class MainActivityViewModel @Inject constructor(
             userRepository
                 .observeSellerConnectionWithOwner()
                 .collect { response ->
-                    _mainActivityUiState.update { it.copy(sellerConnection = response) }
+                    if (
+                        response == SellerConnectionState.Disconnected ||
+                        response == SellerConnectionState.DisconnectedBySeller
+                    ) {
+                        lastScreenDatastore.setLastScreenProfile(Screens.ROLE_SECTION.route)
+                        userRepository.clearData()
+                            .onFailure { error ->
+                                Log.e(
+                                    "MainActivityViewModel",
+                                    "Falha ao limpar os dados do vendedor desconectado",
+                                    error
+                                )
+                            }
+                        userRepository.acknowledgeSellerDisconnection()
+                        _mainActivityUiState.update {
+                            it.copy(
+                                sellerConnection = SellerConnectionState.NotConnected,
+                                navigateToRoleSection =
+                                    response == SellerConnectionState.DisconnectedBySeller,
+                                showSellerDisconnectedDialog =
+                                    response == SellerConnectionState.Disconnected
+                            )
+                        }
+                    } else {
+                        _mainActivityUiState.update {
+                            it.copy(sellerConnection = response)
+                        }
+                    }
                 }
         }
     }
@@ -116,20 +143,12 @@ class MainActivityViewModel @Inject constructor(
         viewModelScope.launch { lastScreenDatastore.setLastScreenProfile(route) }
     }
 
-    fun confirmSellerDisconnect() {
-        viewModelScope.launch {
-            userRepository.clearData()
-                .onSuccess {
-                    _mainActivityUiState.update {
-                        it.copy(
-                            sellerConnection = SellerConnectionState.NotConnected
-                        )
-                    }
-                }
-                .onFailure { error ->
-                    // Apresentar o erro ao usuário.
-                }
-        }
+    fun dismissSellerDisconnectedDialog() {
+        _mainActivityUiState.update { it.copy(showSellerDisconnectedDialog = false) }
+    }
+
+    fun onSellerDisconnectionNavigationHandled() {
+        _mainActivityUiState.update { it.copy(navigateToRoleSection = false) }
     }
 
     fun onOwnerNavigationHandled() {
@@ -142,5 +161,7 @@ class MainActivityViewModel @Inject constructor(
 data class MainActivityUiState(
     val showPremiumEndedDialog: Boolean = false,
     val navigateToOwner: Boolean = false,
+    val navigateToRoleSection: Boolean = false,
+    val showSellerDisconnectedDialog: Boolean = false,
     val sellerConnection: SellerConnectionState = SellerConnectionState.NotConnected
 )

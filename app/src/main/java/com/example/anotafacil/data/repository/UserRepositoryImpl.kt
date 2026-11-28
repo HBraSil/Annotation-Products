@@ -216,8 +216,9 @@ class UserRepositoryImpl @Inject constructor(
 
             combine(
                 userDao.observeUserDao(uid).filterNotNull(),
-                userDataStore.observeSellerDisconnectionPending(uid)
-            ) { user, pendingDisconnection ->
+                userDataStore.observeSellerDisconnectionPending(uid),
+                userDataStore.observeSellerDisconnectionBySellerPending(uid)
+            ) { user, pendingDisconnection, pendingDisconnectionBySeller ->
 
                 when {
                     user.role == UserRole.OWNER ->
@@ -225,6 +226,9 @@ class UserRepositoryImpl @Inject constructor(
 
                     pendingDisconnection ->
                         SellerConnectionState.Disconnected
+
+                    pendingDisconnectionBySeller ->
+                        SellerConnectionState.DisconnectedBySeller
 
                     !user.ownerId.isNullOrBlank() ->
                         SellerConnectionState.Connected
@@ -507,7 +511,12 @@ class UserRepositoryImpl @Inject constructor(
             return Result.failure(Exception("Há dados pendentes. Salve antes de desconectar-se!"))
 
 
-        return ownerCodeRepositoryImpl.disconnectOwnerFromSeller(firebaseUserUid)
+        userDataStore.markSellerDisconnectionInitiatedBySeller(firebaseUserUid)
+        val result = ownerCodeRepositoryImpl.disconnectOwnerFromSeller(firebaseUserUid)
+        if (result.isFailure) {
+            userDataStore.clearSellerDisconnectionInitiatedBySeller(firebaseUserUid)
+        }
+        return result
     }
 
 
@@ -519,11 +528,9 @@ class UserRepositoryImpl @Inject constructor(
                     Exception("Usuário não está logado")
                 )
 
-            appDatabase.clearSellerData().getOrThrow()
-
             userDao.updateSellerDisconnectedData(uid = uid, ownerId = null, role = null)
 
-            userDataStore.clearSellerLinkState(uid)
+            appDatabase.clearSellerData().getOrThrow()
 
             Result.success(true)
 
@@ -589,8 +596,11 @@ class UserRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun acknowledgeSellerDisconnection(uid: String) {
-        userDataStore.clearSellerDisconnectionPending(uid)
+    override suspend fun acknowledgeSellerDisconnection() {
+        val uid = auth.currentUser?.uid
+            ?: throw IllegalStateException("Usuário não está logado")
+
+        userDataStore.clearSellerLinkState(uid)
     }
 
     override suspend fun signOut(): Result<Boolean> {

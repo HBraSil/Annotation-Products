@@ -82,7 +82,8 @@ fun ProductsAnnotationApp(
     showEmailChangedDialog: Boolean,
     startDestination: String,
     dismissEmailChangedDialog: () -> Unit,
-    confirmSellerDisconnect: () -> Unit,
+    dismissSellerDisconnectedDialog: () -> Unit,
+    onSellerDisconnectionNavigationHandled: () -> Unit,
     setLastRoute: (String) -> Unit,
     dismissDialog: () -> Unit,
     onOwnerNavigationHandled: () -> Unit
@@ -90,6 +91,46 @@ fun ProductsAnnotationApp(
     val navController = rememberNavController()
     val backStackEntry = navController.currentBackStackEntryAsState()
     val backStackRoute = backStackEntry.value?.destination?.route
+
+    LaunchedEffect(uiState.navigateToRoleSection, backStackRoute) {
+        if (
+            !uiState.navigateToRoleSection ||
+            backStackRoute == null
+        ) {
+            return@LaunchedEffect
+        }
+
+        if (backStackRoute != Screens.ROLE_SECTION.route) {
+            navController.navigate(Screens.ROLE_SECTION.route) {
+                popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
+                launchSingleTop = true
+            }
+        }
+        onSellerDisconnectionNavigationHandled()
+    }
+
+    if (uiState.showSellerDisconnectedDialog) {
+        AnnotationProductsStatusDialog(
+            text = "Você foi desconectado do proprietário",
+            confirmButtonText = "Sair",
+            icon = Icons.Default.Close,
+            iconColor = MaterialTheme.colorScheme.error,
+            containerIconColor = MaterialTheme.colorScheme.errorContainer,
+            confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
+            confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
+            confirmClick = {
+                dismissSellerDisconnectedDialog()
+                if (backStackRoute != Screens.ROLE_SECTION.route) {
+                    navController.navigate(Screens.ROLE_SECTION.route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            inclusive = true
+                        }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        )
+    }
 
     if (showEmailChangedDialog) {
         EasyNoteConfirmationDialog(
@@ -100,26 +141,6 @@ fun ProductsAnnotationApp(
             onConfirmClick = {
                 dismissEmailChangedDialog()
                 navController.navigate(Screens.LOGIN.route) {
-                    popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-                }
-            }
-        )
-    }
-
-
-    if (uiState.sellerConnection == SellerConnectionState.Disconnected) {
-        Log.d("ProductsAnnotationApp", "SellerDisconnected")
-        AnnotationProductsStatusDialog(
-            text = "Você foi desconectado do proprietário",
-            confirmButtonText = "Sair",
-            icon = Icons.Default.Close,
-            iconColor = MaterialTheme.colorScheme.error,
-            containerIconColor = MaterialTheme.colorScheme.errorContainer,
-            confirmButtonTextColor = MaterialTheme.colorScheme.error.copy(0.8f),
-            confirmButtonContainerColor = MaterialTheme.colorScheme.onPrimary,
-            confirmClick = {
-                confirmSellerDisconnect()
-                navController.navigate(Screens.ROLE_SECTION.route) {
                     popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
                 }
             }
